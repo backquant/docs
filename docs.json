@@ -169,7 +169,6 @@
     "openapi": "/openapi-v2.json"
   },
   "thumbnails": {
-    "background": "/images/smalllogo1.png",
     "appearance": "dark"
   },
   "logo": "/images/smalllogo1.png",
