@@ -1,0 +1,160 @@
+---
+title: "BTC & monetary"
+description: "Explore Bitcoin's relationship with US and global money supply, on-chain monetary signals, and long-cycle analysis."
+---
+
+All endpoints require an `X-API-Key` header. Responses use the standard envelope — `success`, `data`, and `meta` fields.
+
+<AccordionGroup>
+  <Accordion title="GET /macro/btc-us-m2">
+    Returns the relationship between Bitcoin's price and US M2 money supply. Historically, BTC has tracked broad money supply growth with a lag — this endpoint quantifies that correlation and flags when BTC is trading at a premium or discount to its M2-implied fair value.
+
+    <ParamField query="lag_days" type="integer">
+      Optional. Lead/lag offset in days to apply when comparing BTC price to M2. Defaults to `90`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/btc-us-m2 \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "btc_price_usd": 42850,
+        "us_m2_usd_tn": 20.74,
+        "us_m2_yoy_pct": 2.1,
+        "btc_m2_ratio": 2066.3,
+        "btc_m2_ratio_zscore": 0.42,
+        "implied_fair_value_usd": 39200,
+        "premium_discount_pct": 9.3,
+        "correlation_90d": 0.71,
+        "signal": "slightly_overbought"
+      },
+      "meta": {
+        "timestamp": "2024-01-15T16:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    `btc_m2_ratio_zscore` is the z-score of the BTC/M2 ratio over its historical distribution. `signal` is one of `oversold`, `neutral`, `slightly_overbought`, `overbought`.
+  </Accordion>
+
+  <Accordion title="GET /macro/btc-global-m2">
+    Returns the relationship between Bitcoin and global M2 money supply, aggregating liquidity across the US, EU, China, Japan, and other major economies. Global M2 is one of the most widely cited long-term BTC valuation frameworks. When global liquidity expands, BTC historically benefits with a 6–12 week lag.
+
+    <ParamField query="lag_days" type="integer">
+      Optional. Lead/lag offset in days applied to the global M2 series. Defaults to `70`.
+    </ParamField>
+
+    <ParamField query="currency" type="string">
+      Optional. Express global M2 in this currency. Accepted values: `usd` (default), `btc`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/btc-global-m2 \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "btc_price_usd": 42850,
+        "global_m2_usd_tn": 104.7,
+        "global_m2_yoy_pct": 5.8,
+        "btc_global_m2_ratio": 409.3,
+        "btc_global_m2_ratio_zscore": 0.31,
+        "implied_fair_value_usd": 40100,
+        "premium_discount_pct": 6.9,
+        "correlation_90d": 0.83,
+        "signal": "neutral"
+      },
+      "meta": {
+        "timestamp": "2024-01-15T16:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    `global_m2_usd_tn` aggregates M2 from the US, Eurozone, China, Japan, UK, and Canada, converted to USD at current exchange rates.
+  </Accordion>
+
+  <Accordion title="GET /macro/btc-bmo">
+    Returns the Bitcoin Monetary Oscillator (BMO) — a proprietary indicator that synthesises BTC's relationship with global liquidity, real yields, and dollar strength into a single momentum score. A rising BMO in positive territory signals a macro tailwind for BTC; a falling BMO approaching negative territory suggests headwinds.
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/btc-bmo \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "bmo": 0.62,
+        "bmo_1m_change": 0.14,
+        "bmo_signal": "bullish",
+        "components": {
+          "liquidity_contribution": 0.28,
+          "real_yield_contribution": 0.19,
+          "dollar_contribution": 0.15
+        },
+        "regime": "macro_tailwind",
+        "btc_price_usd": 42850
+      },
+      "meta": {
+        "timestamp": "2024-01-15T16:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    `bmo` is normalised on a -1 to +1 scale. `bmo_signal` is one of `bearish`, `neutral`, `bullish`. `regime` is one of `macro_headwind`, `neutral`, `macro_tailwind`.
+  </Accordion>
+
+  <Accordion title="GET /macro/hurst-cycle">
+    Returns the Hurst Cycle analysis for Bitcoin, identifying dominant cyclical patterns in price data based on spectral analysis. The Hurst exponent measures market persistence — values above 0.5 indicate trending behaviour; values below 0.5 indicate mean-reversion. Use this alongside the dominant cycle period to time entries within the identified cycle.
+
+    <ParamField query="window" type="integer">
+      Optional. Lookback window in days for cycle detection. Accepted values: `365` (default), `730`, `1095`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/hurst-cycle \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "hurst_exponent": 0.58,
+        "market_character": "trending",
+        "dominant_cycle_days": 147,
+        "cycle_phase": "mid_expansion",
+        "cycle_progress_pct": 54,
+        "projected_cycle_peak_days": 68,
+        "confidence": 0.74,
+        "btc_price_usd": 42850
+      },
+      "meta": {
+        "timestamp": "2024-01-15T16:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    `hurst_exponent` is between 0 and 1. `market_character` is `mean_reverting` (< 0.5), `random_walk` (≈ 0.5), or `trending` (> 0.5). `cycle_phase` is one of `early_expansion`, `mid_expansion`, `late_expansion`, `peak`, `early_contraction`, `mid_contraction`, `late_contraction`, `trough`. `confidence` is 0–1.
+  </Accordion>
+</AccordionGroup>

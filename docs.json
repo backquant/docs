@@ -1,0 +1,142 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "luma",
+  "name": "BackQuant Terminal API",
+  "colors": {
+    "primary": "#0F4C81",
+    "light": "#E8F1FA",
+    "dark": "#0A2E50"
+  },
+  "navbar": {
+    "primary": {
+      "type": "button",
+      "label": "Get API Key",
+      "href": "https://backquant.com/api-access"
+    },
+    "links": [
+
+      {
+        "label": "Status",
+        "href": "https://status.backquant.com/"
+      }
+    ]
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "authentication",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/response-format",
+              "concepts/rate-limits",
+              "concepts/errors"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "GEX",
+            "pages": [
+              "api/gex/strike-profile",
+              "api/gex/0dte-strike-profile",
+              "api/gex/levels",
+              "api/gex/expiry-profile",
+              "api/gex/history"
+            ]
+          },
+          {
+            "group": "Market",
+            "pages": [
+              "api/market/index",
+              "api/market/cross-asset"
+            ]
+          },
+          {
+            "group": "Perpetuals",
+            "pages": [
+              "api/perps/funding",
+              "api/perps/open-interest",
+              "api/perps/volume",
+              "api/perps/long-short-ratio",
+              "api/perps/cvd",
+              "api/perps/coinbase-premium"
+            ]
+          },
+          {
+            "group": "Options",
+            "pages": [
+              "api/options/iv-surface",
+              "api/options/term-structure",
+              "api/options/skew",
+              "api/options/expected-move",
+              "api/options/vrp"
+            ]
+          },
+          {
+            "group": "Macro",
+            "pages": [
+              "api/macro/yields",
+              "api/macro/inflation",
+              "api/macro/credit",
+              "api/macro/sentiment",
+              "api/macro/btc-monetary"
+            ]
+          },
+          {
+            "group": "Equities & ETFs",
+            "pages": [
+              "api/equities/overview",
+              "api/etf/flows",
+              "api/etf/premium-aum"
+            ]
+          },
+          {
+            "group": "Liquidation",
+            "pages": [
+              "api/liquidation/heatmap",
+              "api/liquidation/distribution"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "favicon": "/images/favicon.ico",
+  "appearance": {
+    "default": "dark"
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/backquant",
+      "website": "https://backquant.com/",
+      "discord": "https://discord.gg/RmVrJV67yE"
+    }
+  },
+  "api": {
+    "playground": {
+      "display": "interactive"
+    },
+    "openapi": "/openapi.json"
+  },
+  "thumbnails": {
+    "background": "/images/smalllogo1.png",
+    "appearance": "dark"
+  },
+  "logo": "/images/smalllogo1.png",
+  "background": {
+    "decoration": "gradient"
+  }
+}

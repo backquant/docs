@@ -1,0 +1,138 @@
+---
+title: "Expected Move"
+description: "Retrieve the market-implied expected price move derived from options pricing for a given asset and expiry."
+---
+
+The expected move endpoint returns the one-standard-deviation price range the options market implies for an asset over a given expiry period. It is calculated directly from options prices — typically using ATM straddle pricing — and represents the market's consensus estimate of how much the asset could move by expiry.
+
+Traders use expected move to set realistic profit targets and stop levels, evaluate whether breakout strategies are pricing in enough room to run, and compare the options-implied range against historical realized moves to assess whether vol is rich or cheap.
+
+<Tip>
+Expected move is a symmetric measure — it defines an upper and lower bound with roughly equal probability. If spot is near the edge of the range heading into an event, the options market is pricing a meaningful probability of a breakout.
+</Tip>
+
+## Endpoint
+
+```
+GET https://api.backquant.com/v1/options/expected-move
+```
+
+## Query parameters
+
+<ParamField query="symbol" type="string" required>
+  The asset to query. Supported values: `BTC`, `ETH`.
+</ParamField>
+
+<ParamField query="expiry" type="string">
+  Expiry date in `YYYY-MM-DD` format. If omitted, results are returned for all available expiries.
+</ParamField>
+
+## Request example
+
+```bash
+curl "https://api.backquant.com/v1/options/expected-move?symbol=ETH&expiry=2024-05-31" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+## Response fields
+
+<ResponseField name="success" type="boolean" required>
+  `true` when the request succeeds.
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  <Expandable title="properties" defaultOpen>
+    <ResponseField name="symbol" type="string">
+      Asset symbol, e.g. `ETH`.
+    </ResponseField>
+    <ResponseField name="spot" type="number">
+      Spot price at the time of snapshot.
+    </ResponseField>
+    <ResponseField name="expected_moves" type="object[]">
+      Array of expected move ranges by expiry.
+      <Expandable title="properties">
+        <ResponseField name="expiry" type="string">
+          Expiry date in `YYYY-MM-DD` format.
+        </ResponseField>
+        <ResponseField name="dte" type="number">
+          Days to expiry at the time of snapshot.
+        </ResponseField>
+        <ResponseField name="expected_move_pct" type="number">
+          Expected move expressed as a percentage of spot (e.g. `0.12` = ±12%).
+        </ResponseField>
+        <ResponseField name="expected_move_usd" type="number">
+          Expected move in absolute USD terms.
+        </ResponseField>
+        <ResponseField name="upper_bound" type="number">
+          Spot plus expected move: the implied upper price boundary.
+        </ResponseField>
+        <ResponseField name="lower_bound" type="number">
+          Spot minus expected move: the implied lower price boundary.
+        </ResponseField>
+        <ResponseField name="atm_iv" type="number">
+          ATM implied volatility used in the calculation.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="timestamp" type="string">
+      ISO 8601 timestamp of when the snapshot was taken.
+    </ResponseField>
+    <ResponseField name="version" type="string">
+      API version string, e.g. `1.0`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Response example
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "ETH",
+    "spot": 3185.50,
+    "expected_moves": [
+      {
+        "expiry": "2024-04-26",
+        "dte": 4,
+        "expected_move_pct": 0.058,
+        "expected_move_usd": 184.76,
+        "upper_bound": 3370.26,
+        "lower_bound": 3000.74,
+        "atm_iv": 0.83
+      },
+      {
+        "expiry": "2024-05-31",
+        "dte": 39,
+        "expected_move_pct": 0.172,
+        "expected_move_usd": 547.91,
+        "upper_bound": 3733.41,
+        "lower_bound": 2637.59,
+        "atm_iv": 0.74
+      },
+      {
+        "expiry": "2024-06-28",
+        "dte": 67,
+        "expected_move_pct": 0.224,
+        "expected_move_usd": 713.55,
+        "upper_bound": 3899.05,
+        "lower_bound": 2471.95,
+        "atm_iv": 0.70
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-04-22T14:30:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+<Note>
+The expected move formula is approximately `spot × atm_iv × √(dte / 365)`. It defines a one-standard-deviation range — the market assigns roughly a 68% probability that price will remain within the `lower_bound` and `upper_bound` by expiry.
+</Note>

@@ -1,0 +1,99 @@
+---
+title: "Funding rates"
+description: "Retrieve historical and current perpetual futures funding rates across exchanges."
+---
+
+The `/perps/funding` endpoint returns funding rates for perpetual futures contracts. Funding is the periodic payment between long and short holders that keeps perp prices anchored to spot. Persistently positive rates signal overcrowded longs and elevated carry cost; negative rates signal overcrowded shorts. Use this data to time entries, measure market sentiment, and assess the cost of holding a leveraged position.
+
+## Endpoint
+
+```text
+GET https://api.backquant.com/v1/perps/funding
+```
+
+## Request
+
+```bash
+curl "https://api.backquant.com/v1/perps/funding?symbol=BTC&exchange=binance&timeframe=8h&limit=90" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+## Parameters
+
+<ParamField query="symbol" type="string" required>
+  Asset ticker. Examples: `BTC`, `ETH`, `SOL`.
+</ParamField>
+
+<ParamField query="exchange" type="string">
+  Exchange to query. Examples: `binance`, `bybit`, `okx`, `deribit`. Omit to aggregate across all supported exchanges.
+</ParamField>
+
+<ParamField query="timeframe" type="string">
+  Funding interval. Common values: `8h`, `1h`. Defaults to `8h`.
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Number of historical funding periods to return. Defaults to `90`. Maximum: `500`.
+</ParamField>
+
+## Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTC",
+    "exchange": "binance",
+    "funding": [
+      {
+        "timestamp": "2026-01-15T08:00:00Z",
+        "rate": 0.0102,
+        "annualized": 11.12
+      },
+      {
+        "timestamp": "2026-01-15T00:00:00Z",
+        "rate": 0.0089,
+        "annualized": 9.69
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2026-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+## Response fields
+
+<ResponseField name="data.symbol" type="string">
+  The asset ticker that was queried.
+</ResponseField>
+
+<ResponseField name="data.exchange" type="string">
+  The exchange the funding data originates from.
+</ResponseField>
+
+<ResponseField name="data.funding" type="array">
+  Array of funding rate observations ordered by timestamp descending.
+</ResponseField>
+
+<ResponseField name="data.funding[].timestamp" type="string">
+  ISO 8601 timestamp marking the start of the funding period.
+</ResponseField>
+
+<ResponseField name="data.funding[].rate" type="number">
+  Funding rate as a decimal for the period. Multiply by 100 for the percentage value. Positive rates mean longs pay shorts.
+</ResponseField>
+
+<ResponseField name="data.funding[].annualized" type="number">
+  Funding rate annualized as a percentage, assuming the same rate repeats every period.
+</ResponseField>
+
+<ResponseField name="meta.timestamp" type="string">
+  ISO 8601 timestamp of when the response was generated.
+</ResponseField>
+
+<ResponseField name="meta.version" type="string">
+  API version.
+</ResponseField>

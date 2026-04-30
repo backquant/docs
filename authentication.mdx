@@ -1,0 +1,53 @@
+---
+title: "Authentication"
+description: "Authenticate API requests"
+---
+
+All BackQuant API requests require an API key. Keys are tied to your subscription tier and control your [rate limits](/concepts/rate-limits).
+
+## Get an API key
+
+Go to the [BackQuant API Dashboard](https://backquant.com/api-dashboard) to create and manage your API keys.
+
+## Pass your API key
+
+Include your key in the `X-API-Key` header on every request.
+
+```bash
+curl https://api.backquant.com/v1/gex/levels \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+API keys follow this format:
+
+```text
+bq_live_your_api_key_here
+```
+
+<Warning>
+  Keep your API key secret. Do not commit it to source control or expose it in client-side code. If your key is compromised, rotate it immediately from the [BackQuant API Dashboard](https://backquant.com/api-dashboard).
+</Warning>
+
+## Authentication errors
+
+If your API key is missing or invalid, the API returns a `401` response with the `UNAUTHORIZED` error code:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Invalid or missing API key"
+  },
+  "meta": {
+    "timestamp": "2026-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+Check the following if you receive this error:
+
+- The `X-API-Key` header is present on the request.
+- The key value is copied correctly with no leading or trailing spaces.
+- The key has not been revoked in your dashboard.

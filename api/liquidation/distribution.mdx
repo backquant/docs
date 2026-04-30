@@ -1,0 +1,135 @@
+---
+title: "Liquidation distribution"
+description: "Breakdown of crypto perpetual futures liquidations by position size and exchange over a given time window."
+---
+
+The liquidation distribution endpoint breaks down forced position closures by size bucket and exchange. While the heatmap shows where liquidations are likely to occur, the distribution shows what has already happened — and at what scale. Large-size liquidation spikes often mark local price extremes, as they represent leveraged capital being forcibly removed from the market.
+
+All requests require a valid `X-API-Key` header.
+
+## GET /liquidation/distribution
+
+Returns a breakdown of liquidations by size tier and exchange for a given asset and time window.
+
+**Request**
+
+```bash
+curl "https://api.backquant.com/v1/liquidation/distribution?symbol=BTCUSDT&timeframe=1h" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+**Query parameters**
+
+<ParamField query="symbol" type="string" required>
+  Perpetual futures trading pair to query. Examples: `BTCUSDT`, `ETHUSDT`, `SOLUSDT`.
+</ParamField>
+
+<ParamField query="timeframe" type="string" default="1h">
+  Time window to aggregate liquidation data over. Accepted values: `15m`, `1h`, `4h`, `12h`, `24h`.
+</ParamField>
+
+<ParamField query="exchange" type="string">
+  Filter to a specific exchange. Examples: `binance`, `bybit`, `okx`. Omit to aggregate across all exchanges.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "period_start": "2024-01-15T11:00:00Z",
+    "period_end": "2024-01-15T12:00:00Z",
+    "total_liquidated_usd": 84320000,
+    "longs_liquidated_usd": 61400000,
+    "shorts_liquidated_usd": 22920000,
+    "by_size": [
+      {
+        "bucket": "whale",
+        "min_usd": 1000000,
+        "max_usd": null,
+        "count": 12,
+        "total_usd": 38100000
+      },
+      {
+        "bucket": "large",
+        "min_usd": 100000,
+        "max_usd": 1000000,
+        "count": 87,
+        "total_usd": 29400000
+      },
+      {
+        "bucket": "medium",
+        "min_usd": 10000,
+        "max_usd": 100000,
+        "count": 641,
+        "total_usd": 12600000
+      },
+      {
+        "bucket": "small",
+        "min_usd": 0,
+        "max_usd": 10000,
+        "count": 4820,
+        "total_usd": 4220000
+      }
+    ],
+    "by_exchange": [
+      { "exchange": "binance", "total_usd": 41300000 },
+      { "exchange": "bybit", "total_usd": 26800000 },
+      { "exchange": "okx", "total_usd": 16220000 }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+<ResponseField name="data.symbol" type="string">
+  The trading pair queried.
+</ResponseField>
+<ResponseField name="data.timeframe" type="string">
+  Aggregation window for the liquidation data.
+</ResponseField>
+<ResponseField name="data.period_start" type="string">
+  ISO 8601 start time of the aggregation window.
+</ResponseField>
+<ResponseField name="data.period_end" type="string">
+  ISO 8601 end time of the aggregation window.
+</ResponseField>
+<ResponseField name="data.total_liquidated_usd" type="number">
+  Total value liquidated across all positions in USD.
+</ResponseField>
+<ResponseField name="data.longs_liquidated_usd" type="number">
+  Total value of long positions liquidated in USD.
+</ResponseField>
+<ResponseField name="data.shorts_liquidated_usd" type="number">
+  Total value of short positions liquidated in USD.
+</ResponseField>
+<ResponseField name="data.by_size" type="array">
+  Liquidation breakdown by position size bucket.
+
+  <Expandable title="size bucket properties">
+    <ResponseField name="bucket" type="string">
+      Size label: `small`, `medium`, `large`, or `whale`.
+    </ResponseField>
+    <ResponseField name="min_usd" type="number">
+      Minimum position size (in USD) for this bucket.
+    </ResponseField>
+    <ResponseField name="max_usd" type="number">
+      Maximum position size (in USD) for this bucket. `null` for the whale bucket (no upper bound).
+    </ResponseField>
+    <ResponseField name="count" type="number">
+      Number of individual liquidation events in this bucket.
+    </ResponseField>
+    <ResponseField name="total_usd" type="number">
+      Total USD value of liquidations in this bucket.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+<ResponseField name="data.by_exchange" type="array">
+  Liquidation breakdown by exchange. Each object contains `exchange` (string) and `total_usd` (number).
+</ResponseField>

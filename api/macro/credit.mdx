@@ -1,0 +1,187 @@
+---
+title: "Credit & financial conditions"
+description: "Monitor credit spreads, financial conditions, liquidity, and fiscal impulse to gauge systemic stress and market tightness."
+---
+
+All endpoints require an `X-API-Key` header. Responses use the standard envelope — `success`, `data`, and `meta` fields.
+
+<AccordionGroup>
+  <Accordion title="GET /macro/credit-spreads">
+    Returns credit spread data across investment-grade (IG) and high-yield (HY) corporate bond markets. Credit spreads widen when investors demand more compensation for default risk — a reliable stress signal that often leads equity drawdowns. Tight spreads indicate complacency or abundant liquidity.
+
+    <ParamField query="tenor" type="string">
+      Optional. Bond tenor. Accepted values: `all` (default), `5y`, `10y`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/credit-spreads \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "ig_spread_bps": 112,
+        "hy_spread_bps": 387,
+        "ig_spread_change_1d": -3,
+        "hy_spread_change_1d": -8,
+        "ig_spread_pct_rank_1y": 0.32,
+        "hy_spread_pct_rank_1y": 0.28
+      },
+      "meta": {
+        "timestamp": "2024-01-15T16:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    Spreads are in basis points (bps). `pct_rank_1y` is the percentile rank over the trailing 12 months (0 = tightest, 1 = widest).
+  </Accordion>
+
+  <Accordion title="GET /macro/credit-monitor">
+    Returns a multi-factor credit health dashboard aggregating signals across IG spreads, HY spreads, CDS indices, and loan conditions. Use this as a single composite view of credit stress rather than tracking individual spread series manually.
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/credit-monitor \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "credit_health_score": 72,
+        "ig_spread_bps": 112,
+        "hy_spread_bps": 387,
+        "cdx_ig_bps": 58,
+        "cdx_hy_bps": 398,
+        "loan_standards_tightening": false,
+        "stress_regime": "normal",
+        "signal": "neutral"
+      },
+      "meta": {
+        "timestamp": "2024-01-15T16:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    `credit_health_score` is 0–100 (higher = healthier). `stress_regime` is one of `normal`, `elevated`, `stress`.
+  </Accordion>
+
+  <Accordion title="GET /macro/fci">
+    Returns the Financial Conditions Index (FCI), a composite measure of overall monetary tightness incorporating interest rates, credit spreads, equity valuations, and the dollar. A rising FCI signals tightening conditions that typically weigh on growth assets; a falling FCI indicates easing.
+
+    <ParamField query="region" type="string">
+      Optional. Geographic scope. Accepted values: `us` (default), `global`, `em`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/fci \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "fci": 99.4,
+        "fci_1w_change": -0.3,
+        "fci_1m_change": -1.1,
+        "components": {
+          "rates": 98.2,
+          "credit": 101.4,
+          "equity": 98.9,
+          "dollar": 100.6
+        },
+        "stance": "slightly_accommodative",
+        "region": "us"
+      },
+      "meta": {
+        "timestamp": "2024-01-15T16:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    The index is normalised around 100. Values above 100 indicate tighter-than-average conditions. `stance` is one of `accommodative`, `slightly_accommodative`, `neutral`, `slightly_restrictive`, `restrictive`.
+  </Accordion>
+
+  <Accordion title="GET /macro/liquidity">
+    Returns a global liquidity proxy measuring the net supply of money and credit flowing through the financial system. The indicator combines central bank balance sheets, money supply growth, and cross-border capital flows. Rising liquidity has historically correlated with risk asset outperformance, including Bitcoin.
+
+    <ParamField query="scope" type="string">
+      Optional. Scope of liquidity measure. Accepted values: `global` (default), `us`, `cn`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/liquidity \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "liquidity_index": 107.3,
+        "liquidity_yoy_pct": 4.8,
+        "cb_balance_sheets_usd_tn": 27.4,
+        "m2_global_yoy_pct": 5.1,
+        "trend": "expanding",
+        "scope": "global"
+      },
+      "meta": {
+        "timestamp": "2024-01-15T16:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    `liquidity_index` is normalised around 100. `trend` is one of `contracting`, `flat`, `expanding`.
+  </Accordion>
+
+  <Accordion title="GET /macro/fiscal-impulse">
+    Returns the fiscal impulse — a measure of how much government spending is adding to or subtracting from economic growth relative to the prior period. A large positive impulse (deficit expansion) supports nominal growth and can be inflationary; a negative impulse (deficit contraction or austerity) is a drag on activity.
+
+    <ParamField query="country" type="string">
+      Optional. Country code. Accepted values: `us` (default), `eu`, `uk`, `jp`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/fiscal-impulse \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "fiscal_impulse_pct_gdp": 1.2,
+        "deficit_pct_gdp": -6.3,
+        "deficit_yoy_change": 0.8,
+        "spending_growth_yoy": 5.4,
+        "revenue_growth_yoy": 3.1,
+        "stance": "expansionary",
+        "country": "us"
+      },
+      "meta": {
+        "timestamp": "2024-01-15T16:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    `fiscal_impulse_pct_gdp` is positive when policy is expansionary (adding stimulus). `stance` is one of `contractionary`, `neutral`, `expansionary`.
+  </Accordion>
+</AccordionGroup>

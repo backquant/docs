@@ -1,0 +1,105 @@
+---
+title: "Open interest"
+description: "Retrieve open interest for perpetual futures contracts across exchanges."
+---
+
+The `/perps/open-interest` endpoint returns the total notional value of outstanding perpetual futures contracts. Rising open interest alongside a price rally confirms conviction behind the move; rising open interest with falling price signals short accumulation. Use this endpoint to gauge market participation, validate breakouts, and detect potential over-extension before squeezes.
+
+## Endpoint
+
+```text
+GET https://api.backquant.com/v1/perps/open-interest
+```
+
+## Request
+
+```bash
+curl "https://api.backquant.com/v1/perps/open-interest?symbol=BTC&exchange=binance&timeframe=1d&limit=90" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+## Parameters
+
+<ParamField query="symbol" type="string" required>
+  Asset ticker. Examples: `BTC`, `ETH`, `SOL`.
+</ParamField>
+
+<ParamField query="exchange" type="string">
+  Exchange to query. Examples: `binance`, `bybit`, `okx`. Omit to aggregate across all supported exchanges.
+</ParamField>
+
+<ParamField query="timeframe" type="string">
+  Data resolution. Common values: `1h`, `4h`, `1d`. Defaults to `1d`.
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Number of data points to return. Defaults to `90`. Maximum: `500`.
+</ParamField>
+
+## Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTC",
+    "exchange": "binance",
+    "open_interest": [
+      {
+        "timestamp": "2026-01-15T00:00:00Z",
+        "value_usd": 8412500000,
+        "value_coin": 196432.18,
+        "change_24h_pct": 3.41
+      },
+      {
+        "timestamp": "2026-01-14T00:00:00Z",
+        "value_usd": 8133200000,
+        "value_coin": 194020.55,
+        "change_24h_pct": -1.12
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+## Response fields
+
+<ResponseField name="data.symbol" type="string">
+  The asset ticker that was queried.
+</ResponseField>
+
+<ResponseField name="data.exchange" type="string">
+  The exchange the open interest data originates from.
+</ResponseField>
+
+<ResponseField name="data.open_interest" type="array">
+  Array of open interest snapshots ordered by timestamp descending.
+</ResponseField>
+
+<ResponseField name="data.open_interest[].timestamp" type="string">
+  ISO 8601 timestamp of the snapshot.
+</ResponseField>
+
+<ResponseField name="data.open_interest[].value_usd" type="number">
+  Total open interest denominated in USD.
+</ResponseField>
+
+<ResponseField name="data.open_interest[].value_coin" type="number">
+  Total open interest denominated in the underlying asset.
+</ResponseField>
+
+<ResponseField name="data.open_interest[].change_24h_pct" type="number">
+  Percentage change in open interest over the prior 24 hours.
+</ResponseField>
+
+<ResponseField name="meta.timestamp" type="string">
+  ISO 8601 timestamp of when the response was generated.
+</ResponseField>
+
+<ResponseField name="meta.version" type="string">
+  API version.
+</ResponseField>

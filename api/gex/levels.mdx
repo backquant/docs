@@ -1,0 +1,107 @@
+---
+title: "GEX levels"
+description: "Returns key gamma exposure levels including the GEX flip point and major positive and negative gamma zones."
+---
+
+GEX levels are the derived price points that matter most for positioning. The most important is the **GEX flip level** — the price at which aggregate dealer gamma transitions from positive to negative. Above the flip, dealers are long gamma and act as a stabilizing force. Below it, dealers are short gamma and amplify directional moves. This endpoint also returns the largest positive and negative GEX strikes, which frequently act as near-term support and resistance.
+
+```
+GET /gex/levels
+```
+
+## Query parameters
+
+<ParamField query="symbol" type="string" required>
+  The underlying asset symbol. Examples: `BTC`, `ETH`, `SOL`.
+</ParamField>
+
+<ParamField query="date" type="string">
+  Date for which to return levels, in `YYYY-MM-DD` format. Defaults to the most recent available snapshot.
+</ParamField>
+
+## Request example
+
+```bash
+curl "https://api.backquant.com/v1/gex/levels?symbol=BTC&date=2024-01-15" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+## Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTC",
+    "date": "2024-01-15",
+    "spot_price": 43250.00,
+    "regime": "positive",
+    "flip_level": 41500,
+    "positive_gamma_wall": 44000,
+    "negative_gamma_wall": 40000,
+    "call_wall": 46000,
+    "put_wall": 40000,
+    "zero_gamma": 41500
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+## Response fields
+
+<ResponseField name="success" type="boolean" required>
+  `true` when the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="symbol" type="string">
+      The requested asset symbol.
+    </ResponseField>
+    <ResponseField name="date" type="string">
+      The date of the snapshot in `YYYY-MM-DD` format.
+    </ResponseField>
+    <ResponseField name="spot_price" type="number">
+      Spot price of the underlying at the time of the snapshot.
+    </ResponseField>
+    <ResponseField name="regime" type="string">
+      Current gamma regime relative to spot. `"positive"` when spot is above the flip level; `"negative"` when spot is below it.
+    </ResponseField>
+    <ResponseField name="flip_level" type="number">
+      The price at which aggregate net GEX crosses zero. This is the transition point between positive and negative gamma regimes. Also returned as `zero_gamma`.
+    </ResponseField>
+    <ResponseField name="positive_gamma_wall" type="number">
+      The strike with the highest positive GEX. Frequently acts as near-term resistance, as dealers sell into strength approaching this level.
+    </ResponseField>
+    <ResponseField name="negative_gamma_wall" type="number">
+      The strike with the largest negative GEX. Can act as a magnet for accelerated downside moves as dealers sell to re-hedge below this level.
+    </ResponseField>
+    <ResponseField name="call_wall" type="number">
+      The strike with the highest call open interest. Often aligns with the positive gamma wall but may differ.
+    </ResponseField>
+    <ResponseField name="put_wall" type="number">
+      The strike with the highest put open interest. Often aligns with the negative gamma wall but may differ.
+    </ResponseField>
+    <ResponseField name="zero_gamma" type="number">
+      Alias for `flip_level`. The exact price at which cumulative GEX equals zero.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="timestamp" type="string">
+      ISO 8601 timestamp of when the response was generated.
+    </ResponseField>
+    <ResponseField name="version" type="string">
+      API version.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  The flip level is computed by interpolating across the cumulative GEX curve from the strike profile. It is a derived estimate, not a hard order-book level. Treat it as a zone rather than an exact price.
+</Note>

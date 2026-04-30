@@ -1,0 +1,51 @@
+---
+title: "Rate limits"
+description: "Request rate limits by tier"
+---
+
+Rate limits are enforced per API key based on your subscription tier. Exceeding your limit returns a `429` response with the `RATE_LIMIT_EXCEEDED` error code.
+
+## Limits by tier
+
+| Tier | Requests per minute |
+| --- | --- |
+| Monthly | 60 |
+| Yearly | 120 |
+| Enterprise | Unlimited |
+
+## Rate limit headers
+
+Every response includes headers that tell you your current limit status:
+
+| Header | Description |
+| --- | --- |
+| `X-RateLimit-Limit` | Your per-minute request limit |
+| `X-RateLimit-Remaining` | Requests remaining in the current window |
+| `X-RateLimit-Reset` | Unix timestamp when the current window resets |
+
+Check these headers to understand how much of your quota you have used before the window resets.
+
+```bash
+curl -I https://api.backquant.com/v1/gex/levels \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```text
+X-RateLimit-Limit: 120
+X-RateLimit-Remaining: 87
+X-RateLimit-Reset: 1705320060
+```
+
+## Staying within your limits
+
+**Cache responses locally.** Many endpoints return data that does not change second-to-second. Store responses and serve them from your own cache instead of making a new request every time.
+
+**Implement exponential backoff.** If you receive a `RATE_LIMIT_EXCEEDED` error, wait before retrying. Start with a short delay and double it on each subsequent failure.
+
+**Monitor `X-RateLimit-Remaining`.** If this value drops close to zero, slow down your request rate and wait for the window to reset at `X-RateLimit-Reset`.
+
+**Use the Enterprise tier for high-throughput workloads.** If 120 requests per minute is not sufficient, contact BackQuant to discuss Enterprise access.
+
+<Note>
+  Rate limit windows are per-minute and roll over at the Unix timestamp in `X-RateLimit-Reset`.
+</Note>

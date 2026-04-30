@@ -1,0 +1,140 @@
+---
+title: "Strike profile"
+description: "Returns gamma exposure distributed across all active option strike prices for a given underlying asset."
+---
+
+The strike profile shows you how dealer gamma is concentrated at each option strike. Strikes with large positive GEX act as price magnets — dealers buy the underlying as it falls and sell as it rises, dampening volatility. Strikes with large negative GEX do the opposite, amplifying moves. Use this endpoint to identify where price is likely to gravitate or accelerate.
+
+```
+GET /gex/strike-profile
+```
+
+## Query parameters
+
+<ParamField query="symbol" type="string" required>
+  The underlying asset symbol. Examples: `BTC`, `ETH`, `SOL`.
+</ParamField>
+
+<ParamField query="date" type="string">
+  Date for which to return the strike profile, in `YYYY-MM-DD` format. Defaults to the most recent available snapshot.
+</ParamField>
+
+## Request example
+
+```bash
+curl "https://api.backquant.com/v1/gex/strike-profile?symbol=BTC&date=2024-01-15" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+## Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTC",
+    "date": "2024-01-15",
+    "spot_price": 43250.00,
+    "strikes": [
+      {
+        "strike": 40000,
+        "gex": -182500000,
+        "call_gex": 45200000,
+        "put_gex": -227700000,
+        "net_oi": 1240
+      },
+      {
+        "strike": 42000,
+        "gex": 310400000,
+        "call_gex": 398100000,
+        "put_gex": -87700000,
+        "net_oi": 2870
+      },
+      {
+        "strike": 44000,
+        "gex": 524800000,
+        "call_gex": 560300000,
+        "put_gex": -35500000,
+        "net_oi": 3410
+      },
+      {
+        "strike": 46000,
+        "gex": 198200000,
+        "call_gex": 210100000,
+        "put_gex": -11900000,
+        "net_oi": 1580
+      },
+      {
+        "strike": 48000,
+        "gex": -95300000,
+        "call_gex": 31400000,
+        "put_gex": -126700000,
+        "net_oi": 920
+      }
+    ],
+    "total_gex": 756600000
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+## Response fields
+
+<ResponseField name="success" type="boolean" required>
+  `true` when the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="symbol" type="string">
+      The requested asset symbol.
+    </ResponseField>
+    <ResponseField name="date" type="string">
+      The date of the snapshot in `YYYY-MM-DD` format.
+    </ResponseField>
+    <ResponseField name="spot_price" type="number">
+      Spot price of the underlying at the time of the snapshot.
+    </ResponseField>
+    <ResponseField name="strikes" type="object[]">
+      Array of strike-level GEX data, ordered by strike price ascending.
+      <Expandable title="strike object properties">
+        <ResponseField name="strike" type="number">
+          The option strike price.
+        </ResponseField>
+        <ResponseField name="gex" type="number">
+          Net gamma exposure at this strike, in USD notional. Positive values indicate dealer long gamma; negative values indicate dealer short gamma.
+        </ResponseField>
+        <ResponseField name="call_gex" type="number">
+          Gamma exposure contributed by call options at this strike.
+        </ResponseField>
+        <ResponseField name="put_gex" type="number">
+          Gamma exposure contributed by put options at this strike. Always negative or zero.
+        </ResponseField>
+        <ResponseField name="net_oi" type="number">
+          Net open interest across calls and puts at this strike, in contracts.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="total_gex" type="number">
+      Sum of GEX across all strikes. Positive total GEX indicates the market is in a positive gamma regime; negative indicates a negative gamma regime.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="timestamp" type="string">
+      ISO 8601 timestamp of when the response was generated.
+    </ResponseField>
+    <ResponseField name="version" type="string">
+      API version.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  GEX values are expressed in USD notional terms. For BTC and ETH, these figures can be large (hundreds of millions to billions). Magnitude matters — focus on which strikes carry the highest absolute GEX relative to the total.
+</Note>

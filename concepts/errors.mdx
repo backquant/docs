@@ -1,0 +1,111 @@
+---
+title: "Errors"
+description: "API error codes and handling"
+---
+
+When a request fails, the API returns a non-2xx HTTP status code and an error envelope with a machine-readable `code` field and a human-readable `message`.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid parameter: 'symbol' is required."
+  },
+  "meta": {
+    "timestamp": "2026-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+## Error codes
+
+| Code | HTTP status | Description |
+|---|---|---|
+| `UNAUTHORIZED` | 401 | The `X-API-Key` header is missing or the key is invalid. |
+| `RATE_LIMIT_EXCEEDED` | 429 | You have exceeded your per-minute request limit. |
+| `NOT_FOUND` | 404 | The requested resource or endpoint does not exist. |
+| `VALIDATION_ERROR` | 422 | One or more request parameters are invalid or missing. |
+
+## Handling errors in code
+
+Always check `success` before reading `data`. Use the `code` field to branch your error handling logic.
+
+<CodeGroup>
+
+```python python
+import requests
+import time
+
+def get_gex_levels(api_key):
+    response = requests.get(
+        "https://api.backquant.com/v1/gex/levels",
+        headers={"X-API-Key": api_key}
+    )
+    body = response.json()
+
+    if not body["success"]:
+        code = body["error"]["code"]
+
+        if code == "UNAUTHORIZED":
+            raise ValueError("Invalid API key. Check your key in the BackQuant Dashboard.")
+        elif code == "RATE_LIMIT_EXCEEDED":
+            reset_at = int(response.headers.get("X-RateLimit-Reset", 0))
+            wait = max(reset_at - int(time.time()), 1)
+            print(f"Rate limit exceeded. Retry in {wait}s.")
+            time.sleep(wait)
+            return get_gex_levels(api_key)
+        elif code == "NOT_FOUND":
+            raise ValueError("Endpoint not found.")
+        elif code == "VALIDATION_ERROR":
+            raise ValueError(f"Invalid parameters: {body['error']['message']}")
+        else:
+            raise RuntimeError(f"Unexpected error: {body['error']['message']}")
+
+    return body["data"]
+```
+
+```javascript javascript
+async function getGexLevels(apiKey) {
+  const response = await fetch("https://api.backquant.com/v1/gex/levels", {
+    headers: { "X-API-Key": apiKey },
+  });
+
+  const body = await response.json();
+
+  if (!body.success) {
+    const { code, message } = body.error;
+
+    if (code === "UNAUTHORIZED") {
+      throw new Error("Invalid API key. Check your key in the BackQuant Dashboard.");
+    } else if (code === "RATE_LIMIT_EXCEEDED") {
+      const resetAt = parseInt(response.headers.get("X-RateLimit-Reset") ?? "0", 10);
+      const wait = Math.max(resetAt - Math.floor(Date.now() / 1000), 1);
+      console.log(`Rate limit exceeded. Retry in ${wait}s.`);
+      await new Promise((r) => setTimeout(r, wait * 1000));
+      return getGexLevels(apiKey);
+    } else if (code === "NOT_FOUND") {
+      throw new Error("Endpoint not found.");
+    } else if (code === "VALIDATION_ERROR") {
+      throw new Error(`Invalid parameters: ${message}`);
+    } else {
+      throw new Error(`Unexpected error: ${message}`);
+    }
+  }
+
+  return body.data;
+}
+```
+
+</CodeGroup>
+
+## Guidance by error type
+
+**`UNAUTHORIZED`** — Check that you are sending the `X-API-Key` header and that the value matches a valid key in your [BackQuant Dashboard](https://backquant.com/dashboard). Keys are case-sensitive.
+
+**`RATE_LIMIT_EXCEEDED`** — Read `X-RateLimit-Reset` from the response headers to determine when your window resets, then wait before retrying. Implement exponential backoff for repeated failures. See [Rate limits](/concepts/rate-limits) for details.
+
+**`NOT_FOUND`** — Verify the endpoint path is correct by checking the [API reference](https://api.backquant.com/v1/docs). This error also occurs if a parameterized path value (such as a symbol) does not exist.
+
+**`VALIDATION_ERROR`** — Read the `message` field for details about which parameter is invalid. Cross-reference the required parameters in the [API reference](https://api.backquant.com/v1/docs).

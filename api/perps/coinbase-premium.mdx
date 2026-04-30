@@ -1,0 +1,98 @@
+---
+title: "Coinbase premium"
+description: "Retrieve the Coinbase premium index, which measures the price difference between Coinbase and offshore exchanges."
+---
+
+The `/perps/coinbase-premium` endpoint returns the price spread between BTC/USD on Coinbase (a US-regulated spot exchange) and BTC/USDT on Binance (an offshore exchange). A sustained positive premium indicates US-based buyers are bidding aggressively — historically a sign of institutional accumulation. Negative premium suggests selling pressure from the US market. Use this as a macro sentiment indicator to gauge where institutional demand is originating.
+
+## Endpoint
+
+```
+GET https://api.backquant.com/v1/perps/coinbase-premium
+```
+
+## Request
+
+```bash
+curl "https://api.backquant.com/v1/perps/coinbase-premium?timeframe=1h&limit=168" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+## Parameters
+
+<ParamField query="timeframe" type="string">
+  Data resolution. Common values: `5m`, `15m`, `1h`, `4h`, `1d`. Defaults to `1h`.
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Number of data points to return. Defaults to `168` (one week at 1h). Maximum: `1000`.
+</ParamField>
+
+## Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTC",
+    "premium": [
+      {
+        "timestamp": "2024-01-15T12:00:00Z",
+        "coinbase_price": 42863.41,
+        "binance_price": 42837.55,
+        "premium_usd": 25.86,
+        "premium_pct": 0.0603
+      },
+      {
+        "timestamp": "2024-01-15T11:00:00Z",
+        "coinbase_price": 42598.17,
+        "binance_price": 42621.04,
+        "premium_usd": -22.87,
+        "premium_pct": -0.0537
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+## Response fields
+
+<ResponseField name="data.symbol" type="string">
+  The asset this premium index is calculated for. Currently `BTC`.
+</ResponseField>
+
+<ResponseField name="data.premium" type="array">
+  Array of premium observations ordered by timestamp descending.
+</ResponseField>
+
+<ResponseField name="data.premium[].timestamp" type="string">
+  ISO 8601 timestamp of the observation.
+</ResponseField>
+
+<ResponseField name="data.premium[].coinbase_price" type="number">
+  BTC/USD spot price on Coinbase at the given timestamp.
+</ResponseField>
+
+<ResponseField name="data.premium[].binance_price" type="number">
+  BTC/USDT price on Binance at the given timestamp, used as the offshore reference.
+</ResponseField>
+
+<ResponseField name="data.premium[].premium_usd" type="number">
+  Absolute price difference in USD: `coinbase_price − binance_price`. Positive values indicate Coinbase is trading at a premium.
+</ResponseField>
+
+<ResponseField name="data.premium[].premium_pct" type="number">
+  Premium expressed as a percentage of the Binance price. Positive values indicate Coinbase is trading at a premium.
+</ResponseField>
+
+<ResponseField name="meta.timestamp" type="string">
+  ISO 8601 timestamp of when the response was generated.
+</ResponseField>
+
+<ResponseField name="meta.version" type="string">
+  API version.
+</ResponseField>

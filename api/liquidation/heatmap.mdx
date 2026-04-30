@@ -1,0 +1,104 @@
+---
+title: "Liquidation heatmap"
+description: "Price-level liquidation concentrations across crypto perpetual futures, showing where leveraged positions are most at risk."
+---
+
+The liquidation heatmap shows where clusters of leveraged long and short positions would be forced to close if price moves to a given level. High-density liquidation zones act as price magnets — markets often move toward them as large players hunt stops and trigger cascades. Use this data to identify likely support and resistance levels driven by leverage, not just technicals.
+
+All requests require a valid `X-API-Key` header.
+
+## GET /liquidation/heatmap
+
+Returns the liquidation exposure distribution across price levels for a given asset.
+
+**Request**
+
+```bash
+curl "https://api.backquant.com/v1/liquidation/heatmap?symbol=BTCUSDT" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+**Query parameters**
+
+<ParamField query="symbol" type="string" required>
+  Perpetual futures trading pair to query. Examples: `BTCUSDT`, `ETHUSDT`, `SOLUSDT`.
+</ParamField>
+
+<ParamField query="exchange" type="string">
+  Filter results to a specific exchange. Examples: `binance`, `bybit`, `okx`. Omit to aggregate across all exchanges.
+</ParamField>
+
+<ParamField query="timeframe" type="string" default="24h">
+  Lookback window for position data. Accepted values: `1h`, `4h`, `12h`, `24h`, `7d`.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTCUSDT",
+    "current_price": 65240.00,
+    "timeframe": "24h",
+    "levels": [
+      {
+        "price": 68000.00,
+        "longs_usd": 142000000,
+        "shorts_usd": 18000000,
+        "net_usd": -142000000,
+        "intensity": 0.87
+      },
+      {
+        "price": 63000.00,
+        "longs_usd": 38000000,
+        "shorts_usd": 97000000,
+        "net_usd": 97000000,
+        "intensity": 0.61
+      },
+      {
+        "price": 60000.00,
+        "longs_usd": 22000000,
+        "shorts_usd": 184000000,
+        "net_usd": 184000000,
+        "intensity": 1.0
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+<ResponseField name="data.symbol" type="string">
+  The trading pair queried.
+</ResponseField>
+<ResponseField name="data.current_price" type="number">
+  Spot/mark price at the time of the request.
+</ResponseField>
+<ResponseField name="data.timeframe" type="string">
+  Lookback window used for the position data.
+</ResponseField>
+<ResponseField name="data.levels" type="array">
+  Array of price level objects, sorted by price descending.
+
+  <Expandable title="level properties">
+    <ResponseField name="price" type="number">
+      Price level in the quote currency (e.g., USD).
+    </ResponseField>
+    <ResponseField name="longs_usd" type="number">
+      Estimated value of long positions that would be liquidated if price reaches this level, in USD.
+    </ResponseField>
+    <ResponseField name="shorts_usd" type="number">
+      Estimated value of short positions that would be liquidated if price reaches this level, in USD.
+    </ResponseField>
+    <ResponseField name="net_usd" type="number">
+      Net liquidation pressure at this level. Positive = net short liquidations (bullish cascade); negative = net long liquidations (bearish cascade).
+    </ResponseField>
+    <ResponseField name="intensity" type="number">
+      Normalized intensity of liquidation pressure at this level, from 0 to 1. A value of 1 represents the highest-density level in the response.
+    </ResponseField>
+  </Expandable>
+</ResponseField>

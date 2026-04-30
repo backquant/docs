@@ -1,0 +1,377 @@
+---
+title: "Cross-asset data"
+description: "Prices, returns, momentum, correlation, oscillator, and volatility across crypto and macro assets."
+---
+
+The cross-asset endpoints give you a unified view of how crypto assets are moving relative to each other and to traditional markets. Use these to identify regime shifts, build diversified signals, or detect divergences between correlated assets.
+
+All six sub-endpoints share the same base path `/market/cross-asset/` and accept common query parameters.
+
+<AccordionGroup>
+
+  <Accordion title="GET /market/cross-asset/prices — Prices">
+
+    Returns the latest spot prices for a configurable basket of crypto and macro assets.
+
+    ### Request
+
+    ```bash
+    curl "https://api.backquant.com/v1/market/cross-asset/prices?assets=BTC,ETH,SPX,GOLD&timeframe=1d" \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    ### Parameters
+
+    <ParamField query="assets" type="string">
+      Comma-separated list of asset tickers to include. Examples: `BTC`, `ETH`, `SPX`, `GOLD`, `DXY`, `US10Y`. Defaults to a standard basket when omitted.
+    </ParamField>
+
+    <ParamField query="timeframe" type="string">
+      Data resolution. Common values: `1h`, `4h`, `1d`. Defaults to `1d`.
+    </ParamField>
+
+    <ParamField query="limit" type="integer">
+      Number of data points to return per asset. Defaults to `90`.
+    </ParamField>
+
+    ### Response
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "prices": {
+          "BTC": [
+            { "timestamp": "2024-01-15T00:00:00Z", "price": 42850.12 },
+            { "timestamp": "2024-01-14T00:00:00Z", "price": 41920.44 }
+          ],
+          "ETH": [
+            { "timestamp": "2024-01-15T00:00:00Z", "price": 2541.87 },
+            { "timestamp": "2024-01-14T00:00:00Z", "price": 2498.30 }
+          ]
+        }
+      },
+      "meta": {
+        "timestamp": "2024-01-15T12:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    <ResponseField name="data.prices" type="object">
+      Key-value map of asset ticker to an array of `{ timestamp, price }` objects.
+    </ResponseField>
+
+    <ResponseField name="data.prices[ticker][].timestamp" type="string">
+      ISO 8601 timestamp for the price data point.
+    </ResponseField>
+
+    <ResponseField name="data.prices[ticker][].price" type="number">
+      Asset price in USD at the given timestamp.
+    </ResponseField>
+
+  </Accordion>
+
+  <Accordion title="GET /market/cross-asset/returns — Returns">
+
+    Returns percentage price changes over multiple lookback windows for each asset in the basket.
+
+    ### Request
+
+    ```bash
+    curl "https://api.backquant.com/v1/market/cross-asset/returns?assets=BTC,ETH,SPX,GOLD" \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    ### Parameters
+
+    <ParamField query="assets" type="string">
+      Comma-separated list of asset tickers. Defaults to a standard basket.
+    </ParamField>
+
+    <ParamField query="windows" type="string">
+      Comma-separated lookback periods. Example: `1d,7d,30d,90d`. Defaults to `1d,7d,30d`.
+    </ParamField>
+
+    ### Response
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "returns": {
+          "BTC": { "1d": 2.22, "7d": -4.10, "30d": 18.65 },
+          "ETH": { "1d": 1.74, "7d": -6.32, "30d": 12.44 },
+          "SPX": { "1d": 0.38, "7d": 1.12, "30d": 4.91 },
+          "GOLD": { "1d": -0.21, "7d": 0.88, "30d": 3.20 }
+        }
+      },
+      "meta": {
+        "timestamp": "2024-01-15T12:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    <ResponseField name="data.returns" type="object">
+      Key-value map of asset ticker to an object of lookback window → percentage return.
+    </ResponseField>
+
+    <ResponseField name="data.returns[ticker][window]" type="number">
+      Percentage price change over the given lookback window. Positive values indicate gains.
+    </ResponseField>
+
+  </Accordion>
+
+  <Accordion title="GET /market/cross-asset/momentum — Momentum">
+
+    Returns momentum scores for each asset based on price and volume trends across multiple timeframes.
+
+    ### Request
+
+    ```bash
+    curl "https://api.backquant.com/v1/market/cross-asset/momentum?assets=BTC,ETH,SPX&timeframe=1d" \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    ### Parameters
+
+    <ParamField query="assets" type="string">
+      Comma-separated list of asset tickers. Defaults to a standard basket.
+    </ParamField>
+
+    <ParamField query="timeframe" type="string">
+      Data resolution for momentum calculation. Common values: `4h`, `1d`. Defaults to `1d`.
+    </ParamField>
+
+    <ParamField query="limit" type="integer">
+      Number of historical momentum snapshots to return. Defaults to `90`.
+    </ParamField>
+
+    ### Response
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "momentum": {
+          "BTC": [
+            {
+              "timestamp": "2024-01-15T00:00:00Z",
+              "score": 71.4,
+              "signal": "bullish"
+            }
+          ],
+          "ETH": [
+            {
+              "timestamp": "2024-01-15T00:00:00Z",
+              "score": 58.2,
+              "signal": "neutral"
+            }
+          ]
+        }
+      },
+      "meta": {
+        "timestamp": "2024-01-15T12:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    <ResponseField name="data.momentum[ticker][].score" type="number">
+      Momentum score from 0 to 100. Higher values indicate stronger positive momentum.
+    </ResponseField>
+
+    <ResponseField name="data.momentum[ticker][].signal" type="string">
+      Categorical signal derived from the score. One of `bullish`, `neutral`, or `bearish`.
+    </ResponseField>
+
+  </Accordion>
+
+  <Accordion title="GET /market/cross-asset/correlation — Correlation">
+
+    Returns a rolling correlation matrix between assets over a configurable lookback window. Use this to monitor when historically correlated assets decouple — often an early signal of a regime shift.
+
+    ### Request
+
+    ```bash
+    curl "https://api.backquant.com/v1/market/cross-asset/correlation?assets=BTC,ETH,SPX,GOLD&window=30d" \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    ### Parameters
+
+    <ParamField query="assets" type="string">
+      Comma-separated list of asset tickers. Defaults to a standard basket.
+    </ParamField>
+
+    <ParamField query="window" type="string">
+      Lookback window for correlation calculation. Common values: `7d`, `30d`, `90d`. Defaults to `30d`.
+    </ParamField>
+
+    <ParamField query="timeframe" type="string">
+      Return interval used as observations in the correlation. Common values: `1h`, `4h`, `1d`. Defaults to `1d`.
+    </ParamField>
+
+    ### Response
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "window": "30d",
+        "correlation": {
+          "BTC": { "BTC": 1.00, "ETH": 0.91, "SPX": 0.54, "GOLD": 0.12 },
+          "ETH": { "BTC": 0.91, "ETH": 1.00, "SPX": 0.49, "GOLD": 0.08 },
+          "SPX": { "BTC": 0.54, "ETH": 0.49, "SPX": 1.00, "GOLD": 0.31 },
+          "GOLD": { "BTC": 0.12, "ETH": 0.08, "SPX": 0.31, "GOLD": 1.00 }
+        }
+      },
+      "meta": {
+        "timestamp": "2024-01-15T12:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    <ResponseField name="data.window" type="string">
+      The lookback window used to calculate the correlation matrix.
+    </ResponseField>
+
+    <ResponseField name="data.correlation" type="object">
+      Nested key-value map forming a symmetric matrix. Each value is a Pearson correlation coefficient between −1 and 1.
+    </ResponseField>
+
+  </Accordion>
+
+  <Accordion title="GET /market/cross-asset/oscillator — Oscillator">
+
+    Returns an oscillator signal for each asset that normalizes price relative to recent range. Values near 100 indicate overbought conditions; values near 0 indicate oversold.
+
+    ### Request
+
+    ```bash
+    curl "https://api.backquant.com/v1/market/cross-asset/oscillator?assets=BTC,ETH&timeframe=1d" \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    ### Parameters
+
+    <ParamField query="assets" type="string">
+      Comma-separated list of asset tickers. Defaults to a standard basket.
+    </ParamField>
+
+    <ParamField query="timeframe" type="string">
+      Data resolution. Common values: `4h`, `1d`. Defaults to `1d`.
+    </ParamField>
+
+    <ParamField query="limit" type="integer">
+      Number of historical oscillator values to return per asset. Defaults to `90`.
+    </ParamField>
+
+    ### Response
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "oscillator": {
+          "BTC": [
+            {
+              "timestamp": "2024-01-15T00:00:00Z",
+              "value": 74.3,
+              "condition": "overbought"
+            }
+          ],
+          "ETH": [
+            {
+              "timestamp": "2024-01-15T00:00:00Z",
+              "value": 38.7,
+              "condition": "neutral"
+            }
+          ]
+        }
+      },
+      "meta": {
+        "timestamp": "2024-01-15T12:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    <ResponseField name="data.oscillator[ticker][].value" type="number">
+      Normalized oscillator value from 0 to 100.
+    </ResponseField>
+
+    <ResponseField name="data.oscillator[ticker][].condition" type="string">
+      Categorical reading. One of `overbought`, `neutral`, or `oversold`.
+    </ResponseField>
+
+  </Accordion>
+
+  <Accordion title="GET /market/cross-asset/volatility — Volatility">
+
+    Returns realized and implied volatility estimates for each asset over multiple lookback windows. Use this to compare volatility regimes across assets or detect volatility compression before a potential breakout.
+
+    ### Request
+
+    ```bash
+    curl "https://api.backquant.com/v1/market/cross-asset/volatility?assets=BTC,ETH,SPX&timeframe=1d" \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    ### Parameters
+
+    <ParamField query="assets" type="string">
+      Comma-separated list of asset tickers. Defaults to a standard basket.
+    </ParamField>
+
+    <ParamField query="timeframe" type="string">
+      Data resolution. Common values: `4h`, `1d`. Defaults to `1d`.
+    </ParamField>
+
+    <ParamField query="windows" type="string">
+      Comma-separated lookback windows for realized volatility. Example: `7d,30d,90d`. Defaults to `7d,30d`.
+    </ParamField>
+
+    ### Response
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "volatility": {
+          "BTC": [
+            {
+              "timestamp": "2024-01-15T00:00:00Z",
+              "realized": { "7d": 48.2, "30d": 52.7 },
+              "implied": 55.1
+            }
+          ],
+          "ETH": [
+            {
+              "timestamp": "2024-01-15T00:00:00Z",
+              "realized": { "7d": 61.4, "30d": 67.9 },
+              "implied": 71.2
+            }
+          ]
+        }
+      },
+      "meta": {
+        "timestamp": "2024-01-15T12:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    <ResponseField name="data.volatility[ticker][].realized" type="object">
+      Annualized realized volatility (%) over each requested lookback window.
+    </ResponseField>
+
+    <ResponseField name="data.volatility[ticker][].implied" type="number">
+      Annualized implied volatility (%) derived from options markets, where available.
+    </ResponseField>
+
+  </Accordion>
+
+</AccordionGroup>

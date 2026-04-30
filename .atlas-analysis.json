@@ -1,0 +1,176 @@
+{
+  "projectType": "api-service",
+  "projectName": "BackQuant",
+  "projectDescription": "Professional-grade market data API for crypto derivatives, equities, and macro analysis.",
+  "theme": "luma",
+  "primaryColor": "#0F4C81",
+  "lightColor": "#E8F1FA",
+  "darkColor": "#0A2E50",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "authentication",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/response-format",
+              "concepts/rate-limits",
+              "concepts/errors"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "GEX",
+            "pages": [
+              "api/gex/strike-profile",
+              "api/gex/0dte-strike-profile",
+              "api/gex/levels",
+              "api/gex/expiry-profile",
+              "api/gex/history"
+            ]
+          },
+          {
+            "group": "Market",
+            "pages": [
+              "api/market/index",
+              "api/market/cross-asset"
+            ]
+          },
+          {
+            "group": "Perpetuals",
+            "pages": [
+              "api/perps/funding",
+              "api/perps/open-interest",
+              "api/perps/volume",
+              "api/perps/long-short-ratio",
+              "api/perps/cvd",
+              "api/perps/coinbase-premium"
+            ]
+          },
+          {
+            "group": "Options",
+            "pages": [
+              "api/options/iv-surface",
+              "api/options/term-structure",
+              "api/options/skew",
+              "api/options/expected-move",
+              "api/options/vrp"
+            ]
+          },
+          {
+            "group": "Macro",
+            "pages": [
+              "api/macro/yields",
+              "api/macro/inflation",
+              "api/macro/credit",
+              "api/macro/sentiment",
+              "api/macro/btc-monetary"
+            ]
+          },
+          {
+            "group": "Equities & ETFs",
+            "pages": [
+              "api/equities/overview",
+              "api/etf/flows",
+              "api/etf/premium-aum"
+            ]
+          },
+          {
+            "group": "Liquidation",
+            "pages": [
+              "api/liquidation/heatmap",
+              "api/liquidation/distribution"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Gamma Exposure (GEX) analysis for options market structure",
+    "Perpetual futures data: funding rates, open interest, CVD, long/short ratios",
+    "Options analytics: IV surface, term structure, skew, VRP, expected move",
+    "Macro indicators: treasury yields, CPI, PCE, credit spreads, VIX, liquidity",
+    "Equities market breadth and cross-asset correlation data",
+    "Crypto ETF flows, AUM, and premium tracking (BTC, ETH, SOL, XRP)",
+    "Liquidation heatmap and distribution analytics",
+    "Cross-asset momentum, correlation, and oscillator metrics"
+  ],
+  "publicApiSurface": [
+    "GET /gex/strike-profile",
+    "GET /gex/0dte-strike-profile",
+    "GET /gex/levels",
+    "GET /gex/expiry-profile",
+    "GET /gex/history",
+    "GET /market/index",
+    "GET /market/cross-asset/prices",
+    "GET /market/cross-asset/returns",
+    "GET /market/cross-asset/momentum",
+    "GET /market/cross-asset/correlation",
+    "GET /market/cross-asset/oscillator",
+    "GET /market/cross-asset/volatility",
+    "GET /perps/funding",
+    "GET /perps/open-interest",
+    "GET /perps/volume",
+    "GET /perps/long-short-ratio",
+    "GET /perps/cvd",
+    "GET /perps/coinbase-premium",
+    "GET /options/iv-surface",
+    "GET /options/term-structure",
+    "GET /options/skew",
+    "GET /options/expected-move",
+    "GET /options/vrp",
+    "GET /macro/treasury-yields",
+    "GET /macro/yield-spread",
+    "GET /macro/yield-spread-10y3m",
+    "GET /macro/real-yields",
+    "GET /macro/cpi",
+    "GET /macro/pce",
+    "GET /macro/credit-spreads",
+    "GET /macro/vix",
+    "GET /macro/pmi",
+    "GET /macro/sentiment",
+    "GET /macro/bci",
+    "GET /macro/copper-gold",
+    "GET /macro/quadrant",
+    "GET /macro/yen-carry",
+    "GET /macro/fci",
+    "GET /macro/credit-monitor",
+    "GET /macro/liquidity",
+    "GET /macro/fiscal-impulse",
+    "GET /macro/btc-us-m2",
+    "GET /macro/btc-global-m2",
+    "GET /macro/btc-bmo",
+    "GET /macro/hurst-cycle",
+    "GET /equities/ma-breadth",
+    "GET /equities/equity-bond-ratio",
+    "GET /equities/cyclicals-defensives",
+    "GET /equities/large-small-cap",
+    "GET /equities/growth-value",
+    "GET /etf/btc/flows",
+    "GET /etf/eth/flows",
+    "GET /etf/sol/flows",
+    "GET /etf/xrp/flows",
+    "GET /etf/hk/btc/flows",
+    "GET /etf/btc/premium",
+    "GET /etf/eth/premium",
+    "GET /etf/btc/aum",
+    "GET /etf/eth/aum",
+    "GET /etf/grayscale/{symbol}/premium",
+    "GET /liquidation/heatmap",
+    "GET /liquidation/distribution"
+  ]
+}

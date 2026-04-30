@@ -1,0 +1,156 @@
+---
+title: "Expiry profile"
+description: "Returns gamma exposure broken down by option expiry date, showing how GEX is distributed across the term structure."
+---
+
+The expiry profile lets you see how much gamma is concentrated in each expiry bucket. Nearby expiries (especially weekly or daily) carry the highest per-dollar gamma impact because their options are most sensitive to spot moves. Far-dated expiries carry less gamma per dollar of notional but still influence the overall regime. Use this endpoint to understand whether current GEX is dominated by short-dated positions — which can unwind quickly — or distributed across the term structure.
+
+```
+GET /gex/expiry-profile
+```
+
+## Query parameters
+
+<ParamField query="symbol" type="string" required>
+  The underlying asset symbol. Examples: `BTC`, `ETH`, `SOL`.
+</ParamField>
+
+<ParamField query="date" type="string">
+  Date for which to return the expiry profile, in `YYYY-MM-DD` format. Defaults to the most recent available snapshot.
+</ParamField>
+
+## Request example
+
+```bash
+curl "https://api.backquant.com/v1/gex/expiry-profile?symbol=BTC&date=2024-01-15" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+## Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTC",
+    "date": "2024-01-15",
+    "spot_price": 43250.00,
+    "total_gex": 1842300000,
+    "expiries": [
+      {
+        "expiry_date": "2024-01-15",
+        "dte": 0,
+        "gex": 569500000,
+        "gex_pct": 30.9,
+        "call_gex": 621100000,
+        "put_gex": -51600000,
+        "open_interest": 2890
+      },
+      {
+        "expiry_date": "2024-01-19",
+        "dte": 4,
+        "gex": 487200000,
+        "gex_pct": 26.4,
+        "call_gex": 521400000,
+        "put_gex": -34200000,
+        "open_interest": 2210
+      },
+      {
+        "expiry_date": "2024-01-26",
+        "dte": 11,
+        "gex": 394600000,
+        "gex_pct": 21.4,
+        "call_gex": 418900000,
+        "put_gex": -24300000,
+        "open_interest": 1740
+      },
+      {
+        "expiry_date": "2024-02-23",
+        "dte": 39,
+        "gex": 241800000,
+        "gex_pct": 13.1,
+        "call_gex": 258300000,
+        "put_gex": -16500000,
+        "open_interest": 1050
+      },
+      {
+        "expiry_date": "2024-03-29",
+        "dte": 74,
+        "gex": 149200000,
+        "gex_pct": 8.1,
+        "call_gex": 161700000,
+        "put_gex": -12500000,
+        "open_interest": 680
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+## Response fields
+
+<ResponseField name="success" type="boolean" required>
+  `true` when the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="symbol" type="string">
+      The requested asset symbol.
+    </ResponseField>
+    <ResponseField name="date" type="string">
+      The date of the snapshot in `YYYY-MM-DD` format.
+    </ResponseField>
+    <ResponseField name="spot_price" type="number">
+      Spot price of the underlying at the time of the snapshot.
+    </ResponseField>
+    <ResponseField name="total_gex" type="number">
+      Aggregate GEX across all expiries, in USD notional.
+    </ResponseField>
+    <ResponseField name="expiries" type="object[]">
+      Array of per-expiry GEX entries, ordered by expiry date ascending.
+      <Expandable title="expiry object properties">
+        <ResponseField name="expiry_date" type="string">
+          The option expiry date in `YYYY-MM-DD` format.
+        </ResponseField>
+        <ResponseField name="dte" type="number">
+          Days to expiry from the snapshot date.
+        </ResponseField>
+        <ResponseField name="gex" type="number">
+          Net gamma exposure from options expiring on this date, in USD notional.
+        </ResponseField>
+        <ResponseField name="gex_pct" type="number">
+          This expiry's GEX as a percentage of `total_gex`.
+        </ResponseField>
+        <ResponseField name="call_gex" type="number">
+          Gamma exposure from call options expiring on this date.
+        </ResponseField>
+        <ResponseField name="put_gex" type="number">
+          Gamma exposure from put options expiring on this date. Always negative or zero.
+        </ResponseField>
+        <ResponseField name="open_interest" type="number">
+          Total open interest across all strikes for this expiry, in contracts.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="timestamp" type="string">
+      ISO 8601 timestamp of when the response was generated.
+    </ResponseField>
+    <ResponseField name="version" type="string">
+      API version.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  High concentration in near-dated expiries (low DTE) signals that a significant portion of current GEX will roll off soon. Monitor `gex_pct` for the nearest expiries — when they represent more than 40–50% of total GEX, expect a regime shift as that expiry passes.
+</Note>

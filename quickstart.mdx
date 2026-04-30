@@ -1,0 +1,67 @@
+---
+title: "Quick start"
+description: "Make your first API call"
+---
+
+This guide walks you through making your first request to the BackQuant API.
+
+<Steps>
+  <Step title="Get your API key">
+    Go to the [BackQuant Dashboard](https://backquant.com/dashboard) and copy your API key.
+
+    Your key looks like this:
+
+    ```
+    bq_live_your_api_key_here
+    ```
+  </Step>
+
+  <Step title="Make your first request">
+    Call the `/gex/levels` endpoint to retrieve current GEX levels. Replace `YOUR_API_KEY` with your actual key.
+
+    ```bash
+    curl https://api.backquant.com/v1/gex/levels \
+      -H "X-API-Key: YOUR_API_KEY"
+    ```
+  </Step>
+
+  <Step title="Handle the response">
+    Every API response uses the same envelope format. A successful response looks like this:
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "zero_gamma": 5200.0,
+        "call_wall": 5400.0,
+        "put_wall": 5000.0,
+        "major_positive": 5300.0,
+        "major_negative": 4900.0
+      },
+      "meta": {
+        "timestamp": "2026-01-15T12:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    Check `success` before reading `data`. If `success` is `false`, read the `error` object instead. See [Errors](/concepts/errors) for a full list of error codes.
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="API reference" icon="book-open" href="/api/gex/strike-profile">
+    Browse all available endpoints and their parameters.
+  </Card>
+  <Card title="Response format" icon="brackets-curly" href="/concepts/response-format">
+    Learn about the standard response envelope.
+  </Card>
+  <Card title="Rate limits" icon="gauge" href="/concepts/rate-limits">
+    Understand your request limits and how to handle them.
+  </Card>
+  <Card title="Errors" icon="circle-exclamation" href="/concepts/errors">
+    See all error codes and how to handle them.
+  </Card>
+</CardGroup>

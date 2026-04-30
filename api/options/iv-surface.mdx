@@ -1,0 +1,149 @@
+---
+title: "IV Surface"
+description: "Retrieve the implied volatility surface across strikes and expiry dates for a given asset."
+---
+
+The IV surface endpoint returns a two-dimensional grid of implied volatility values, indexed by strike price and days-to-expiry. Each point on the surface represents the market-implied volatility for an option at that specific strike and tenor.
+
+Traders use the surface to understand how volatility is priced across the full options chain — identifying cheap or expensive strikes relative to the at-the-money level, comparing current vol levels against historical surfaces, and informing options pricing models.
+
+<Tip>
+The IV surface is the foundation for most options analytics. If you're building a vol model or running delta-hedging strategies, start here to calibrate your assumptions before querying term structure or skew endpoints.
+</Tip>
+
+## Endpoint
+
+```
+GET https://api.backquant.com/v1/options/iv-surface
+```
+
+## Query parameters
+
+<ParamField query="symbol" type="string" required>
+  The asset to query. Supported values: `BTC`, `ETH`.
+</ParamField>
+
+<ParamField query="expiry" type="string">
+  Filter to a specific expiry date in `YYYY-MM-DD` format. If omitted, all available expiries are returned.
+</ParamField>
+
+<ParamField query="strike_min" type="number">
+  Lower bound for the strike price range. Expressed as an absolute price in USD.
+</ParamField>
+
+<ParamField query="strike_max" type="number">
+  Upper bound for the strike price range. Expressed as an absolute price in USD.
+</ParamField>
+
+<ParamField query="currency" type="string" default="USD">
+  Quote currency for strike prices. Defaults to `USD`.
+</ParamField>
+
+## Request example
+
+```bash
+curl "https://api.backquant.com/v1/options/iv-surface?symbol=BTC" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+## Response fields
+
+<ResponseField name="success" type="boolean" required>
+  `true` when the request succeeds.
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  <Expandable title="properties" defaultOpen>
+    <ResponseField name="symbol" type="string">
+      Asset symbol, e.g. `BTC`.
+    </ResponseField>
+    <ResponseField name="surface" type="object[]">
+      Array of IV data points across the surface.
+      <Expandable title="properties">
+        <ResponseField name="expiry" type="string">
+          Expiry date in `YYYY-MM-DD` format.
+        </ResponseField>
+        <ResponseField name="dte" type="number">
+          Days to expiry at the time of the snapshot.
+        </ResponseField>
+        <ResponseField name="strike" type="number">
+          Strike price in USD.
+        </ResponseField>
+        <ResponseField name="iv" type="number">
+          Implied volatility as a decimal (e.g. `0.72` = 72% annualized IV).
+        </ResponseField>
+        <ResponseField name="option_type" type="string">
+          `call` or `put`.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="spot" type="number">
+      Spot price of the underlying at the time of snapshot.
+    </ResponseField>
+    <ResponseField name="atm_iv" type="number">
+      At-the-money implied volatility for the nearest expiry.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="timestamp" type="string">
+      ISO 8601 timestamp of when the snapshot was taken.
+    </ResponseField>
+    <ResponseField name="version" type="string">
+      API version string, e.g. `1.0`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Response example
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTC",
+    "spot": 68420.00,
+    "atm_iv": 0.72,
+    "surface": [
+      {
+        "expiry": "2024-04-26",
+        "dte": 4,
+        "strike": 65000,
+        "iv": 0.84,
+        "option_type": "put"
+      },
+      {
+        "expiry": "2024-04-26",
+        "dte": 4,
+        "strike": 68000,
+        "iv": 0.71,
+        "option_type": "call"
+      },
+      {
+        "expiry": "2024-05-31",
+        "dte": 39,
+        "strike": 70000,
+        "iv": 0.68,
+        "option_type": "call"
+      },
+      {
+        "expiry": "2024-06-28",
+        "dte": 67,
+        "strike": 80000,
+        "iv": 0.65,
+        "option_type": "call"
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-04-22T14:30:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+<Note>
+IV values are annualized and expressed as decimals. Multiply by 100 to get percentage terms. A value of `0.72` represents 72% annualized implied volatility.
+</Note>

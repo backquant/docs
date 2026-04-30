@@ -1,0 +1,295 @@
+---
+title: "ETF premium and AUM"
+description: "Premium/discount data and total assets under management for spot crypto ETFs, including Grayscale products."
+---
+
+Premium and AUM endpoints give you insight into how ETF market prices relate to underlying net asset value (NAV), and how much capital is deployed in each product. A persistent premium signals strong demand that outpaces share creation; a discount can indicate forced selling or structural redemption friction.
+
+All endpoints require a valid `X-API-Key` header.
+
+## GET /etf/btc/premium
+
+Returns the premium or discount at which US-listed spot Bitcoin ETFs are trading relative to their net asset value.
+
+A premium above 0 means the ETF market price exceeds the value of the underlying BTC held. A discount below 0 means the ETF is trading cheaper than NAV. Authorized participants typically arbitrage this spread, so sustained deviations indicate unusual supply/demand pressure.
+
+**Request**
+
+```bash
+curl https://api.backquant.com/v1/etf/btc/premium \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+**Query parameters**
+
+<ParamField query="limit" type="number" default="1">
+  Number of daily data points to return.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "success": true,
+  "data": {
+    "date": "2024-01-15",
+    "premium_pct": 0.08,
+    "nav_per_share": 47.62,
+    "market_price": 47.66,
+    "issuers": [
+      { "name": "iShares (BlackRock)", "premium_pct": 0.11 },
+      { "name": "Fidelity", "premium_pct": 0.05 }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+<ResponseField name="data.date" type="string">
+  Date of this premium reading (YYYY-MM-DD).
+</ResponseField>
+<ResponseField name="data.premium_pct" type="number">
+  Aggregate premium or discount as a percentage of NAV. Positive = premium; negative = discount.
+</ResponseField>
+<ResponseField name="data.nav_per_share" type="number">
+  Aggregate NAV per share across covered BTC ETFs.
+</ResponseField>
+<ResponseField name="data.market_price" type="number">
+  Aggregate closing market price per share.
+</ResponseField>
+<ResponseField name="data.issuers" type="array">
+  Per-issuer premium breakdown. Each object contains `name` (string) and `premium_pct` (number).
+</ResponseField>
+
+---
+
+## GET /etf/eth/premium
+
+Returns the premium or discount at which US-listed spot Ethereum ETFs are trading relative to their net asset value.
+
+**Request**
+
+```bash
+curl https://api.backquant.com/v1/etf/eth/premium \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+**Query parameters**
+
+<ParamField query="limit" type="number" default="1">
+  Number of daily data points to return.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "success": true,
+  "data": {
+    "date": "2024-01-15",
+    "premium_pct": -0.03,
+    "nav_per_share": 28.14,
+    "market_price": 28.13,
+    "issuers": [
+      { "name": "iShares (BlackRock)", "premium_pct": 0.02 },
+      { "name": "Fidelity", "premium_pct": -0.08 }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+<ResponseField name="data.date" type="string">
+  Date of this premium reading (YYYY-MM-DD).
+</ResponseField>
+<ResponseField name="data.premium_pct" type="number">
+  Aggregate premium or discount as a percentage of NAV. Positive = premium; negative = discount.
+</ResponseField>
+<ResponseField name="data.nav_per_share" type="number">
+  Aggregate NAV per share across covered ETH ETFs.
+</ResponseField>
+<ResponseField name="data.market_price" type="number">
+  Aggregate closing market price per share.
+</ResponseField>
+<ResponseField name="data.issuers" type="array">
+  Per-issuer premium breakdown.
+</ResponseField>
+
+---
+
+## GET /etf/btc/aum
+
+Returns the total assets under management for US-listed spot Bitcoin ETFs, aggregated and broken down by issuer.
+
+Total AUM is a measure of how much capital the market has committed to spot BTC exposure through regulated wrappers. Growing AUM alongside inflows confirms sustained demand; rising AUM without inflows may reflect price appreciation rather than new capital.
+
+**Request**
+
+```bash
+curl https://api.backquant.com/v1/etf/btc/aum \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+**Query parameters**
+
+<ParamField query="limit" type="number" default="1">
+  Number of daily data points to return.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "success": true,
+  "data": {
+    "date": "2024-01-15",
+    "total_aum_usd": 47820000000,
+    "issuers": [
+      { "name": "iShares (BlackRock)", "aum_usd": 28140000000 },
+      { "name": "Fidelity", "aum_usd": 11200000000 },
+      { "name": "ARK 21Shares", "aum_usd": 4360000000 },
+      { "name": "Others", "aum_usd": 4120000000 }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+<ResponseField name="data.date" type="string">
+  Date of this AUM snapshot (YYYY-MM-DD).
+</ResponseField>
+<ResponseField name="data.total_aum_usd" type="number">
+  Total assets under management across all covered BTC ETFs, in USD.
+</ResponseField>
+<ResponseField name="data.issuers" type="array">
+  Per-issuer AUM breakdown. Each object contains `name` (string) and `aum_usd` (number).
+</ResponseField>
+
+---
+
+## GET /etf/eth/aum
+
+Returns the total assets under management for US-listed spot Ethereum ETFs.
+
+**Request**
+
+```bash
+curl https://api.backquant.com/v1/etf/eth/aum \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+**Query parameters**
+
+<ParamField query="limit" type="number" default="1">
+  Number of daily data points to return.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "success": true,
+  "data": {
+    "date": "2024-01-15",
+    "total_aum_usd": 9410000000,
+    "issuers": [
+      { "name": "iShares (BlackRock)", "aum_usd": 4820000000 },
+      { "name": "Fidelity", "aum_usd": 2930000000 },
+      { "name": "Others", "aum_usd": 1660000000 }
+    ]
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+<ResponseField name="data.date" type="string">
+  Date of this AUM snapshot (YYYY-MM-DD).
+</ResponseField>
+<ResponseField name="data.total_aum_usd" type="number">
+  Total assets under management across all covered ETH ETFs, in USD.
+</ResponseField>
+<ResponseField name="data.issuers" type="array">
+  Per-issuer AUM breakdown.
+</ResponseField>
+
+---
+
+## GET /etf/grayscale/\{symbol\}/premium
+
+Returns the current premium or discount for a specific Grayscale crypto trust or ETF product.
+
+Grayscale products historically traded at significant premiums when there was no redemption mechanism. Since converting to spot ETF structures, premiums have compressed — but deviations still occur and can signal arbitrage opportunities or structural demand shifts. This endpoint covers products such as GBTC, ETHE, and GDLC.
+
+**Request**
+
+```bash
+curl https://api.backquant.com/v1/etf/grayscale/GBTC/premium \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+**Path parameters**
+
+<ParamField path="symbol" type="string" required>
+  Ticker symbol of the Grayscale product. Examples: `GBTC`, `ETHE`, `GDLC`.
+</ParamField>
+
+**Query parameters**
+
+<ParamField query="limit" type="number" default="1">
+  Number of daily data points to return.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "GBTC",
+    "date": "2024-01-15",
+    "premium_pct": -1.42,
+    "nav_per_share": 43.18,
+    "market_price": 42.57,
+    "underlying_asset": "BTC",
+    "btc_per_share": 0.00091
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+<ResponseField name="data.symbol" type="string">
+  Grayscale product ticker, echoed from the path parameter.
+</ResponseField>
+<ResponseField name="data.date" type="string">
+  Date of this premium reading (YYYY-MM-DD).
+</ResponseField>
+<ResponseField name="data.premium_pct" type="number">
+  Premium or discount as a percentage of NAV. Positive = premium; negative = discount.
+</ResponseField>
+<ResponseField name="data.nav_per_share" type="number">
+  Net asset value per share based on the underlying asset price.
+</ResponseField>
+<ResponseField name="data.market_price" type="number">
+  Closing market price per share.
+</ResponseField>
+<ResponseField name="data.underlying_asset" type="string">
+  The primary asset held by this product (e.g., `BTC`, `ETH`).
+</ResponseField>
+<ResponseField name="data.btc_per_share" type="number">
+  Amount of underlying asset represented by each share. Field name reflects the underlying; value present for all products.
+</ResponseField>

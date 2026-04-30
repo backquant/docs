@@ -1,0 +1,113 @@
+---
+title: "Inflation"
+description: "Access CPI, PCE, and PMI data to monitor price pressures and economic activity trends."
+---
+
+All endpoints require an `X-API-Key` header. Responses use the standard envelope — `success`, `data`, and `meta` fields.
+
+<AccordionGroup>
+  <Accordion title="GET /macro/cpi">
+    Returns the US Consumer Price Index (CPI), the most widely cited inflation gauge. You get both headline CPI (which includes food and energy) and core CPI (which strips them out). Use core CPI to track underlying price pressure that the Fed weights most heavily in policy decisions.
+
+    <ParamField query="series" type="string">
+      Optional. Which series to return. Accepted values: `all` (default), `headline`, `core`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/cpi \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "headline_yoy": 3.4,
+        "headline_mom": 0.3,
+        "core_yoy": 3.9,
+        "core_mom": 0.4,
+        "super_core_yoy": 4.2,
+        "period": "2023-12"
+      },
+      "meta": {
+        "timestamp": "2024-01-15T08:30:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    All rates are in percent. `yoy` is year-over-year; `mom` is month-over-month. `super_core` excludes shelter in addition to food and energy.
+  </Accordion>
+
+  <Accordion title="GET /macro/pce">
+    Returns the Personal Consumption Expenditures (PCE) price index — the Federal Reserve's preferred inflation measure. PCE tends to run slightly below CPI because it accounts for consumer substitution behaviour. Core PCE at or below 2% is the Fed's stated target.
+
+    <ParamField query="series" type="string">
+      Optional. Which series to return. Accepted values: `all` (default), `headline`, `core`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/pce \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "headline_yoy": 2.6,
+        "headline_mom": 0.2,
+        "core_yoy": 2.9,
+        "core_mom": 0.2,
+        "period": "2023-11"
+      },
+      "meta": {
+        "timestamp": "2024-01-26T08:30:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    All rates are in percent. `yoy` is year-over-year; `mom` is month-over-month.
+  </Accordion>
+
+  <Accordion title="GET /macro/pmi">
+    Returns Purchasing Managers' Index (PMI) data for manufacturing and services sectors. PMI is a leading indicator of economic activity — readings above 50 signal expansion, below 50 signal contraction. Use services PMI alongside CPI to assess whether sticky inflation is demand-driven.
+
+    <ParamField query="region" type="string">
+      Optional. Geographic scope. Accepted values: `us` (default), `global`, `eu`, `china`.
+    </ParamField>
+
+    ```bash
+    curl https://api.backquant.com/v1/macro/pmi \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+
+    **Response**
+
+    ```json
+    {
+      "success": true,
+      "data": {
+        "manufacturing": 47.4,
+        "services": 52.7,
+        "composite": 50.9,
+        "manufacturing_new_orders": 46.1,
+        "services_new_orders": 53.4,
+        "period": "2024-01",
+        "region": "us"
+      },
+      "meta": {
+        "timestamp": "2024-01-24T14:00:00Z",
+        "version": "1.0"
+      }
+    }
+    ```
+
+    All values are diffusion indices on a 0–100 scale. 50 is the expansion/contraction threshold.
+  </Accordion>
+</AccordionGroup>

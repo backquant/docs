@@ -1,0 +1,133 @@
+---
+title: "0DTE strike profile"
+description: "Returns gamma exposure across strike prices for options expiring today, isolating same-day expiry positioning."
+---
+
+The 0DTE strike profile isolates gamma exposure from options expiring on the current trading day. Near expiry, gamma is highly concentrated and extremely sensitive to spot price — small moves near a high-GEX strike can trigger sharp intraday reversals or accelerations as dealers rapidly adjust hedges. This endpoint is most useful during active trading hours on days with heavy 0DTE open interest.
+
+```
+GET /gex/0dte-strike-profile
+```
+
+## Query parameters
+
+<ParamField query="symbol" type="string" required>
+  The underlying asset symbol. Examples: `BTC`, `ETH`, `SOL`.
+</ParamField>
+
+<ParamField query="date" type="string">
+  The expiry date to treat as "today," in `YYYY-MM-DD` format. Defaults to the current UTC date. Provide a past date to query a historical 0DTE snapshot.
+</ParamField>
+
+## Request example
+
+```bash
+curl "https://api.backquant.com/v1/gex/0dte-strike-profile?symbol=BTC&date=2024-01-15" \
+  -H "X-API-Key: bq_live_your_api_key_here"
+```
+
+## Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "symbol": "BTC",
+    "expiry_date": "2024-01-15",
+    "spot_price": 43250.00,
+    "strikes": [
+      {
+        "strike": 42500,
+        "gex": 87300000,
+        "call_gex": 102100000,
+        "put_gex": -14800000,
+        "net_oi": 430
+      },
+      {
+        "strike": 43000,
+        "gex": 214600000,
+        "call_gex": 231800000,
+        "put_gex": -17200000,
+        "net_oi": 1120
+      },
+      {
+        "strike": 43500,
+        "gex": 196400000,
+        "call_gex": 207900000,
+        "put_gex": -11500000,
+        "net_oi": 980
+      },
+      {
+        "strike": 44000,
+        "gex": 71200000,
+        "call_gex": 79300000,
+        "put_gex": -8100000,
+        "net_oi": 360
+      }
+    ],
+    "total_gex": 569500000
+  },
+  "meta": {
+    "timestamp": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  }
+}
+```
+
+## Response fields
+
+<ResponseField name="success" type="boolean" required>
+  `true` when the request succeeded.
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="symbol" type="string">
+      The requested asset symbol.
+    </ResponseField>
+    <ResponseField name="expiry_date" type="string">
+      The expiry date used to filter options, in `YYYY-MM-DD` format.
+    </ResponseField>
+    <ResponseField name="spot_price" type="number">
+      Spot price of the underlying at the time of the snapshot.
+    </ResponseField>
+    <ResponseField name="strikes" type="object[]">
+      Array of strike-level GEX data for 0DTE options only, ordered by strike price ascending.
+      <Expandable title="strike object properties">
+        <ResponseField name="strike" type="number">
+          The option strike price.
+        </ResponseField>
+        <ResponseField name="gex" type="number">
+          Net gamma exposure at this strike from 0DTE options, in USD notional.
+        </ResponseField>
+        <ResponseField name="call_gex" type="number">
+          Gamma exposure from 0DTE call options at this strike.
+        </ResponseField>
+        <ResponseField name="put_gex" type="number">
+          Gamma exposure from 0DTE put options at this strike. Always negative or zero.
+        </ResponseField>
+        <ResponseField name="net_oi" type="number">
+          Net open interest from 0DTE options at this strike, in contracts.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    <ResponseField name="total_gex" type="number">
+      Sum of GEX across all 0DTE strikes.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="timestamp" type="string">
+      ISO 8601 timestamp of when the response was generated.
+    </ResponseField>
+    <ResponseField name="version" type="string">
+      API version.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Note>
+  0DTE gamma is highly time-sensitive. Strikes that appear dominant in the morning may lose significance rapidly as open interest rolls off through the session. For intraday use, poll this endpoint frequently and compare against the full strike profile from `/gex/strike-profile` to see what fraction of total GEX is expiring today.
+</Note>

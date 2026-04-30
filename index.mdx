@@ -1,0 +1,63 @@
+---
+title: "BackQuant API"
+description: "Professional-grade market data API for crypto derivatives, equities, and macro analysis."
+---
+
+BackQuant gives you programmatic access to institutional-quality market data — gamma exposure, perpetual futures metrics, options analytics, macroeconomic indicators, ETF flows, and more — through a single REST API.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="bolt" href="/quickstart">
+    Make your first API call in minutes.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Get your API key and authenticate requests.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/gex/strike-profile">
+    Browse all endpoints across every data category.
+  </Card>
+  <Card title="Rate Limits" icon="gauge" href="/concepts/rate-limits">
+    Understand request limits by subscription tier.
+  </Card>
+</CardGroup>
+
+## What you can build
+
+<CardGroup cols={2}>
+  <Card title="GEX Analysis" icon="chart-bar" href="/api/gex/strike-profile">
+    Gamma exposure strike profiles, levels, and history for options market structure.
+  </Card>
+  <Card title="Perpetuals Data" icon="arrows-rotate" href="/api/perps/funding">
+    Funding rates, open interest, CVD, long/short ratios, and coinbase premium.
+  </Card>
+  <Card title="Options Analytics" icon="chart-line" href="/api/options/iv-surface">
+    IV surface, term structure, skew, VRP, and expected move.
+  </Card>
+  <Card title="Macro Indicators" icon="globe" href="/api/macro/yields">
+    Treasury yields, inflation, credit spreads, liquidity, and BTC monetary correlations.
+  </Card>
+  <Card title="Equities & ETFs" icon="building-columns" href="/api/equities/overview">
+    Market breadth, sector rotations, ETF flows, AUM, and premiums.
+  </Card>
+  <Card title="Liquidation Data" icon="fire" href="/api/liquidation/heatmap">
+    Liquidation heatmaps and distribution analytics.
+  </Card>
+</CardGroup>
+
+## Get started in 3 steps
+
+<Steps>
+  <Step title="Get your API key">
+    Sign in to the [BackQuant Dashboard](https://backquant.com/dashboard) and copy your API key.
+  </Step>
+  <Step title="Make your first request">
+    Pass your key in the `X-API-Key` header and call any endpoint.
+
+    ```bash
+    curl https://api.backquant.com/v1/gex/levels \
+      -H "X-API-Key: bq_live_your_api_key_here"
+    ```
+  </Step>
+  <Step title="Explore the data">
+    Browse the [API Reference](/api/gex/strike-profile) to discover all available endpoints.
+  </Step>
+</Steps>
