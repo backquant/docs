@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "luma",
-  "name": "BackQuant Terminal API",
+  "name": "BackQuant API",
   "colors": {
     "primary": "#0F4C81",
     "light": "#E8F1FA",
@@ -14,7 +14,10 @@
       "href": "https://backquant.com/api-access"
     },
     "links": [
-
+      {
+        "label": "BackQuant",
+        "href": "https://backquant.com/"
+      },
       {
         "label": "Status",
         "href": "https://status.backquant.com/"
@@ -35,79 +38,113 @@
             ]
           },
           {
-            "group": "Core Concepts",
+            "group": "Concepts",
             "pages": [
+              "concepts/gex",
+              "concepts/opex",
+              "concepts/max-pain",
+              "concepts/probability-density",
+              "concepts/iv-suite",
+              "concepts/greeks",
+              "concepts/multi-symbol",
+              "concepts/data-freshness",
               "concepts/response-format",
               "concepts/rate-limits",
-              "concepts/errors"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "GEX",
-            "pages": [
-              "api/gex/strike-profile",
-              "api/gex/0dte-strike-profile",
-              "api/gex/levels",
-              "api/gex/expiry-profile",
-              "api/gex/history"
+              "concepts/errors",
+              "concepts/faq",
+              "concepts/glossary"
             ]
           },
           {
-            "group": "Market",
+            "group": "Code examples",
             "pages": [
-              "api/market/index",
-              "api/market/cross-asset"
+              "examples/python",
+              "examples/typescript",
+              "examples/curl"
             ]
           },
           {
-            "group": "Perpetuals",
+            "group": "API — Discovery & Meta",
             "pages": [
-              "api/perps/funding",
-              "api/perps/open-interest",
-              "api/perps/volume",
-              "api/perps/long-short-ratio",
-              "api/perps/cvd",
-              "api/perps/coinbase-premium"
+              "api/v2/health",
+              "api/v2/discovery/symbols",
+              "api/v2/discovery/expiries",
+              "api/v2/discovery/status",
+              "api/v2/discovery/meta",
+              "api/v2/discovery/endpoints",
+              "api/v2/discovery/changelog"
             ]
           },
           {
-            "group": "Options",
+            "group": "API — GEX",
             "pages": [
-              "api/options/iv-surface",
-              "api/options/term-structure",
-              "api/options/skew",
-              "api/options/expected-move",
-              "api/options/vrp"
+              "api/v2/gex/levels",
+              "api/v2/gex/strike-profile",
+              "api/v2/gex/expiry-profile",
+              "api/v2/gex/strike-expiry-heatmap",
+              "api/v2/gex/time-heatmap",
+              "api/v2/gex/history",
+              "api/v2/gex/stress-history",
+              "api/v2/gex/max-pain"
             ]
           },
           {
-            "group": "Macro",
+            "group": "API — Options chain & OPEX",
             "pages": [
-              "api/macro/yields",
-              "api/macro/inflation",
-              "api/macro/credit",
-              "api/macro/sentiment",
-              "api/macro/btc-monetary"
+              "api/v2/options/chain",
+              "api/v2/options/expiry-summary",
+              "api/v2/options/opex"
             ]
           },
           {
-            "group": "Equities & ETFs",
+            "group": "API — IV analytics",
             "pages": [
-              "api/equities/overview",
-              "api/etf/flows",
-              "api/etf/premium-aum"
+              "api/v2/options/iv/surface",
+              "api/v2/options/iv/term-structure",
+              "api/v2/options/iv/skew",
+              "api/v2/options/iv/curves",
+              "api/v2/options/iv/smile",
+              "api/v2/options/iv/iv-rv",
+              "api/v2/options/vrp",
+              "api/v2/options/expected-move"
             ]
           },
           {
-            "group": "Liquidation",
+            "group": "API — Probability density",
             "pages": [
-              "api/liquidation/heatmap",
-              "api/liquidation/distribution"
+              "api/v2/options/probability/density",
+              "api/v2/options/probability/surface"
+            ]
+          },
+          {
+            "group": "API — Greeks",
+            "pages": [
+              "api/v2/options/greeks/by-greek",
+              "api/v2/options/greeks/surfaces",
+              "api/v2/options/greeks/3d-surface"
+            ]
+          },
+          {
+            "group": "API — Open interest & flow",
+            "pages": [
+              "api/v2/options/oi/by-expiry",
+              "api/v2/options/oi/history",
+              "api/v2/options/pcr",
+              "api/v2/options/premium-tide"
+            ]
+          },
+          {
+            "group": "API — Futures & liquidation",
+            "pages": [
+              "api/v2/options/futures/term-structure",
+              "api/v2/liquidation/heatmap",
+              "api/v2/liquidation/distribution"
+            ]
+          },
+          {
+            "group": "API — Multi-symbol",
+            "pages": [
+              "api/v2/multi/gex-levels"
             ]
           }
         ]
@@ -129,7 +166,7 @@
     "playground": {
       "display": "interactive"
     },
-    "openapi": "/openapi.json"
+    "openapi": "/openapi-v2.json"
   },
   "thumbnails": {
     "background": "/images/smalllogo1.png",

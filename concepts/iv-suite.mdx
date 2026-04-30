@@ -1,0 +1,122 @@
+---
+title: "The IV suite"
+description: "Surface, term structure, skew, smile, IV-RV, VRP — what each one tells you"
+---
+
+The implied-volatility (IV) endpoints in v2 give you every standard
+slice and aggregate of the IV surface. Each one answers a different
+question.
+
+## At a glance
+
+| Endpoint | What it shows | Use it for |
+| --- | --- | --- |
+| [`/v2/options/iv/surface`](/api/v2/options/iv/surface) | Full 2D IV grid (strike × expiry) | 3D vol-surface viz |
+| [`/v2/options/iv/term-structure`](/api/v2/options/iv/term-structure) | ATM IV per expiry | Calendar / term carry, contango vs backwardation |
+| [`/v2/options/iv/skew`](/api/v2/options/iv/skew) | 25Δ / 10Δ skew + 25Δ butterfly per expiry | Risk-reversal, fear gauge |
+| [`/v2/options/iv/curves`](/api/v2/options/iv/curves) | Full smile per expiry, multi-expiry | Vol surface comparison across tenors |
+| [`/v2/options/iv/smile`](/api/v2/options/iv/smile) | Single-expiry smile | Cheaper than `/curves` when you only need one tenor |
+| [`/v2/options/iv/iv-rv`](/api/v2/options/iv/iv-rv) | Daily IV vs realised vol history | Vol-selling timing |
+| [`/v2/options/vrp`](/api/v2/options/vrp) | Volatility risk premium (IV − RV history) | Mean-reversion signal on premium richness |
+
+## Surface
+
+The full strike × expiry grid of implied volatilities. Best rendered as
+a 3D surface or contour plot. Returns:
+
+- `x_grid` — strikes
+- `y_grid` — expiry tenors (DTE)
+- `z_grid` — IV values at each (strike, expiry) cell
+- `min_iv` / `max_iv` — for color scaling
+
+Most useful when you can see the whole shape — local "wings" up means
+fat-tail pricing, "smirk" with low call-side IV means upside-skew
+positioning.
+
+## Term structure
+
+ATM implied vol per expiry, sorted by DTE. The shape tells you the
+market's vol forecast across time:
+
+- **Upward-sloping (contango)** — far-month vol higher than front-month.
+  Normal for low-vol regimes; the market is pricing in eventual
+  normalisation.
+- **Downward-sloping (backwardation)** — front higher than back.
+  Common during stress, expirations or regime breaks. The market is
+  pricing in *now* being noisier than *later*.
+- **Hump near anchor expirations** — higher IV at the upcoming
+  monthly/quarterly than at adjacent weeklies, because of OPEX
+  positioning.
+
+Filter `?dte_max=60` to focus on the front of the curve, or pass
+`?historical_compare_days=30` to also receive the constant-maturity ATM
+IV from 30 days ago — useful for showing "term structure shifted right"
+in dashboards.
+
+## Skew
+
+`/v2/options/iv/skew` gives you per-expiry:
+
+- `skew_25d` = 25Δ put IV − 25Δ call IV (positive = downside premium)
+- `skew_10d` = 10Δ put IV − 10Δ call IV (tail skew)
+- `butterfly_25d` = (25Δ put IV + 25Δ call IV) / 2 − ATM IV (smile curvature)
+
+These are computed from real delta-bracketed options (interpolated to
+exact 25Δ / 10Δ), not strike proxies. Crypto skews are often more
+extreme than equities — `skew_25d` of +5–10 IV points on a near-term
+expiry is normal in jittery regimes, > 15 is signalling crash hedging.
+
+A *flattening* skew over time (positive going to zero) often precedes a
+local low. A *steepening* skew is fear bid.
+
+## Curves and Smile
+
+[`/v2/options/iv/curves`](/api/v2/options/iv/curves) returns the full
+merged-IV smile (OTM puts below spot, OTM calls above) for *every*
+active expiry, sorted by DTE. Best for plotting all smiles on a single
+chart for visual comparison.
+
+[`/v2/options/iv/smile`](/api/v2/options/iv/smile) returns the same data
+for *one* expiry. Lighter payload; use this if you only need the front
+month or a specific tenor.
+
+## IV-RV history
+
+`/v2/options/iv/iv-rv` returns the daily history of:
+
+- `iv` — at-the-money implied volatility
+- `rv` — realised volatility (typically 30d)
+- `spread` — IV − RV
+
+Use the spread to decide when implied vol is rich relative to what's
+actually been realised. Sustained `spread > 0` is a sell-vol signal;
+sustained `spread < 0` is a buy-vol signal.
+
+## VRP — the volatility risk premium
+
+`/v2/options/vrp` is the same as `iv-rv` but normalised. The vol risk
+premium is the *excess* IV traders demand over realised — historically
+positive on average (vol writers earn a premium). Sharp drops below zero
+are usually short-vol unwinds and worth tracking.
+
+## Filtering knobs across the suite
+
+- `?days=30/90/365` on history endpoints (`/iv-rv`, `/vrp`) — window length
+- `?exchanges=deribit,bybit,okx,binance` — venue filter (term structure recomputes from filtered breakdown)
+- `?dte_max=N` — front-of-curve focus
+- `?historical_compare_days=N` — overlay today's term structure with N days ago
+
+## Related concepts
+
+<CardGroup cols={2}>
+  <Card title="Probability density" icon="chart-area" href="/concepts/probability-density">
+    The Breeden-Litzenberger PDF derived from the IV surface.
+  </Card>
+  <Card title="What is GEX?" icon="chart-line" href="/concepts/gex">
+    GEX is computed using the same per-contract greeks as IV — the
+    suites are complementary.
+  </Card>
+  <Card title="OPEX calendar" icon="calendar-days" href="/concepts/opex">
+    Term-structure humps near anchor expirations are an OPEX signal.
+  </Card>
+</CardGroup>

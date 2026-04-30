@@ -1,0 +1,104 @@
+---
+title: "Data freshness"
+description: "How current the data is — and how to tell from the response"
+---
+
+Every v2 response carries `computed_at` and `freshness_seconds` in the
+`meta` block. This page explains what they mean and the cadence behind
+them.
+
+## Refresh cadences
+
+| Category | Refresh | What's in it |
+| --- | --- | --- |
+| **GEX** (levels, strike profile, expiry profile, max-pain, expiry summary, time heatmap, history) | **30 seconds** | Pulled from Deribit / Bybit / OKX / Binance, computed by our worker |
+| **Options** (chain, IV surface / term / skew / smile / curves, greeks, probability density, OI by expiry, expected move) | **30 seconds** | Same compute pipeline as GEX — they share the snapshot |
+| **Premium tide / OI history** | **30 seconds** | Append-only history of options trade flow |
+| **Liquidation heatmap** | **5 minutes** | Lower cadence; perp liquidations don't move that fast |
+| **IV-RV / VRP history** | **Daily** (after UTC midnight) | Daily snapshots, not intraday |
+| **Stress history** (`/v2/gex/stress-history`) | **Continuous** (Postgres-backed) | Persistent log of HVL / walls over time |
+
+## Reading freshness from a response
+
+Every successful response includes:
+
+```json
+{
+  "meta": {
+    "computed_at": "2026-04-30T11:59:48.000Z",
+    "freshness_seconds": 12.0,
+    ...
+  }
+}
+```
+
+- `computed_at` — wall-clock when the underlying cache was last written
+- `freshness_seconds` — `now - computed_at`, in seconds
+
+For a healthy 30s endpoint, `freshness_seconds` should be in the range
+0–60. Values consistently > 90 mean the worker is having trouble
+refreshing — check `/v2/status` for confirmation.
+
+## Operational status
+
+[`/v2/status`](/api/v2/discovery/status) gives you a per-symbol
+per-category health grid:
+
+```json
+{
+  "service": "BackQuant API v2",
+  "version": "2.0",
+  "current_time": "2026-04-30T12:00:00Z",
+  "overall_status": "healthy",
+  "symbols": {
+    "BTCUSDT": {
+      "gex":         { "status": "healthy", "freshness_seconds": 12 },
+      "options":     { "status": "healthy", "freshness_seconds": 18 },
+      "chain":       { "status": "healthy", "freshness_seconds": 22 },
+      "liquidation": { "status": "healthy", "freshness_seconds": 280 }
+    },
+    ...
+  },
+  "thresholds": {
+    "gex":         { "healthy_max_seconds": 60, "degraded_max_seconds": 300 },
+    ...
+  }
+}
+```
+
+Each cell is one of:
+
+- `healthy` — within the expected refresh window
+- `degraded` — behind schedule but still usable
+- `unhealthy` — dangerously stale; worker is having trouble
+- `unavailable` — no cache at all (cold start or extended outage)
+
+The `overall_status` is the worst case across the grid — pessimistic
+on purpose so monitoring alerts trip on the first real problem.
+
+## When you don't care about freshness
+
+For one-off historical queries (`/v2/gex/stress-history`,
+`/v2/options/iv/iv-rv`, `/v2/options/vrp`), the data is daily/historical
+and `computed_at` reflects when the historical row was written. Don't
+panic if `freshness_seconds` is huge — that's normal for time-series.
+
+## Public liveness probe
+
+[`/v2/health`](/api/v2/health) is a no-auth liveness probe for external
+monitors (UptimeRobot, Datadog synthetic, etc.). Returns `status: ok |
+degraded | unhealthy` based on Redis + Postgres reachability. Always
+HTTP 200 — the body has the truth, not the status code, so the
+envelope contract stays clean.
+
+## Related concepts
+
+<CardGroup cols={2}>
+  <Card title="Response format" icon="brackets-curly" href="/concepts/response-format">
+    Every meta field documented in detail.
+  </Card>
+  <Card title="Rate limits" icon="gauge" href="/concepts/rate-limits">
+    Cadence considerations for polling — don't poll faster than the
+    refresh.
+  </Card>
+</CardGroup>

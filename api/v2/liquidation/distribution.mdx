@@ -1,0 +1,27 @@
+---
+title: "Liquidation distribution"
+openapi: "GET /liquidation/distribution"
+---
+
+Per-price-level long and short liquidation volumes with a leverage-tier
+estimate based on distance from spot. Use it as a histogram visualisation
+or as input to position-sizing logic — clusters of leverage near current
+price are where stop-cascades typically trigger.
+
+Leverage tiers are estimated from distance to spot:
+
+| Distance from spot | Tier |
+| --- | --- |
+| 0–1% | 100x (high) |
+| 1–2% | 50x (medium-high) |
+| 2–4% | 25x (medium) |
+| 4%+ | 10x (low) |
+
+Updated every 5 minutes server-side.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Liquidation heatmap" icon="bookmark" href="/api/v2/liquidation/heatmap" />
+  <Card title="Data freshness" icon="bookmark" href="/concepts/data-freshness" />
+</CardGroup>

@@ -1,0 +1,117 @@
+---
+title: "Greeks beyond delta"
+description: "DEX, theta, vanna, charm, vega — what they measure and how to use them"
+---
+
+The greek profile endpoints in v2 give you the **dealer-aggregated
+greek exposure per strike** for the four underlyings. Same idea as
+[GEX](/concepts/gex) but for the higher-order greeks that drive
+hedging flows the gamma profile alone misses.
+
+## The five exposure profiles
+
+| Greek | Endpoint | What dealer holds | What it drives |
+| --- | --- | --- | --- |
+| **Delta (DEX)** | [`/v2/options/greeks/delta`](/api/v2/options/greeks/by-greek) | Net directional exposure per strike | Forced delta hedging in the underlying |
+| **Theta** | [`/v2/options/greeks/theta`](/api/v2/options/greeks/by-greek) | Time-decay USD/day per strike | The premium dealers earn passively |
+| **Vega** | [`/v2/options/greeks/vega`](/api/v2/options/greeks/by-greek) | IV sensitivity per strike | P&L impact of vol moves |
+| **Vanna** | [`/v2/options/greeks/vanna`](/api/v2/options/greeks/by-greek) | ∂Delta/∂IV per strike | Delta hedging adjustment when vol moves |
+| **Charm** | [`/v2/options/greeks/charm`](/api/v2/options/greeks/by-greek) | ∂Delta/∂Time per strike | EOD / pre-expiry delta drift |
+
+All five share the same shape:
+
+```json
+{
+  "greek": "vanna",
+  "strikes": [60000, 62500, 65000, 67500, 70000, ...],
+  "net_exposure": [-12000, -8000, 5000, 22000, 14000, ...],
+  "call_exposure": [...],
+  "put_exposure": [...],
+  "total_exposure": 81000
+}
+```
+
+## DEX — the workhorse
+
+Net delta exposure tells you how much underlying dealers must hold
+*right now* to be neutral at each strike. Large positive DEX above spot
+= dealers long deltas there = they'll sell into rallies. Large negative
+DEX below spot = they're short = they'll buy on dips.
+
+DEX is essentially the *integral* of GEX across price. Use both:
+**GEX** for "where will dealers turn the boat?", **DEX** for "how big
+is their current position?"
+
+## Vanna — the vol-rallies-the-tape effect
+
+Vanna is **dDelta/dVol**. Positive vanna means: when IV rises, dealer
+delta increases (they need to buy underlying); when IV falls, dealer
+delta decreases (they sell). The classic "vol crush rallies the
+underlying" pattern is vanna in action.
+
+In crypto, vanna concentrates around 25Δ strikes (where vega is
+biggest). Watch for cliffs in the vanna profile near current spot —
+those are levels where a vol move triggers hedging flows that move
+price.
+
+## Charm — the time-bleed delta drift
+
+Charm is **dDelta/dTime**. As an option ages with no underlying move,
+its delta drifts (calls toward 0 or 1, puts toward 0 or -1). Dealers
+hedge that drift, which creates predictable end-of-day flows.
+
+Watch this in the last hour before close (especially before OPEX
+days) — large charm at strikes near spot means dealers will be
+adjusting deltas just from time passing, even if price doesn't move.
+
+## Vega — vol P&L geography
+
+Where dealers will gain or lose if IV moves. Useful as a complement to
+the [IV surface](/concepts/iv-suite) — high vega at a strike means a
+vol move there has outsized impact on the dealer book.
+
+## Filtering the greek profiles
+
+Each greek endpoint accepts:
+
+- `?exchanges=deribit,bybit,okx,binance` — venue filter
+- `?moneyness_min=0.9&moneyness_max=1.1` — focus on ATM ±10%
+- `?dte_max=7` — recompute from raw chain limited to short-DTE
+  contracts (cached 30s per `(symbol, greek, dte_max)` so repeated
+  requests stay sub-millisecond)
+
+The `?dte_max` filter is particularly useful — the cached profiles span
+*every* expiry, but for intraday workflows you usually only care about
+0DTE / weekly contributions.
+
+## Surfaces — strike × time
+
+Two endpoints expose the *evolution* of exposure over time:
+
+- [`/v2/options/greeks/surfaces/charm`](/api/v2/options/greeks/surfaces) — strike × time charm surface
+- [`/v2/options/greeks/surfaces/vega`](/api/v2/options/greeks/surfaces) — strike × time vega surface
+
+These are useful when you want to see where exposure is *building* over
+the day, not just the current snapshot.
+
+## 3D — strike × expiry for any greek
+
+[`/v2/options/greeks/3d/surface?greek=gamma`](/api/v2/options/greeks/3d-surface)
+returns a `Z` matrix of `Σ(greek × OI)` per `(strike, expiry)` cell for
+any greek. Best for 3D visualisation; the matrix is downsampled around
+spot when the cell count exceeds 5000 to keep payload bounded.
+
+## Related concepts
+
+<CardGroup cols={2}>
+  <Card title="What is GEX?" icon="chart-line" href="/concepts/gex">
+    Gamma is the special case — start there before reading the higher
+    order greeks.
+  </Card>
+  <Card title="Probability density" icon="chart-area" href="/concepts/probability-density">
+    Vanna and charm shape how the implied PDF evolves.
+  </Card>
+  <Card title="OPEX calendar" icon="calendar-days" href="/concepts/opex">
+    Charm matters most pre-OPEX as time-decay flows accelerate.
+  </Card>
+</CardGroup>

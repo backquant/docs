@@ -1,0 +1,202 @@
+---
+title: "TypeScript recipes"
+description: "Copy-paste TypeScript / Node.js snippets for the most common v2 workflows"
+---
+
+These recipes use the standard `fetch` API. No SDK required. Set your
+key in an env var:
+
+```bash
+export BACKQUANT_API_KEY=bq_live_your_api_key_here
+```
+
+```typescript
+const API_KEY = process.env.BACKQUANT_API_KEY!;
+const BASE = "https://api.backquant.com";
+
+interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: { code: string; message: string; details?: unknown };
+  meta: { version: string; request_id?: string; [k: string]: unknown };
+}
+
+async function get<T = unknown>(
+  path: string,
+  params: Record<string, string | number> = {},
+): Promise<ApiResponse<T>> {
+  const qs = new URLSearchParams(
+    Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])),
+  );
+  const url = `${BASE}${path}${qs.toString() ? `?${qs}` : ""}`;
+  const r = await fetch(url, { headers: { "X-API-Key": API_KEY } });
+  const body: ApiResponse<T> = await r.json();
+  if (!body.success) {
+    throw new Error(
+      `${body.error!.code}: ${body.error!.message} ` +
+        `(request_id=${body.meta.request_id})`,
+    );
+  }
+  return body;
+}
+```
+
+## Watch GEX levels for the universe
+
+```typescript
+const resp = await get("/v2/multi/gex/levels", {
+  symbols: "BTCUSDT,ETHUSDT,SOLUSDT,HYPEUSDT",
+  include: "ranked,max_pain,expected_move,zones",
+});
+
+const results = (resp.data as { results: Record<string, any> }).results;
+for (const [sym, data] of Object.entries(results)) {
+  if (data === null) {
+    console.log(`${sym}: no data`);
+    continue;
+  }
+  console.log(
+    `${sym}: HVL=${data.all_expiry.hvl} ` +
+      `Call wall=${data.all_expiry.call_resistance} ` +
+      `Put support=${data.all_expiry.put_support} ` +
+      `Max pain=${data.max_pain.strike}`,
+  );
+}
+```
+
+## OPEX calendar widget
+
+```typescript
+const resp = await get("/v2/options/opex", { symbol: "BTCUSDT", horizon: 30 });
+const data = resp.data as { expirations: any[]; next_anchor: any };
+
+console.table(
+  data.expirations.map((e) => ({
+    expiry: e.expiry,
+    type: e.type,
+    dte: e.dte,
+    oi: e.oi.total_oi,
+    notional_m: ((e.oi.notional_oi_usd ?? 0) / 1e6).toFixed(1),
+    call_wall: e.gamma.call_resistance,
+    put_support: e.gamma.put_support,
+  })),
+);
+
+if (data.next_anchor) {
+  console.log(
+    `Next anchor: ${data.next_anchor.expiry} (${data.next_anchor.type}, ` +
+      `${data.next_anchor.dte}d away)`,
+  );
+}
+```
+
+## Filter the chain to ATM ±10% with greeks only
+
+```typescript
+const resp = await get("/v2/options/chain", {
+  symbol: "BTCUSDT",
+  moneyness_min: 0.9,
+  moneyness_max: 1.1,
+  option_type: "both",
+  include: "greeks,iv,oi",
+  max_contracts: 200,
+});
+
+const data = resp.data as {
+  contracts: any[];
+  truncated: boolean;
+  total_matching_count: number;
+};
+console.table(data.contracts);
+
+if (data.truncated) {
+  console.warn(
+    `Result truncated: matched ${data.total_matching_count}, ` +
+      `returned ${data.contracts.length}.`,
+  );
+}
+```
+
+## 1σ implied price band for the next monthly OPEX
+
+```typescript
+const opex = await get("/v2/options/opex", {
+  symbol: "BTCUSDT",
+  horizon: 60,
+  types: "monthly,quarterly",
+});
+const expirations = (opex.data as any).expirations;
+const nextAnchor = expirations.find((e: any) => e.is_anchor);
+
+if (nextAnchor) {
+  const pdf = await get("/v2/options/probability/density", {
+    symbol: "BTCUSDT",
+    expiry: nextAnchor.expiry,
+    confidence_band: 0.68,
+  });
+  const band = (pdf.data as any).expiries[nextAnchor.expiry].confidence_band;
+  console.log(
+    `${nextAnchor.expiry} 1σ implied range: $${band.lower.toFixed(0)} – $${band.upper.toFixed(0)}`,
+  );
+}
+```
+
+## Paginate GEX history
+
+```typescript
+const allPoints: [string, number][] = [];
+let cursor: string | undefined;
+
+for (let i = 0; i < 10; i++) {
+  const params: Record<string, string | number> = {
+    symbol: "BTCUSDT",
+    limit: 200,
+  };
+  if (cursor) params.before = cursor;
+  const resp = await get("/v2/gex/history", params);
+  const page = resp.data as { timestamps: string[]; total_gex: number[]; next_cursor: string | null };
+  page.timestamps.forEach((t, idx) => allPoints.push([t, page.total_gex[idx]]));
+  if (page.timestamps.length === 0) break;
+  cursor = page.next_cursor ?? undefined;
+}
+
+console.log(`Pulled ${allPoints.length} history points`);
+```
+
+## Backoff on rate-limit errors
+
+```typescript
+async function getWithBackoff<T>(path: string, params = {}, maxAttempts = 4): Promise<ApiResponse<T>> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await get<T>(path, params);
+    } catch (e: any) {
+      if (e.message.startsWith("RATE_LIMIT_EXCEEDED")) {
+        const wait = 60 * 2 ** attempt; // 60s, 120s, 240s, 480s
+        console.warn(`Rate limited, sleeping ${wait}s`);
+        await new Promise((r) => setTimeout(r, wait * 1000));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw new Error("Max rate-limit retries exceeded");
+}
+```
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Python recipes" icon="code" href="/examples/python">
+    Same patterns in Python.
+  </Card>
+  <Card title="curl recipes" icon="terminal" href="/examples/curl">
+    Pure-curl one-liners.
+  </Card>
+  <Card title="Errors" icon="circle-exclamation" href="/concepts/errors">
+    Robust error handling.
+  </Card>
+  <Card title="Rate limits" icon="gauge" href="/concepts/rate-limits">
+    Per-tier limits + backoff strategy.
+  </Card>
+</CardGroup>

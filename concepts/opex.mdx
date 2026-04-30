@@ -1,0 +1,120 @@
+---
+title: "OPEX calendar"
+description: "Daily, weekly, monthly, quarterly — and why anchor expirations matter"
+---
+
+**OPEX** (options expiration) is the day options contracts expire. In
+crypto, contracts expire on multiple cadences:
+
+- **Daily expirations** — BTC and ETH have daily 0DTE contracts on Deribit
+- **Weekly expirations** — every Friday, smaller OI
+- **Monthly expirations** — the **last Friday** of each month, much larger OI
+- **Quarterly expirations** — last Friday of March, June, September, December — the heaviest of all
+
+The monthly and quarterly expirations are **anchor expiries** —
+institutional positioning concentrates in them, GEX clusters around
+their strikes, and they often dictate price action in the days leading
+up to expiry.
+
+## Why this distinction matters
+
+Monthly/quarterly expirations have:
+
+- **5–10× the OI** of weeklies in the same week
+- **Roll activity** in the 3–5 days before — rolling positions to the
+  next expiry can move spot
+- **Pin risk** from large dealer hedges unwinding on expiry day
+- **Vol regime shifts** as the GEX picture redistributes after the
+  expiry-day delta unwind
+
+Weekly expirations matter for short-term gamma but have nowhere near
+the institutional weight.
+
+## The classification BackQuant returns
+
+Every expiration in our responses comes pre-classified with a `type`
+field — you don't have to parse Deribit-style tokens or detect
+last-Friday-of-month rules client-side:
+
+| Type | Definition | Example |
+| --- | --- | --- |
+| `quarterly` | Last Friday of Mar / Jun / Sep / Dec | `28MAR25`, `27JUN25`, `26SEP25`, `26DEC25` |
+| `monthly` | Last Friday of any other month | `25APR25` (April 30 is Wednesday → last Friday is the 25th), `30MAY25`, `25JUL25` |
+| `weekly` | Any other Friday | `07MAR25`, `14MAR25`, `21MAR25`, `04APR25`, `11APR25` |
+| `daily` | Any non-Friday weekday | `26MAR25` (Wednesday), `27MAR25` (Thursday) |
+
+`is_anchor: true` is shorthand for `monthly` or `quarterly` — the two
+that institutions watch.
+
+Tokens that don't parse cleanly are returned as `unknown` and never
+silently filtered out.
+
+## The `/v2/options/opex` endpoint
+
+[`/v2/options/opex`](/api/v2/options/opex) bundles everything you need
+for an OPEX-day workflow into one call:
+
+```bash
+curl "https://api.backquant.com/v2/options/opex?symbol=BTCUSDT&horizon=30" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+For each upcoming expiration within the horizon, you get:
+
+- **Identification**: token, ISO date, DTE, type, `is_anchor` flag
+- **OI block**: `call_oi`, `put_oi`, `total_oi`, `pcr`, **`notional_oi_usd`** (= total_oi × spot)
+- **IV block**: `atm_iv`, `skew_25d`, `put_25d_iv`, `call_25d_iv`
+- **Gamma block**: `net_gex`, `call_resistance`, `put_support` (computed per-expiry from the strike × expiry heatmap), `max_pain`
+
+Plus a `next_anchor` pointer at the closest monthly/quarterly so you
+can highlight it in your UI.
+
+## Filtering for the institutional view
+
+Want only the heavyweight expirations? Filter to anchors:
+
+```bash
+curl "https://api.backquant.com/v2/options/opex?\
+symbol=BTCUSDT\
+&horizon=90\
+&types=monthly,quarterly" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+You'll get back just the monthlies + quarterlies in the next 90 days,
+sorted by DTE.
+
+## Same enrichment in `/v2/options/expiry-summary`
+
+If you already use [`/v2/options/expiry-summary`](/api/v2/options/expiry-summary),
+each row is enriched with the same `type`, `is_anchor`, `expiry_date`,
+`notional_oi_usd`, and `max_pain` fields. Plus top-level `anchor_count`
+and `type_counts` so you can render summary stats without iterating.
+
+## How to use this in production
+
+**Pre-OPEX setup (T-5 to T-1)**: filter to next anchor, watch the
+gamma walls move as positions unwind/roll. Big call_resistance moves
+upward = bullish positioning rolling forward.
+
+**OPEX day**: the `max_pain` strike on the anchor expiry is a magnet.
+Combined with [GEX levels](/concepts/gex), you get a tight pin
+prediction window for the close.
+
+**Post-OPEX**: the next anchor's expected_move and OI tell you whether
+positioning has compressed (low IV, low OI = sell-vol environment) or
+expanded (high IV, high OI = vol expansion likely).
+
+## Related concepts
+
+<CardGroup cols={2}>
+  <Card title="Max pain" icon="bullseye" href="/concepts/max-pain">
+    The pinning strike on each expiry — a key OPEX-day signal.
+  </Card>
+  <Card title="What is GEX?" icon="chart-line" href="/concepts/gex">
+    The walls / HVL / support levels OPEX positioning concentrates in.
+  </Card>
+  <Card title="The IV suite" icon="wave-square" href="/concepts/iv-suite">
+    Term structure flattening / steepening around OPEX is a big signal.
+  </Card>
+</CardGroup>

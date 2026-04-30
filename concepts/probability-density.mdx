@@ -1,0 +1,143 @@
+---
+title: "Probability density"
+description: "Risk-neutral PDF / CDF via Breeden-Litzenberger — the market's implied price distribution"
+---
+
+**Risk-neutral probability density** is the full implied probability
+distribution of the underlying's price at a future expiry, extracted
+from option prices. It tells you not just where the market expects
+price to land (the mean / mode) but the full *shape* of expectations —
+including skew toward downside crashes or upside squeezes.
+
+## The intuition
+
+Breeden and Litzenberger (1978) showed that the shape of an option
+chain — specifically the way call prices respond to strike — implicitly
+encodes the market's probability distribution for the underlying at
+expiry. We do the heavy lifting on our side and return a clean,
+normalised PDF over the strike grid for every active expiry.
+
+You get the distribution directly. No surface-fitting, no numerical
+differentiation, no boundary-handling. Plot it, integrate it, sample
+percentiles from it.
+
+## What you get from `/v2/options/probability/density`
+
+For every active expiry, the [endpoint](/api/v2/options/probability/density)
+returns:
+
+```json
+{
+  "expiries": {
+    "30MAY26": {
+      "strikes": [60000, 62500, 65000, 67500, 70000, 72500, 75000, ...],
+      "pdf": [0.001, 0.003, 0.012, 0.025, 0.018, 0.008, 0.002, ...],
+      "pdf_normalized": [...],
+      "cdf_below": [0.05, 0.12, 0.30, 0.55, 0.78, 0.92, 0.99, ...],
+      "cdf_above": [0.95, 0.88, 0.70, 0.45, 0.22, 0.08, 0.01, ...],
+      "mean": 67200,
+      "mode": 67500,
+      "std": 4100,
+      "skewness": -0.18,
+      "kurtosis": 3.6,
+      "prob_25": 64500,
+      "prob_50": 67500,
+      "prob_75": 70200
+    },
+    ...
+  },
+  "spot_price": 67213.5
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `pdf` | Probability density per strike (un-normalized — sum × strike spacing ≈ 1) |
+| `pdf_normalized` | PDF divided by total mass, sums to 1 over the strike grid |
+| `cdf_below` | Cumulative probability `P(price < strike)` — monotone non-decreasing |
+| `cdf_above` | Survival function `P(price > strike)` = 1 − cdf_below |
+| `mean` | Expected price at expiry under the risk-neutral measure |
+| `mode` | Most likely single price (peak of the PDF) |
+| `std` | Standard deviation in price units |
+| `skewness` | Distribution skew — negative = downside-skewed (crash risk priced in) |
+| `kurtosis` | Tail-fatness — > 3 means fat tails, < 3 means thin |
+| `prob_25 / 50 / 75` | The 25th / 50th / 75th percentile prices |
+
+## Confidence bands — the easiest way to use this
+
+Pass `?confidence_band=0.68` (≈ 1σ) or `?confidence_band=0.95` (≈ 2σ)
+and each expiry payload gets an extra block:
+
+```json
+{
+  "30MAY26": {
+    ...,
+    "confidence_band": {
+      "confidence": 0.68,
+      "lower": 63100,
+      "upper": 71200,
+      "lower_percentile": 0.16,
+      "upper_percentile": 0.84
+    }
+  }
+}
+```
+
+`lower` and `upper` are the price levels containing 68% (or 95%) of the
+implied probability mass, computed by interpolating the CDF. Use these
+directly as range bounds in dashboards or mean-reversion strategies.
+
+## Filtering
+
+- `?expiry=28MAR25` — slice to a single expiry token (case-insensitive)
+- `?dte_max=30` — drop expiries beyond N days, focus on the front
+
+## How traders use it
+
+**Identifying skew**: a `skewness` of -0.5 on the next monthly means the
+market is paying up for downside protection. Often a contrarian buy
+signal when extreme.
+
+**Sizing risk**: a `confidence_band` at 95% gives you the implied 2σ
+range. Position sizing that assumes a tighter range is taking a vol
+view; sizing that assumes wider is hedged.
+
+**Strike selection**: looking at the PDF for the next monthly, you can
+see where the "shoulders" of the distribution are — strikes with
+elevated PDF density that aren't the mode. These are often the strikes
+where dealer hedging clusters and worth knowing for execution.
+
+**Comparing expiries**: the term structure of `std` (per-expiry vol) and
+`skewness` (per-expiry crash risk) tells you whether the market is
+pricing volatility expansion or compression over the next few weeks.
+
+## What it isn't
+
+- **Not a forecast.** Risk-neutral probabilities differ from real-world
+  probabilities by the risk premium. A 70% RN probability of upside
+  doesn't mean a 70% real-world chance.
+- **Not infinitely smooth.** The underlying chain can be sparse for
+  far-OTM strikes, so the tails of the PDF are noisier than the body.
+  Use the body for sizing decisions; treat the tails as informational.
+- **Not free.** It's computationally heavy. The endpoint is cached at
+  the worker layer — refreshed every 30s, not real-time.
+
+## See also
+
+- **3D surface**: [`/v2/options/probability/surface`](/api/v2/options/probability/surface)
+  returns the same PDF aligned across all expiries on a unified strike
+  grid, suitable for 3D visualisation.
+
+## Related concepts
+
+<CardGroup cols={2}>
+  <Card title="The IV suite" icon="wave-square" href="/concepts/iv-suite">
+    The IV surface that underpins this density extraction.
+  </Card>
+  <Card title="Max pain" icon="bullseye" href="/concepts/max-pain">
+    A simpler scalar measure of "where price wants to be" at expiry.
+  </Card>
+  <Card title="Greeks beyond delta" icon="function" href="/concepts/greeks">
+    Vanna and charm shape how the PDF evolves between now and expiry.
+  </Card>
+</CardGroup>

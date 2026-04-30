@@ -1,0 +1,24 @@
+---
+title: "Put / call ratio"
+openapi: "GET /options/pcr"
+---
+
+OI-weighted put/call ratio — the most-asked-for single sentiment
+indicator from options data. PCR > 1 means more put OI than call OI
+(typically defensive / fear bid); PCR < 1 means call-heavy (typically
+risk-on).
+
+Two granularities:
+
+- **`?granularity=intraday`** — rolling intraday series, refreshed every 30s. Use for live dashboards.
+- **`?granularity=daily`** — one value per UTC day, sourced from the historical store. Use for time-series studies and backtests.
+
+Filter the daily mode with `?days=N` (1–365) to control window length.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="OI by expiry" icon="bookmark" href="/api/v2/options/oi/by-expiry" />
+  <Card title="OI history" icon="bookmark" href="/api/v2/options/oi/history" />
+  <Card title="Premium tide" icon="bookmark" href="/api/v2/options/premium-tide" />
+</CardGroup>

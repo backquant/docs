@@ -1,17 +1,24 @@
 ---
 title: "Introduction"
+description: "Professional-grade options + GEX analytics for crypto markets"
 ---
 
-BackQuant provides a professional-grade market data API for crypto derivatives, equities, and macro analysis. Use the API to programmatically access the same data that powers the BackQuant platform, and integrate it directly into your trading systems, research workflows, and dashboards.
+BackQuant is a professional market-data API focused on **crypto options
+analytics**: gamma exposure (GEX), implied volatility surfaces, dealer
+positioning, max-pain, OPEX calendar, and risk-neutral probability
+distributions. The same data that powers the BackQuant terminal is
+available programmatically, ready to plug into your trading systems,
+research workflows, and dashboards.
 
-Sign up for a API plan now at [API Access](https://www.backquant.com/api-access). 
+<Card title="Get your API key" icon="key" href="https://backquant.com/api-access" horizontal>
+  Sign up at **backquant.com/api-access**.
+</Card>
 
-This is for personal use plans. No redistribution is permitted. See our [Terms of Service](https://www.backquant.com/terms) for more information. 
+This API is for personal-use plans. No redistribution is permitted —
+see our [Terms of Service](https://www.backquant.com/terms) for details.
+Custom and Enterprise plans are available; contact dev@backquant.com.
 
-Custom and Enterprise Solutions are available. Email
-dev@backquant.com
-
-The base URL for all API requests is:
+## Base URL
 
 ```text
 https://api.backquant.com/v2/
@@ -19,30 +26,62 @@ https://api.backquant.com/v2/
 
 ## Get started
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card title="Authentication" icon="key" href="/authentication">
     Get your API key and authenticate your first request.
   </Card>
 
   <Card title="Quick start" icon="bolt" href="/quickstart">
-    Make your first API call in minutes.
+    Make your first API call in under five minutes.
   </Card>
 
-  <Card title="API reference" icon="book-open" href="/api/gex/strike-profile">
-    Browse all available endpoints.
+  <Card title="API reference" icon="book-open" href="/api/v2/gex/levels">
+    Browse all 38 endpoints with interactive try-it-out.
+  </Card>
+
+  <Card title="Code examples" icon="terminal" href="/examples/python">
+    Python, TypeScript, and curl recipes for common workflows.
   </Card>
 </CardGroup>
 
-## Available data
+## What's covered
 
-The API covers seven categories of market data:
+The API is focused on the data crypto options traders actually
+trade against. Everything is computed by us from raw exchange chains
+(Deribit + Bybit + OKX + Binance) and refreshed every 30 seconds.
 
-| Category | Description |
+| Category | What's in it |
 | --- | --- |
-| **GEX** | Gamma exposure analysis — strike profiles, expiry profiles, levels, and history |
-| **Perpetuals** | Funding rates, open interest, volume, long/short ratio, CVD, and Coinbase premium |
-| **Options** | IV surface, term structure, skew, expected move, and volatility risk premium |
-| **Macro** | Treasury yields, credit spreads, VIX, PMI, CPI, PCE, liquidity, and more |
-| **Equities** | Market breadth, equity/bond ratio, cyclicals vs. defensives, cap and style ratios |
-| **ETFs** | BTC, ETH, SOL, and XRP ETF flows, AUM, premiums, and Grayscale data |
-| **Liquidation** | Liquidation heatmaps and distributions |
+| **GEX** | Composable levels (HVL / call wall / put support / max-pain / expected move / gamma flip zones), strike profiles, expiry profiles, strike × expiry heatmap, time heatmap with greek + DTE filters, history, Postgres-backed stress history |
+| **Options chain** | Filtered chain with two-layer projection (`?fields` + `?include`), expiry summary table, OPEX calendar with daily/weekly/monthly/quarterly classification |
+| **IV analytics** | Surface, term structure, 25Δ/10Δ skew, butterfly, full smile per expiry, single-expiry smile, IV-RV history, VRP |
+| **Greeks** | DEX, theta, vanna, charm, vega — per-strike profiles + strike × time surfaces + 3D strike × expiry surface |
+| **Probability** | Breeden-Litzenberger PDF/CDF + 3D probability surface + confidence-band interpolation |
+| **Open interest** | By expiry, time-series with cursor pagination, put/call ratio (intraday + daily) |
+| **Other** | Premium tide (0DTE + weekly), dated-futures basis, liquidation heatmap + distribution, multi-symbol GEX bundle |
+
+## Concepts before reference
+
+If you're new to options analytics or just want a refresher on what
+this data means in trader terms:
+
+<CardGroup cols={2}>
+  <Card title="What is GEX?" icon="chart-line" href="/concepts/gex">
+    Gamma exposure, dealer positioning, walls and support levels.
+  </Card>
+  <Card title="OPEX calendar" icon="calendar-days" href="/concepts/opex">
+    Why monthly and quarterly expirations matter.
+  </Card>
+  <Card title="Max pain" icon="bullseye" href="/concepts/max-pain">
+    The strike where option writers profit most.
+  </Card>
+  <Card title="Probability density" icon="chart-area" href="/concepts/probability-density">
+    Breeden-Litzenberger explained for traders.
+  </Card>
+  <Card title="The IV suite" icon="wave-square" href="/concepts/iv-suite">
+    Surface, term structure, skew, smile.
+  </Card>
+  <Card title="Greeks beyond delta" icon="function" href="/concepts/greeks">
+    DEX, vanna, charm, vega — what they measure.
+  </Card>
+</CardGroup>

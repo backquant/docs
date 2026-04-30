@@ -1,55 +1,86 @@
 ---
 title: "Response format"
-description: "Standard API response envelope"
+description: "The standard envelope every BackQuant API response uses"
 ---
 
-Every response from the BackQuant API uses the same envelope structure, whether the request succeeds or fails. Always check the `success` field before reading `data` or `error`.
+Every response from the BackQuant API uses the same envelope structure,
+whether the request succeeds or fails. **Always check the `success`
+field before reading `data` or `error`.**
 
 ## Success response
 
-When a request succeeds, `success` is `true` and the result is in `data`.
+When a request succeeds, `success` is `true` and the result is in
+`data`. The `meta` block carries everything you need to know about the
+provenance and freshness of the data.
 
 ```json
 {
   "success": true,
   "data": {
-    "zero_gamma": 5200.0,
-    "call_wall": 5400.0,
-    "put_wall": 5000.0
+    "all_expiry": {
+      "hvl": 67000,
+      "call_resistance": 70000,
+      "put_support": 64000
+    },
+    "odte": {
+      "hvl": 67500,
+      "call_resistance": 68000,
+      "put_support": 66500
+    }
   },
   "meta": {
-    "timestamp": "2026-01-15T12:00:00Z",
-    "version": "1.0"
+    "version": "2.0",
+    "timestamp": "2026-04-30T12:00:00.123Z",
+    "request_id": "req_a1b2c3d4...",
+    "symbol": "BTCUSDT",
+    "spot_price": 67213.5,
+    "computed_at": "2026-04-30T11:59:48.000Z",
+    "freshness_seconds": 12.0,
+    "source": ["deribit", "bybit", "okx", "binance"]
   }
 }
 ```
 
 ## Error response
 
-When a request fails, `success` is `false` and the reason is in `error`.
+When a request fails, `success` is `false` and the reason is in
+`error`. The `meta` block keeps the same shape so logging code doesn't
+have to special-case errors.
 
 ```json
 {
   "success": false,
   "error": {
     "code": "RATE_LIMIT_EXCEEDED",
-    "message": "Rate limit exceeded. Try again later."
+    "message": "Rate limit exceeded. Try again in 60 seconds.",
+    "details": {
+      "retry_after_seconds": 60,
+      "limit": "120 per 1 minute"
+    }
   },
   "meta": {
-    "timestamp": "2026-01-15T12:00:00Z",
-    "version": "1.0"
+    "version": "2.0",
+    "timestamp": "2026-04-30T12:00:00.123Z",
+    "request_id": "req_a1b2c3d4..."
   }
 }
 ```
 
+See [Errors](/concepts/errors) for the full list of error codes.
+
 ## Fields
 
 <ResponseField name="success" type="boolean" required>
-  `true` if the request succeeded, `false` if it failed. Always check this field first.
+  `true` if the request succeeded, `false` if it failed. **Always
+  check this field first.**
 </ResponseField>
 
 <ResponseField name="data" type="object">
-  The response payload. Present when `success` is `true`. The shape varies by endpoint — see the [API reference](https://api.backquant.com/v1/docs) for each endpoint's schema.
+  The response payload. Present when `success` is `true`. The shape
+  varies by endpoint — see the [API reference](/api/v2/gex/levels) for
+  each endpoint's schema. The top 10 most-traffic endpoints have
+  Pydantic-typed schemas in the OpenAPI spec; the rest are documented
+  with examples.
 </ResponseField>
 
 <ResponseField name="error" type="object">
@@ -57,23 +88,95 @@ When a request fails, `success` is `false` and the reason is in `error`.
 
   <Expandable title="properties">
     <ResponseField name="error.code" type="string" required>
-      Machine-readable error code. See [Errors](/concepts/errors) for all possible values.
+      Machine-readable error code. See [Errors](/concepts/errors).
     </ResponseField>
     <ResponseField name="error.message" type="string" required>
-      Human-readable description of the error.
+      Human-readable description.
+    </ResponseField>
+    <ResponseField name="error.details" type="object">
+      Optional structured payload — e.g. `RATE_LIMIT_EXCEEDED` returns
+      `retry_after_seconds`; `VALIDATION_ERROR` returns the failing
+      field list.
     </ResponseField>
   </Expandable>
 </ResponseField>
 
 <ResponseField name="meta" type="object" required>
-  Metadata included in all responses.
+  Metadata included in **every** response — success or error.
 
   <Expandable title="properties">
-    <ResponseField name="meta.timestamp" type="string" required>
-      ISO 8601 timestamp of when the response was generated.
-    </ResponseField>
     <ResponseField name="meta.version" type="string" required>
-      API version that served the response, e.g. `"1.0"`.
+      API version that served the response. Always `"2.0"` for v2 routes.
+    </ResponseField>
+    <ResponseField name="meta.timestamp" type="string" required>
+      ISO 8601 wall-clock when the response was built.
+    </ResponseField>
+    <ResponseField name="meta.request_id" type="string">
+      Per-request UUID, propagated from `X-Request-ID` header. Include
+      this when reporting issues — we trace by it in our logs and Sentry.
+    </ResponseField>
+    <ResponseField name="meta.symbol" type="string">
+      Symbol the response is about, when applicable
+      (e.g. `BTCUSDT`).
+    </ResponseField>
+    <ResponseField name="meta.spot_price" type="number">
+      Current spot price for the symbol at the time of computation.
+      Useful for normalising returns or sizing.
+    </ResponseField>
+    <ResponseField name="meta.computed_at" type="string">
+      ISO 8601 of when the underlying cache value was last written by
+      our worker.
+    </ResponseField>
+    <ResponseField name="meta.freshness_seconds" type="number">
+      `now - computed_at` in seconds. Useful for staleness alarms in
+      your code.
+    </ResponseField>
+    <ResponseField name="meta.source" type="array">
+      Upstream venue list the data flowed through, e.g.
+      `["deribit", "bybit", "okx", "binance"]`. For provenance.
+    </ResponseField>
+    <ResponseField name="meta.exchanges_filtered" type="array">
+      Echo of the `?exchanges=` filter when one was applied.
+      Confirms what your filter actually narrowed to.
+    </ResponseField>
+    <ResponseField name="meta.rate_limit" type="object">
+      `{limit, remaining, reset}` echo of the rate-limit headers.
+      Echoed in body too so browser-based dashboards can read it
+      without inspecting headers.
+    </ResponseField>
+    <ResponseField name="meta.extra" type="object">
+      Open dict for endpoint-specific metadata
+      (e.g. `filter_hash` on `/options/chain`,
+      `expiry_count` on `/options/opex`).
     </ResponseField>
   </Expandable>
 </ResponseField>
+
+## Pydantic schemas
+
+The 10 most-traffic v2 endpoints have full Pydantic response schemas in
+the OpenAPI spec. Use them with codegen tools (`openapi-python-client`,
+`openapi-typescript-codegen`, etc.) to get typed client SDKs:
+
+- `GexLevelsResponse`, `GexStrikeProfileResponse`, `MaxPainResponse`
+- `ChainResponse`, `ExpirySummaryResponse`, `OpexResponse`
+- `IvTermStructureResponse`, `IvSkewResponse`, `ProbabilityDensityResponse`
+- `MultiGexLevelsResponse`
+- Plus `ChangelogResponse`
+
+The other 28 endpoints are documented with examples and the same
+envelope shape.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Errors" icon="circle-exclamation" href="/concepts/errors">
+    Every error code with HTTP status mapping.
+  </Card>
+  <Card title="Rate limits" icon="gauge" href="/concepts/rate-limits">
+    Rate-limit headers and tier-based throttling.
+  </Card>
+  <Card title="Data freshness" icon="bolt" href="/concepts/data-freshness">
+    What `computed_at` and `freshness_seconds` mean per endpoint.
+  </Card>
+</CardGroup>

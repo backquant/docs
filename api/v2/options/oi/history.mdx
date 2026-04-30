@@ -1,0 +1,25 @@
+---
+title: "OI history"
+openapi: "GET /options/oi/history"
+---
+
+Cursor-paginated time-series of total / call / put open interest for
+the underlying. Use cursor pagination (`?limit` + `?before=<ts>`) to
+walk backwards through history without missing rows or double-counting
+at page boundaries.
+
+The response carries `next_cursor` — pass it as `?before=` on the next
+call to fetch the previous page.
+
+Useful for:
+
+- Detecting OI build-ups before major expirations
+- Backtest data feeds that need contiguous history
+- Spotting unwinds (sudden OI drops) coincident with price moves
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="OI by expiry" icon="bookmark" href="/api/v2/options/oi/by-expiry" />
+  <Card title="OPEX calendar" icon="bookmark" href="/concepts/opex" />
+</CardGroup>

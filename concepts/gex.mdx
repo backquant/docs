@@ -1,0 +1,131 @@
+---
+title: "What is GEX?"
+description: "Gamma exposure, dealer positioning, walls and support levels — explained"
+---
+
+**Gamma exposure (GEX)** measures how much underlying delta dealers are
+forced to hedge for every $1 the underlying price moves. It's the single
+most useful concept for understanding why crypto sometimes pins to a
+strike, sometimes accelerates through it, and where the next reversal is
+likely to happen.
+
+## The intuition in one paragraph
+
+When you buy an option, somebody else (a dealer / market maker) is the
+counterparty. To stay delta-neutral, the dealer hedges in the underlying.
+**Gamma** is the rate of change of delta with respect to the underlying
+price — so as price moves, the dealer's delta hedge has to be adjusted.
+**Net dealer gamma** at a given strike tells you how much hedging
+*pressure* exists at that level. Positive net gamma = dealers buy on
+dips and sell on rallies (stabilizing). Negative net gamma = dealers
+sell on dips and buy on rallies (amplifying).
+
+## What we compute for you
+
+For every active option contract across Deribit, Bybit, OKX, and Binance,
+we compute the dollar gamma exposure (the USD impact per 1% spot move),
+sign it using the standard dealer-positioning convention (puts negative,
+calls positive), and aggregate the result per strike, per expiry, and
+per venue. You get the aggregated values directly — no reconstruction
+needed on your side.
+
+The [`/v2/gex/strike-profile`](/api/v2/gex/strike-profile) endpoint is
+the strike-level aggregation; [`/v2/gex/levels`](/api/v2/gex/levels)
+distils that further into the trader-actionable levels below.
+
+## Key levels you'll see in the API
+
+The [`/v2/gex/levels`](/api/v2/gex/levels) endpoint gives you the
+trader-actionable levels distilled from the full strike profile:
+
+| Field | What it means | How traders use it |
+| --- | --- | --- |
+| **HVL** (Hedging Volume Level) | The strike where cumulative net gamma crosses zero closest to spot | The "gamma flip" — above HVL dealers stabilize, below HVL they amplify. Treat as a regime line. |
+| **call_resistance** | The strike with the largest *positive* gamma above spot | The wall dealers will defend by selling into rallies. Common reversal zone. |
+| **call_wall_2 / call_wall_3** | Second / third strongest call walls above spot | Where price *might* pin if it breaks call_resistance. |
+| **put_support** | The strike with the largest positive gamma below spot | Dealers buy on dips into this level. Common bounce zone. |
+| **put_wall_2 / put_wall_3** | Second / third strongest put supports below spot | Successive support levels if put_support breaks. |
+| **odte_hvl / odte_call_resistance / odte_put_support** | Same three levels but computed from 0DTE-only options | Intraday-magnet levels; matters most in the last few hours of the trading day. |
+
+## How to read them in practice
+
+**Spot above HVL with strong call_resistance overhead** — expect
+mean-reverting price action, dampened vol, dealers selling into rallies
+toward the call wall. Good environment for premium selling.
+
+**Spot below HVL with strong put_support below** — expect amplified
+moves on the way down, but a snap-back if price reaches put_support.
+Dealers will start buying.
+
+**Spot crossing HVL** — regime change. The stabilizing/destabilizing
+balance flips. Watch for vol expansion right at the cross.
+
+**0DTE levels different from all-expiry levels** — common in the last
+hour before close. The 0DTE levels usually win for the close itself;
+the all-expiry levels matter more for the next session.
+
+## What our `/v2/gex/levels` endpoint returns
+
+Out of the box, you get all-expiry walls + 0DTE walls:
+
+```json
+{
+  "all_expiry": {
+    "hvl": 67000,
+    "call_resistance": 70000,
+    "call_wall_2": 72500,
+    "call_wall_3": 75000,
+    "put_support": 64000,
+    "put_wall_2": 60000,
+    "put_wall_3": 58000
+  },
+  "odte": {
+    "hvl": 67500,
+    "call_resistance": 68000,
+    "put_support": 66500
+  }
+}
+```
+
+Add `?include=ranked,max_pain,expected_move,zones` to also get:
+
+- `ranked` — top 10 strikes by absolute GEX (where the action concentrates)
+- `max_pain` — see the [max pain page](/concepts/max-pain)
+- `expected_move` — 1σ / 2σ implied range from ATM straddle
+- `gamma_flip_zones` — multiple-zero-crossing detail when the chain has more than one regime line
+
+## Filtering by venue
+
+Aggregating across all four venues smooths noise but can also hide
+venue-specific positioning (e.g. Deribit dealers vs retail-heavy
+Binance options). Use `?exchanges=deribit` (or any subset) to recompute
+levels from a specific venue's chain only.
+
+## Filtering by strike window
+
+Far-OTM strikes can have huge GEX from a small cluster of contracts and
+distort the picture. Use `?moneyness_min=0.9&moneyness_max=1.1` to
+clamp the analysis to ATM ±10%, or `?spot_window_pct=5` for a symmetric
+±5% window. Both work on
+[`/v2/gex/strike-profile`](/api/v2/gex/strike-profile) and
+[`/v2/gex/strike-expiry-heatmap`](/api/v2/gex/strike-expiry-heatmap).
+
+## Related concepts
+
+<CardGroup cols={2}>
+  <Card title="Max pain" icon="bullseye" href="/concepts/max-pain">
+    The strike where option writers profit most — different metric from
+    GEX walls but often near them.
+  </Card>
+  <Card title="Greeks beyond delta" icon="function" href="/concepts/greeks">
+    Vanna, charm, vega — what they measure and how to use them alongside
+    GEX.
+  </Card>
+  <Card title="OPEX calendar" icon="calendar-days" href="/concepts/opex">
+    Why monthly/quarterly expirations dominate the GEX picture for a
+    few days each month.
+  </Card>
+  <Card title="Multi-symbol bundle" icon="layer-group" href="/concepts/multi-symbol">
+    Get GEX levels for BTC + ETH + SOL + HYPE in a single call.
+  </Card>
+</CardGroup>

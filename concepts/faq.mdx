@@ -1,0 +1,168 @@
+---
+title: "FAQ"
+description: "Common gotchas, integration questions, and operational tips"
+---
+
+## Data and freshness
+
+### Why is `freshness_seconds` 30+ in my response?
+
+That's normal. The compute pipeline refreshes the cache on a
+30-second cadence for GEX / IV / chain data, and 5 minutes for
+liquidation. A `freshness_seconds` value between 0 and 60 on a
+30s-cadence endpoint is healthy. See
+[Data freshness](/concepts/data-freshness) for the full cadence table.
+
+### Polling once a second is hammering the rate limit. What's the right frequency?
+
+Polling faster than **30 seconds** is wasted work — you'll see the
+same `computed_at` 30 times in a row. For dashboard panels, 30s is the
+sweet spot. For OPEX-day or volatile windows where you want every
+refresh, you could go to 15s, but anything below that returns
+duplicate data. See [Rate limits](/concepts/rate-limits) for tier
+budgeting.
+
+### My `meta.freshness_seconds` is showing huge values (hours / days). Bug?
+
+Not a bug. The historical endpoints (`/v2/gex/stress-history`,
+`/v2/options/iv/iv-rv`, `/v2/options/vrp`) return *historical* time
+series — the `computed_at` reflects when each historical row was
+written, which can be days or weeks ago. For these endpoints,
+freshness isn't a staleness signal; it's a retention signal.
+
+## Errors and gotchas
+
+### I'm getting 404 on a symbol that should have data. What's wrong?
+
+A 404 on an authed v2 endpoint means "no cache available for this
+symbol/expiry/window right now," not "endpoint doesn't exist."
+Possible causes:
+
+1. The symbol is supported but cold — call [`/v2/symbols`](/api/v2/discovery/symbols) and check `categories_live`. If your category isn't in the list, the worker hasn't populated it yet.
+2. The symbol is unsupported. The supported set is `BTCUSDT`, `ETHUSDT`, `SOLUSDT`, `HYPEUSDT`. Anything else returns a `VALIDATION_ERROR` (422), not a 404.
+3. You asked for a specific expiry token that doesn't exist. Call [`/v2/expiries?symbol=...`](/api/v2/discovery/expiries) for the active token list.
+
+### Why does my client see `success: false` even when the data looks fine?
+
+You're probably reading `data` before checking `success`. The envelope
+**always** has `success` first — branch on it before touching `data` or
+`error`. See the [response format](/concepts/response-format).
+
+### I just hit `RATE_LIMIT_EXCEEDED`. What now?
+
+Check the `Retry-After` response header (or the
+`error.details.retry_after_seconds` field in the body). Wait that
+many seconds, then retry. If it happens repeatedly, your polling
+cadence is too aggressive — see the rate-limits page or consider
+upgrading your tier at
+[backquant.com/api-access](https://backquant.com/api-access).
+
+### What does `UPSTREAM_ERROR` mean?
+
+A transient failure reaching our cache or database — usually clears
+within 30 seconds. Use exponential backoff (2s, 4s, 8s) and your
+client should recover automatically. If it persists past a minute,
+hit [`/v2/health`](/api/v2/health) for the current subsystem status.
+
+## Pagination, filters, and projection
+
+### How does cursor pagination work?
+
+History endpoints (`/v2/gex/history`, `/v2/options/oi/history`) accept
+`?limit` (page size) and `?before=<ISO timestamp>` (cursor). Each
+response includes `next_cursor` — pass it as the next call's `?before`
+to walk backwards. Iterate until `timestamps` comes back empty.
+
+```python
+cursor = None
+while True:
+    params = {"symbol": "BTCUSDT", "limit": 200}
+    if cursor:
+        params["before"] = cursor
+    r = get("/v2/gex/history", params).json()
+    if not r["data"]["timestamps"]:
+        break
+    process(r["data"])
+    cursor = r["data"]["next_cursor"]
+```
+
+### What's the difference between `?fields=` and `?include=` on `/v2/options/chain`?
+
+- **`?fields=`** is **top-level** projection. It drops whole sections of the response: `?fields=contracts` returns just contracts and skips `aggregates` and `available_expiries`.
+- **`?include=`** is **per-row** projection on contracts. It keeps only the named sub-sections of each contract dict: `?include=oi,iv` returns `strike, expiry, dte, type, oi, iv` per row and drops the greeks, bid/ask, etc.
+
+You can use both in the same call.
+
+### How do I filter by strike around spot without knowing spot price?
+
+Use **moneyness bounds** (`?moneyness_min=0.9&moneyness_max=1.1`) — the
+server resolves them against current spot for you. Or
+`?spot_window_pct=5` for a symmetric ±5% window. Both work on every
+endpoint that accepts strike-axis filters.
+
+## OPEX, expiries, dates
+
+### Why are expiry tokens like `28MAR25` and not ISO dates?
+
+That's the convention the underlying exchange (Deribit) uses, so it's
+what the worker stores natively. Every endpoint that returns an expiry
+token also includes the parsed `expiry_date` (ISO YYYY-MM-DD) when it
+parses cleanly, so you can render either format in your UI.
+
+### How do I find the next OPEX day?
+
+Hit [`/v2/options/opex?symbol=BTCUSDT`](/api/v2/options/opex) and read
+`data.next_anchor`. It points at the closest monthly or quarterly
+expiration with its expiry token, ISO date, and DTE.
+
+### Are weekly / monthly / quarterly classifications consistent across symbols?
+
+Yes — the classification is calendar-based (last Friday of month →
+monthly; last Friday of Mar/Jun/Sep/Dec → quarterly), not
+symbol-specific. So `28MAR25` is `quarterly` for BTC, ETH, SOL, and HYPE.
+
+## Caching and SDKs
+
+### Can I cache responses on my end?
+
+Yes, and you should. Server-side data refreshes every 30s anyway —
+caching responses for 15-30s on your end is standard practice and
+saves you rate-limit budget. Use the `meta.computed_at` field as your
+cache key so you can detect refreshes.
+
+### Do you ship official SDKs?
+
+Not yet. The OpenAPI 3 spec at
+[`/v2/openapi.json`](/api/v2/discovery/endpoints) is comprehensive
+enough that codegen tools produce a usable client in any language.
+See [curl recipes](/examples/curl) for the codegen one-liners.
+
+### How do I report a bug?
+
+Email **dev@backquant.com** with:
+
+1. The endpoint URL you hit
+2. The `meta.request_id` from the response (lets us trace the exact call)
+3. What you expected vs what you saw
+
+We trace by request ID so the more specific the better.
+
+## Subscription and access
+
+### How do I get an API key?
+
+[backquant.com/api-access](https://backquant.com/api-access) — sign up
+or sign in, create a key, copy. Same key works across all v2
+endpoints; tier determines your rate limit.
+
+### How do I upgrade my tier?
+
+Same place. Upgrades take effect immediately; the new rate limit
+applies on your next API call.
+
+### Is my data redistributable?
+
+No — personal-use plans don't permit redistribution. If you're
+building a product on top of the API that resells the data, contact
+**dev@backquant.com** for an enterprise discussion. See
+[Terms of Service](https://www.backquant.com/terms).

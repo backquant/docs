@@ -1,0 +1,24 @@
+---
+title: "Symbol catalog"
+openapi: "GET /symbols"
+---
+
+The first call most integrators make. Returns every symbol the API
+supports with the categories of data currently live for each, the
+spot price, the count of active expiries, and the full set of
+endpoint paths that accept a `symbol` parameter.
+
+Use it to:
+
+- Discover which symbols are supported (`BTCUSDT`, `ETHUSDT`, `SOLUSDT`, `HYPEUSDT`)
+- Check at a glance whether a symbol has live cache data before hitting downstream endpoints
+- Build a dynamic UI that lists supported endpoints without hard-coding paths
+
+Powered by a single Redis `MGET` round-trip — sub-millisecond when warm.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Service status" icon="bookmark" href="/api/v2/discovery/status" />
+  <Card title="Data freshness" icon="bookmark" href="/concepts/data-freshness" />
+</CardGroup>

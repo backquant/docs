@@ -1,0 +1,207 @@
+---
+title: "Python recipes"
+description: "Copy-paste Python snippets for the most common v2 workflows"
+---
+
+These recipes use only the standard library + `requests`. No SDK
+required. Set your key in an env var so it doesn't get committed:
+
+```bash
+export BACKQUANT_API_KEY=bq_live_your_api_key_here
+```
+
+```python
+import os
+import requests
+
+API_KEY = os.environ["BACKQUANT_API_KEY"]
+BASE = "https://api.backquant.com"
+
+def get(path: str, params: dict | None = None) -> dict:
+    """Tiny wrapper around requests with auth + error handling."""
+    r = requests.get(
+        f"{BASE}{path}",
+        params=params or {},
+        headers={"X-API-Key": API_KEY},
+        timeout=15,
+    )
+    body = r.json()
+    if not body["success"]:
+        raise RuntimeError(
+            f"{body['error']['code']}: {body['error']['message']} "
+            f"(request_id={body['meta'].get('request_id')})"
+        )
+    return body
+```
+
+## Watch GEX levels for the universe
+
+Single call, four symbols, all the includes:
+
+```python
+resp = get("/v2/multi/gex/levels", {
+    "symbols": "BTCUSDT,ETHUSDT,SOLUSDT,HYPEUSDT",
+    "include": "ranked,max_pain,expected_move,zones",
+})
+for sym, data in resp["data"]["results"].items():
+    if data is None:
+        print(f"{sym}: no data")
+        continue
+    print(f"{sym}: HVL={data['all_expiry']['hvl']} "
+          f"Call wall={data['all_expiry']['call_resistance']} "
+          f"Put support={data['all_expiry']['put_support']} "
+          f"Max pain={data['max_pain']['strike']}")
+```
+
+## Build the OPEX calendar widget
+
+Show the next 30 days of expirations with their OI and walls, sorted
+by DTE:
+
+```python
+resp = get("/v2/options/opex", {"symbol": "BTCUSDT", "horizon": 30})
+
+print(f"{'EXPIRY':<12} {'TYPE':<10} {'DTE':>4} {'OI':>10} {'NOTIONAL($M)':>14} {'CALL WALL':>10} {'PUT SUPP':>10}")
+for e in resp["data"]["expirations"]:
+    notional_m = (e["oi"]["notional_oi_usd"] or 0) / 1e6
+    print(
+        f"{e['expiry']:<12} {e['type']:<10} {e['dte']:>4} "
+        f"{e['oi']['total_oi']:>10.0f} {notional_m:>14.1f} "
+        f"{e['gamma']['call_resistance'] or 0:>10.0f} "
+        f"{e['gamma']['put_support'] or 0:>10.0f}"
+    )
+
+next_anchor = resp["data"]["next_anchor"]
+if next_anchor:
+    print(f"\nNext anchor: {next_anchor['expiry']} ({next_anchor['type']}, "
+          f"{next_anchor['dte']}d away)")
+```
+
+## Filter the chain to ATM ±10% with greeks only
+
+Cuts payload by ~80% vs the full chain:
+
+```python
+resp = get("/v2/options/chain", {
+    "symbol": "BTCUSDT",
+    "moneyness_min": 0.9,
+    "moneyness_max": 1.1,
+    "option_type": "both",
+    "include": "greeks,iv,oi",  # per-row projection
+    "max_contracts": 200,
+})
+for c in resp["data"]["contracts"]:
+    print(f"{c['strike']:>7} {c['expiry']:>10} {c['type']:>5} "
+          f"OI={c['oi']:>5} IV={c['iv']:>5.1f} Δ={c['delta']:>+.2f} "
+          f"Γ={c['gamma']:>+.4f}")
+
+if resp["data"]["truncated"]:
+    print(f"\n⚠ Result truncated: matched {resp['data']['total_matching_count']}, "
+          f"returned {len(resp['data']['contracts'])}.")
+```
+
+## Implied price band for risk sizing
+
+Get the 1σ price band for the next monthly OPEX expiry:
+
+```python
+# Find the next monthly anchor
+opex = get("/v2/options/opex", {
+    "symbol": "BTCUSDT",
+    "horizon": 60,
+    "types": "monthly,quarterly",
+})
+next_monthly = next((e for e in opex["data"]["expirations"] if e["is_anchor"]), None)
+if next_monthly:
+    expiry = next_monthly["expiry"]
+    # Pull the probability band for that expiry
+    pdf = get("/v2/options/probability/density", {
+        "symbol": "BTCUSDT",
+        "expiry": expiry,
+        "confidence_band": 0.68,
+    })
+    band = pdf["data"]["expiries"][expiry]["confidence_band"]
+    print(f"{expiry} 1σ implied range: ${band['lower']:.0f} – ${band['upper']:.0f}")
+```
+
+## Paginate the GEX history
+
+Walk backwards through the time-series using cursor pagination:
+
+```python
+all_points = []
+cursor = None
+for _ in range(10):  # safety cap
+    params = {"symbol": "BTCUSDT", "limit": 200}
+    if cursor:
+        params["before"] = cursor
+    resp = get("/v2/gex/history", params)
+    page = resp["data"]
+    all_points.extend(zip(page["timestamps"], page["total_gex"]))
+    if not page["timestamps"]:
+        break
+    cursor = page["next_cursor"]
+
+print(f"Pulled {len(all_points)} history points, oldest={all_points[-1][0]}")
+```
+
+## Backtest setup — historical levels
+
+Pull 30 days of HVL / walls / net GEX for a regime study:
+
+```python
+resp = get("/v2/gex/stress-history", {"symbol": "BTCUSDT", "days": 30})
+import pandas as pd
+df = pd.DataFrame({
+    "ts": pd.to_datetime(resp["data"]["timestamps"]),
+    "spot": resp["data"]["spot_price"],
+    "hvl": resp["data"]["hvl"],
+    "call_wall": resp["data"]["call_wall"],
+    "put_wall": resp["data"]["put_wall"],
+    "net_gex": resp["data"]["net_gex"],
+})
+df["above_hvl"] = df["spot"] > df["hvl"]
+df["distance_to_call_wall_pct"] = (df["call_wall"] - df["spot"]) / df["spot"] * 100
+print(df.tail())
+print(f"\n% of time above HVL: {df['above_hvl'].mean():.1%}")
+```
+
+## Health check before each polling cycle
+
+For long-running dashboards:
+
+```python
+import time
+
+def health_ok() -> bool:
+    """Auth-free health probe."""
+    r = requests.get(f"{BASE}/v2/health", timeout=5)
+    return r.json()["data"]["status"] in ("ok", "degraded")
+
+while True:
+    if not health_ok():
+        print("API unhealthy, sleeping 30s")
+        time.sleep(30)
+        continue
+    # do your work
+    levels = get("/v2/gex/levels", {"symbol": "BTCUSDT", "include": "max_pain,expected_move"})
+    # ... render dashboard ...
+    time.sleep(30)
+```
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="TypeScript recipes" icon="code" href="/examples/typescript">
+    Same patterns in TypeScript / Node.js.
+  </Card>
+  <Card title="curl recipes" icon="terminal" href="/examples/curl">
+    Pure-curl one-liners for each common workflow.
+  </Card>
+  <Card title="Errors" icon="circle-exclamation" href="/concepts/errors">
+    Robust error handling with backoff.
+  </Card>
+  <Card title="Rate limits" icon="gauge" href="/concepts/rate-limits">
+    Stay under your tier without hitting 429.
+  </Card>
+</CardGroup>

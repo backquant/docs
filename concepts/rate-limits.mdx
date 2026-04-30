@@ -1,51 +1,156 @@
 ---
 title: "Rate limits"
-description: "Request rate limits by tier"
+description: "Per-tier limits, response headers, and backoff strategy"
 ---
 
-Rate limits are enforced per API key based on your subscription tier. Exceeding your limit returns a `429` response with the `RATE_LIMIT_EXCEEDED` error code.
+Rate limits are enforced per API key based on your subscription tier.
+Exceeding your limit returns a `429` response with the
+`RATE_LIMIT_EXCEEDED` error code and a `Retry-After` header.
 
 ## Limits by tier
 
-| Tier | Requests per minute |
-| --- | --- |
-| Monthly | 60 |
-| Yearly | 120 |
-| Enterprise | Unlimited |
+| Tier | Requests per minute | Annual savings |
+| --- | --- | --- |
+| **Monthly** | 60 | — |
+| **Yearly** | 120 | ~15% off monthly × 12 |
+| **Enterprise** | Unlimited | Custom |
+
+[Get or upgrade your key at backquant.com/api-access](https://backquant.com/api-access).
 
 ## Rate limit headers
 
-Every response includes headers that tell you your current limit status:
+Every response — success **or** error — includes:
 
 | Header | Description |
 | --- | --- |
-| `X-RateLimit-Limit` | Your per-minute request limit |
-| `X-RateLimit-Remaining` | Requests remaining in the current window |
-| `X-RateLimit-Reset` | Unix timestamp when the current window resets |
+| `X-RateLimit-Limit` | Your per-minute cap |
+| `X-RateLimit-Remaining` | Calls left in the current window |
+| `X-RateLimit-Reset` | Unix timestamp when the window resets |
+| `Retry-After` | Seconds until safe to retry (on 429 only) |
 
-Check these headers to understand how much of your quota you have used before the window resets.
+The same triple is also echoed inside `meta.rate_limit` in the response
+body, so browser-based dashboards can read it without inspecting
+headers.
 
 ```bash
-curl -I https://api.backquant.com/v1/gex/levels \
+curl -I "https://api.backquant.com/v2/gex/levels?symbol=BTCUSDT" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
 ```text
+HTTP/2 200
 X-RateLimit-Limit: 120
 X-RateLimit-Remaining: 87
-X-RateLimit-Reset: 1705320060
+X-RateLimit-Reset: 1714478160
 ```
 
-## Staying within your limits
+## What happens at the limit
 
-**Cache responses locally.** Many endpoints return data that does not change second-to-second. Store responses and serve them from your own cache instead of making a new request every time.
+1. The 121st request in a minute (on the Yearly tier) returns:
 
-**Implement exponential backoff.** If you receive a `RATE_LIMIT_EXCEEDED` error, wait before retrying. Start with a short delay and double it on each subsequent failure.
+   ```json
+   {
+     "success": false,
+     "error": {
+       "code": "RATE_LIMIT_EXCEEDED",
+       "message": "Rate limit exceeded. Try again in 32 seconds.",
+       "details": {
+         "retry_after_seconds": 32,
+         "limit": "120 per 1 minute"
+       }
+     },
+     "meta": { ... }
+   }
+   ```
 
-**Monitor `X-RateLimit-Remaining`.** If this value drops close to zero, slow down your request rate and wait for the window to reset at `X-RateLimit-Reset`.
+2. HTTP status is `429`.
 
-**Use the Enterprise tier for high-throughput workloads.** If 120 requests per minute is not sufficient, contact BackQuant to discuss Enterprise access.
+3. `Retry-After: 32` header tells you exactly how long to wait.
 
-<Note>
-  Rate limit windows are per-minute and roll over at the Unix timestamp in `X-RateLimit-Reset`.
-</Note>
+4. `X-RateLimit-Remaining: 0` confirms you're out for the window.
+
+## Strategy: how to think about throttling
+
+**Cache aggressively at your end.** The data refreshes every 30s
+server-side anyway. If you're showing GEX levels in a dashboard,
+polling once every 30 seconds (= 2 req/min per panel) gives you the
+freshest possible data without burning quota. Polling every second is
+wasted — you'd see the same `computed_at` 30 times in a row.
+
+**Use multi-symbol bundling.** Hitting
+[`/v2/multi/gex/levels`](/api/v2/multi/gex-levels) once for all four
+symbols counts as **one** request, not four. For desk dashboards
+watching the universe, this is the difference between 240/min (4
+symbols × 60s) and 60/min on the Monthly tier.
+
+**Use composable `?include=`.** `/v2/gex/levels?include=ranked,max_pain,
+expected_move,zones` returns four blocks of data in one request that
+would otherwise take four separate calls.
+
+**Project payloads with `?fields` and `?include`.** Heavy endpoints
+like `/v2/options/chain` support both top-level (`?fields=contracts`)
+and per-row (`?include=oi,iv`) projection. Lighter responses = faster
+parsing client-side and lower egress on our side.
+
+**Implement exponential backoff on 429.** Wait `Retry-After` seconds,
+then if you 429 again, wait 2× as long. Don't hammer.
+
+```python
+import time, requests
+
+def call_with_backoff(url, headers, max_attempts=4):
+    for i in range(max_attempts):
+        r = requests.get(url, headers=headers)
+        if r.status_code != 429:
+            return r
+        delay = int(r.headers.get("Retry-After", 60))
+        time.sleep(delay * (2 ** i))   # 60s, 120s, 240s, 480s
+    raise RuntimeError("rate-limit retries exhausted")
+```
+
+**Monitor `X-RateLimit-Remaining`.** When it drops below ~10% of your
+limit, throttle yourself rather than waiting for a 429. Better to slow
+down voluntarily than to handle errors after the fact.
+
+## Endpoint cost notes
+
+Most endpoints are pure cache reads (~1ms server-side). A handful do
+on-the-fly computation:
+
+- `/v2/options/chain` with novel filter combos — first call computes,
+  subsequent calls (same filters) hit a 30s cache
+- `/v2/gex/max-pain?expiry=all` — computes per-expiry max-pain across
+  the chain, cached 30s
+- `/v2/options/greeks/{greek}?dte_max=N` — recomputes from raw chain
+  for the DTE-filtered slice, cached 30s
+- `/v2/options/greeks/3d/surface` — strike × expiry matrix per greek,
+  cached 30s
+
+All four count as one request against your rate limit, regardless of
+whether they hit cold or warm cache.
+
+## Need more throughput?
+
+If 120 req/min isn't enough — typically when you're powering a paid
+product downstream, or running >100 concurrent dashboards — contact
+**dev@backquant.com** about Enterprise. Enterprise removes the
+per-minute limit and includes:
+
+- Dedicated capacity
+- Custom symbol additions (e.g. SUI, AVAX)
+- Historical bulk export (CSV / Parquet)
+- SLA + priority support
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Errors" icon="circle-exclamation" href="/concepts/errors">
+    Full error code list with recommended retry strategies.
+  </Card>
+  <Card title="Multi-symbol bundle" icon="layer-group" href="/concepts/multi-symbol">
+    The cheapest way to watch the universe.
+  </Card>
+  <Card title="Data freshness" icon="bolt" href="/concepts/data-freshness">
+    Why polling faster than 30s wastes quota.
+  </Card>
+</CardGroup>

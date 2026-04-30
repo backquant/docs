@@ -1,53 +1,121 @@
 ---
 title: "Authentication"
-description: "Authenticate API requests"
+description: "Get an API key and authenticate your requests"
 ---
 
-All BackQuant API requests require an API key. Keys are tied to your subscription tier and control your [rate limits](/concepts/rate-limits).
+Every BackQuant API request requires an API key passed in the `X-API-Key`
+header. Keys are tied to your subscription tier and control your
+[rate limits](/concepts/rate-limits).
 
 ## Get an API key
 
-Go to the [BackQuant API Dashboard](https://backquant.com/api-dashboard) to create and manage your API keys.
+<Card title="Get your API key" icon="key" href="https://backquant.com/api-access" horizontal>
+  Sign up or sign in at **backquant.com/api-access** to create and manage
+  your keys.
+</Card>
 
 ## Pass your API key
 
 Include your key in the `X-API-Key` header on every request.
 
-```bash
-curl https://api.backquant.com/v1/gex/levels \
+<CodeGroup>
+
+```bash curl
+curl https://api.backquant.com/v2/gex/levels?symbol=BTCUSDT \
   -H "X-API-Key: bq_live_your_api_key_here"
 ```
+
+```python Python
+import requests
+
+resp = requests.get(
+    "https://api.backquant.com/v2/gex/levels",
+    params={"symbol": "BTCUSDT"},
+    headers={"X-API-Key": "bq_live_your_api_key_here"},
+)
+data = resp.json()
+```
+
+```typescript TypeScript
+const resp = await fetch(
+  "https://api.backquant.com/v2/gex/levels?symbol=BTCUSDT",
+  { headers: { "X-API-Key": "bq_live_your_api_key_here" } },
+);
+const data = await resp.json();
+```
+
+</CodeGroup>
 
 API keys follow this format:
 
 ```text
-bq_live_your_api_key_here
+bq_live_<32-character-token>
 ```
 
 <Warning>
-  Keep your API key secret. Do not commit it to source control or expose it in client-side code. If your key is compromised, rotate it immediately from the [BackQuant API Dashboard](https://backquant.com/api-dashboard).
+  Keep your API key secret. Do not commit it to source control or expose
+  it in client-side code. If your key is compromised, rotate it
+  immediately at [backquant.com/api-access](https://backquant.com/api-access).
 </Warning>
+
+## Endpoints that don't require auth
+
+A small set of endpoints are intentionally public so you can introspect
+the API before signing up:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `/v2/openapi.json` | Full machine-readable OpenAPI 3 spec |
+| `/v2/docs` | Swagger UI — interactive playground |
+| `/v2/redoc` | ReDoc — alternative reference renderer |
+| `/v2/health` | Liveness/readiness probe for monitors |
+
+Every other route requires `X-API-Key`.
 
 ## Authentication errors
 
-If your API key is missing or invalid, the API returns a `401` response with the `UNAUTHORIZED` error code:
+A missing or invalid API key returns a `401` response with the
+`UNAUTHORIZED` error code:
 
 ```json
 {
   "success": false,
   "error": {
     "code": "UNAUTHORIZED",
-    "message": "Invalid or missing API key"
+    "message": "Missing X-API-Key header"
   },
   "meta": {
-    "timestamp": "2026-01-15T12:00:00Z",
-    "version": "1.0"
+    "version": "2.0",
+    "timestamp": "2026-04-30T12:00:00Z",
+    "request_id": "req_..."
   }
 }
 ```
 
-Check the following if you receive this error:
+Common causes:
 
-- The `X-API-Key` header is present on the request.
-- The key value is copied correctly with no leading or trailing spaces.
-- The key has not been revoked in your dashboard.
+- The `X-API-Key` header is missing from the request.
+- The key value has a leading/trailing space (common when copy-pasting).
+- The key was revoked at [backquant.com/api-access](https://backquant.com/api-access).
+- Your subscription lapsed (`FORBIDDEN` rather than `UNAUTHORIZED` in this case).
+
+The `request_id` field in the `meta` block is the value of the
+`X-Request-ID` header — include it when reporting auth issues so we can
+trace the specific call in our logs.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="bolt" href="/quickstart">
+    Make your first API call.
+  </Card>
+  <Card title="Code examples" icon="terminal" href="/examples/python">
+    Python, TypeScript, and curl recipes.
+  </Card>
+  <Card title="Rate limits" icon="gauge" href="/concepts/rate-limits">
+    Per-tier limits and backoff strategy.
+  </Card>
+  <Card title="Errors" icon="circle-exclamation" href="/concepts/errors">
+    Every error code with handling examples.
+  </Card>
+</CardGroup>

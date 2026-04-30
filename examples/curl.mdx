@@ -1,0 +1,149 @@
+---
+title: "curl recipes"
+description: "Single-shot curl one-liners for the most common v2 workflows"
+---
+
+Set your key once and reuse the variable across requests:
+
+```bash
+export BACKQUANT_API_KEY=bq_live_your_api_key_here
+```
+
+All examples below assume that variable is set. Pipe through `jq` if
+you want pretty JSON.
+
+## Health probe (no auth)
+
+```bash
+curl -s https://api.backquant.com/v2/health | jq
+```
+
+## API metadata + supported symbols
+
+```bash
+curl -s https://api.backquant.com/v2/meta \
+  -H "X-API-Key: $BACKQUANT_API_KEY" | jq '.data | {name, version, supported_symbols, rate_limits}'
+```
+
+## GEX levels with everything
+
+One call, all the optional sections:
+
+```bash
+curl -s "https://api.backquant.com/v2/gex/levels?\
+symbol=BTCUSDT\
+&include=ranked,max_pain,expected_move,zones,spot,candles" \
+  -H "X-API-Key: $BACKQUANT_API_KEY" | jq '.data | {hvl: .all_expiry.hvl, max_pain, expected_move}'
+```
+
+## OPEX calendar — anchors only, next 90 days
+
+```bash
+curl -s "https://api.backquant.com/v2/options/opex?\
+symbol=BTCUSDT\
+&horizon=90\
+&types=monthly,quarterly" \
+  -H "X-API-Key: $BACKQUANT_API_KEY" \
+  | jq '.data.expirations[] | {expiry, type, dte, oi: .oi.total_oi, max_pain: .gamma.max_pain.strike}'
+```
+
+## Multi-symbol GEX in one call
+
+```bash
+curl -s "https://api.backquant.com/v2/multi/gex/levels?\
+symbols=BTCUSDT,ETHUSDT,SOLUSDT,HYPEUSDT\
+&include=ranked,max_pain,expected_move" \
+  -H "X-API-Key: $BACKQUANT_API_KEY" \
+  | jq '.data.results | to_entries[] | {symbol: .key, hvl: .value.all_expiry.hvl, max_pain: .value.max_pain.strike}'
+```
+
+## Filter chain to ATM ±10% with greeks only
+
+```bash
+curl -s "https://api.backquant.com/v2/options/chain?\
+symbol=BTCUSDT\
+&moneyness_min=0.9\
+&moneyness_max=1.1\
+&include=oi,iv,greeks\
+&max_contracts=200" \
+  -H "X-API-Key: $BACKQUANT_API_KEY" \
+  | jq '{contracts: (.data.contracts | length), truncated: .data.truncated, total: .data.total_matching_count}'
+```
+
+## Per-expiry max-pain
+
+```bash
+curl -s "https://api.backquant.com/v2/gex/max-pain?symbol=BTCUSDT&expiry=all" \
+  -H "X-API-Key: $BACKQUANT_API_KEY" \
+  | jq '.data.per_expiry'
+```
+
+## Probability density with 1σ band
+
+```bash
+curl -s "https://api.backquant.com/v2/options/probability/density?\
+symbol=BTCUSDT\
+&confidence_band=0.68" \
+  -H "X-API-Key: $BACKQUANT_API_KEY" \
+  | jq '.data.expiries | to_entries[] | {expiry: .key, lower: .value.confidence_band.lower, upper: .value.confidence_band.upper}'
+```
+
+## IV term structure with 30-day historical overlay
+
+```bash
+curl -s "https://api.backquant.com/v2/options/iv/term-structure?\
+symbol=BTCUSDT\
+&historical_compare_days=30" \
+  -H "X-API-Key: $BACKQUANT_API_KEY" \
+  | jq '{current: .data, compare_30d_ago: .data.compare}'
+```
+
+## 30-day stress history (Postgres-backed)
+
+```bash
+curl -s "https://api.backquant.com/v2/gex/stress-history?\
+symbol=BTCUSDT\
+&days=30" \
+  -H "X-API-Key: $BACKQUANT_API_KEY" \
+  | jq '{points: (.data.timestamps | length), latest_hvl: .data.hvl[-1]}'
+```
+
+## Watch rate-limit headers
+
+```bash
+curl -s -i "https://api.backquant.com/v2/gex/levels?symbol=BTCUSDT" \
+  -H "X-API-Key: $BACKQUANT_API_KEY" \
+  | grep -i "x-ratelimit"
+```
+
+```text
+x-ratelimit-limit: 120
+x-ratelimit-remaining: 87
+x-ratelimit-reset: 1714478160
+```
+
+## Save the OpenAPI spec for SDK codegen
+
+```bash
+curl -s https://api.backquant.com/v2/openapi.json -o backquant-v2-openapi.json
+
+# Generate a Python client (requires `openapi-python-client`):
+openapi-python-client generate --path backquant-v2-openapi.json
+
+# Generate a TypeScript client (requires `openapi-typescript-codegen`):
+openapi --input backquant-v2-openapi.json --output ./src/api-client
+```
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Python recipes" icon="code" href="/examples/python">
+    The same patterns wired through `requests`.
+  </Card>
+  <Card title="TypeScript recipes" icon="code" href="/examples/typescript">
+    The same patterns wired through `fetch`.
+  </Card>
+  <Card title="Quick start" icon="bolt" href="/quickstart">
+    Step-by-step from zero to first call.
+  </Card>
+</CardGroup>

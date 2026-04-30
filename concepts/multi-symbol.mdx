@@ -1,0 +1,115 @@
+---
+title: "Multi-symbol bundling"
+description: "Get the universe in one round-trip via /v2/multi/gex/levels"
+---
+
+Desk dashboards routinely watch the entire crypto-options universe at
+once: BTC + ETH + SOL + HYPE. Hitting `/v2/gex/levels` four times means
+four HTTP round-trips. The multi endpoint collapses that into one.
+
+## The endpoint
+
+[`/v2/multi/gex/levels`](/api/v2/multi/gex-levels) takes a CSV of
+symbols (up to 8) and returns a `results` map keyed by symbol:
+
+```bash
+curl "https://api.backquant.com/v2/multi/gex/levels?\
+symbols=BTCUSDT,ETHUSDT,SOLUSDT,HYPEUSDT\
+&include=ranked,max_pain,expected_move,zones" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```json
+{
+  "results": {
+    "BTCUSDT": {
+      "all_expiry": { "hvl": 67000, "call_resistance": 70000, ... },
+      "odte": { "hvl": 67500, ... },
+      "spot_price": 67213.5,
+      "computed_at": "2026-04-30T11:59:48Z",
+      "ranked": { "all_expiry_top_10": [...], "odte_top_10": [...] },
+      "max_pain": { "strike": 67500, "value": 5e7 },
+      "expected_move": { "upper_1sd": 70000, "lower_1sd": 64000, ... }
+    },
+    "ETHUSDT": { ... },
+    "SOLUSDT": { ... },
+    "HYPEUSDT": { ... }
+  },
+  "requested": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "HYPEUSDT"],
+  "served": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "HYPEUSDT"],
+  "missing": [],
+  "invalid": []
+}
+```
+
+## Why it's faster than N calls
+
+Server-side, the bundle endpoint batches every lookup into a single
+operation rather than serving them sequentially. The result: one HTTP
+round-trip instead of N, and lower upstream load on our side.
+
+For a desk dashboard polling on a 30s loop, that's a 4× reduction in
+round-trips with no client-side change beyond switching to the bundle
+endpoint.
+
+## Partial results
+
+If one of the requested symbols has no live data (cold cache), it
+appears in `missing` and its `results[symbol]` is `null` — but the
+other symbols still come back. **The whole call doesn't fail** because
+of one stale symbol.
+
+```json
+{
+  "results": {
+    "BTCUSDT": { ... },
+    "ETHUSDT": { ... },
+    "SOLUSDT": null,
+    "HYPEUSDT": { ... }
+  },
+  "requested": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "HYPEUSDT"],
+  "served": ["BTCUSDT", "ETHUSDT", "HYPEUSDT"],
+  "missing": ["SOLUSDT"],
+  "invalid": []
+}
+```
+
+`invalid` lists symbols that aren't in the supported set
+(BTCUSDT/ETHUSDT/SOLUSDT/HYPEUSDT) — your client got the symbol name
+wrong.
+
+## Filters
+
+- `?exchanges=deribit,bybit,okx,binance` — same venue filter as
+  single-symbol; applies to every symbol in the bundle.
+- `?include=ranked,max_pain,expected_move,zones` — same composable
+  includes. The single-symbol `spot` and `candles` includes are
+  intentionally absent here to keep the bundled payload bounded
+  (candles arrays would multiply payload by ~10×).
+
+## Limits
+
+- **Up to 8 symbols** per request (you have 4 today; the cap leaves
+  room for future expansion).
+- Duplicate symbols in the request are de-duplicated while preserving
+  caller order.
+
+## When to use it
+
+**Use it for**: dashboard refreshes, multi-symbol overlays, screeners
+that scan the universe.
+
+**Don't use it for**: single-symbol drilldowns. The per-symbol
+endpoints support more includes (`spot`, `candles`) that the multi
+endpoint omits.
+
+## Related concepts
+
+<CardGroup cols={2}>
+  <Card title="What is GEX?" icon="chart-line" href="/concepts/gex">
+    The data this bundles is the same as `/v2/gex/levels` per symbol.
+  </Card>
+  <Card title="Data freshness" icon="bolt" href="/concepts/data-freshness">
+    The shared cache that makes the bundle cheap.
+  </Card>
+</CardGroup>

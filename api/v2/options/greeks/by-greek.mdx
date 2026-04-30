@@ -1,0 +1,13 @@
+---
+title: "Greek profile"
+openapi: "GET /options/greeks/{greek}"
+---
+
+Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`. Optional `?dte_max` recomputes from the raw chain limited to short-DTE contracts.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Greeks beyond delta" href="/concepts/greeks" icon="bookmark" />
+  <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
+</CardGroup>

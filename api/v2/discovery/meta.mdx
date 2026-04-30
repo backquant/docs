@@ -1,0 +1,22 @@
+---
+title: "API metadata"
+openapi: "GET /meta"
+---
+
+Static metadata about the API itself: name, version, the auth scheme,
+the rate-limit ladder, the response envelope shape, the full error code
+catalog with HTTP status mapping, and the supported symbol + exchange
+catalogs. No I/O — pure in-memory dict, sub-millisecond.
+
+Use this when you want a single programmatic source of truth for
+client-side validation: the supported-symbols list, the error-code
+table, and the auth requirements all come from one call so your client
+doesn't drift from the API contract.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Errors" icon="bookmark" href="/concepts/errors" />
+  <Card title="Response format" icon="bookmark" href="/concepts/response-format" />
+  <Card title="Rate limits" icon="bookmark" href="/concepts/rate-limits" />
+</CardGroup>

@@ -1,0 +1,137 @@
+---
+title: "Max pain"
+description: "The strike where option writers profit most — and how to read it"
+---
+
+**Max pain** is the strike at which the largest dollar amount of
+options expires worthless. It's the single number that summarizes
+"where do option *writers* (dealers + sellers) want price to be at
+expiry?"
+
+## The intuition
+
+For each candidate strike, calculate the total dollar payout option
+*buyers* would receive if the underlying settled there at expiry.
+**Max pain is the strike that minimises that total payout** — the price
+where the most contracts expire worthless and writers keep the most
+premium.
+
+Dealers who sold those options have an interest in hedging price toward
+that strike as expiration approaches. Whether they actually have the
+muscle to drive price there is a separate question (usually no for
+liquid underlyings, sometimes yes for thin OPEX days near the strike),
+but the level itself is a meaningful magnet.
+
+## The endpoints
+
+### Quick: 0DTE max-pain
+
+[`/v2/gex/max-pain?symbol=BTCUSDT&expiry=0dte`](/api/v2/gex/max-pain) —
+returns the max-pain strike for today's expiry from the pre-computed
+0DTE cache. Sub-millisecond response.
+
+```json
+{
+  "expiry": "0dte",
+  "max_pain": {
+    "strike": 67500,
+    "value": 12500000.0
+  }
+}
+```
+
+`value` is the total option-buyer payout at the max-pain strike, in USD.
+
+### Per-expiry table
+
+[`/v2/gex/max-pain?symbol=BTCUSDT&expiry=all`](/api/v2/gex/max-pain) —
+the per-expiry max-pain table for every active expiration. Sorted by
+DTE.
+
+```json
+{
+  "expiry": "all",
+  "per_expiry": [
+    { "expiry": "30APR26", "dte": 0, "max_pain": { "strike": 67500, "value": 5e7 } },
+    { "expiry": "02MAY26", "dte": 2, "max_pain": { "strike": 67000, "value": 8e7 } },
+    { "expiry": "30MAY26", "dte": 30, "max_pain": { "strike": 65000, "value": 4e8 } },
+    ...
+  ]
+}
+```
+
+Cached for 30s — repeated calls are sub-millisecond.
+
+### Specific expiry with the full pain curve
+
+[`/v2/gex/max-pain?symbol=BTCUSDT&expiry=30MAY26`](/api/v2/gex/max-pain) —
+returns the max-pain strike for that expiry **plus** the full
+`pain_curve` (one entry per strike), so you can plot the pain function
+as a U-shape and visually see how steep the magnet is.
+
+```json
+{
+  "expiry": "30MAY26",
+  "dte": 30,
+  "max_pain": { "strike": 65000, "value": 4e8 },
+  "pain_curve": [
+    { "strike": 60000, "pain": 7.2e8 },
+    { "strike": 62500, "pain": 5.5e8 },
+    { "strike": 65000, "pain": 4.0e8 },
+    { "strike": 67500, "pain": 4.3e8 },
+    { "strike": 70000, "pain": 5.1e8 },
+    ...
+  ]
+}
+```
+
+A flat curve (similar pain values across many strikes) means weak
+magnet — dealers have no strong preference. A sharp U (one strike with
+much lower pain than its neighbours) means a strong magnet — that's the
+strike to watch into expiry.
+
+## Where else max-pain shows up in v2
+
+- **`/v2/options/opex`** — every expiration in the horizon comes with
+  its `max_pain` block under `gamma`.
+- **`/v2/options/expiry-summary`** — every row carries `max_pain` for
+  that expiry.
+- **`/v2/gex/levels?include=max_pain`** — the 0DTE max-pain alongside
+  the gamma walls.
+
+All three share the same per-expiry max-pain cache (30s TTL) so the
+snapshot scan happens once per refresh cycle regardless of how many
+endpoints query it.
+
+## How traders use it
+
+**Day before OPEX**: combine max-pain with [GEX levels](/concepts/gex).
+When max_pain is between call_resistance and put_support, the levels
+reinforce each other and the pin is high-probability.
+
+**OPEX day**: the closer to expiry, the tighter the pin tends to get.
+Calculate the distance from spot to max_pain and the implied move; if
+the implied move is smaller than the distance, the chain is pricing in
+a successful pin.
+
+**Cross-expiry**: an upcoming monthly's max_pain that's far from spot
+is bullish/bearish positioning. The market is signalling where it
+expects to be at the next anchor.
+
+**Avoid**: treating max-pain as a forecast on illiquid expiries.
+Distant or thinly-traded expirations have noisy max-pain — the curve
+is flat, no real magnet exists.
+
+## Related concepts
+
+<CardGroup cols={2}>
+  <Card title="What is GEX?" icon="chart-line" href="/concepts/gex">
+    The other major source of expiry-day price magnets.
+  </Card>
+  <Card title="OPEX calendar" icon="calendar-days" href="/concepts/opex">
+    Anchor expirations have the strongest max-pain signal.
+  </Card>
+  <Card title="Probability density" icon="chart-area" href="/concepts/probability-density">
+    The market's full implied price distribution for each expiry.
+  </Card>
+</CardGroup>
