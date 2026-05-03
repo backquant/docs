@@ -121,7 +121,8 @@
             "pages": [
               "api/v2/options/greeks/by-greek",
               "api/v2/options/greeks/surfaces",
-              "api/v2/options/greeks/3d-surface"
+              "api/v2/options/greeks/3d-surface",
+              "api/v2/options/greeks/trace"
             ]
           },
           {
