@@ -1,6 +1,7 @@
 ---
 title: "Greek profile"
 openapi: "GET /options/greeks/{greek}"
+mode: "wide"
 ---
 
 Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`. Optional `?dte_max` recomputes from the raw chain limited to short-DTE contracts.

@@ -1,11 +1,12 @@
 ---
 title: "Endpoint catalog"
 openapi: "GET /endpoints"
+mode: "wide"
 ---
 
 Live introspection of every registered route in the API. For each
 endpoint you get the path, HTTP methods, tag, summary, description, and
-the full parameter list — including the `enum` array for any parameter
+the full parameter list - including the `enum` array for any parameter
 that's Literal-typed (so you can validate user input client-side
 against exactly the same values the server accepts).
 

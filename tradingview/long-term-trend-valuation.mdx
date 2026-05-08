@@ -1,0 +1,212 @@
+---
+title: "Long-Term Trend & Valuation Model"
+description: "A two-layer framework that separates 'where we are in the cycle' from 'what to do about it' - built for long-horizon decisions on assets with strong boom-bust structures."
+sidebarTitle: "Long-Term Trend & Valuation"
+mode: "wide"
+---
+
+<Frame>
+  <img src="https://s3.tradingview.com/k/khrZLDD4_mid.webp?v=1757068814" alt="Long-Term Trend & Valuation Model" />
+</Frame>
+
+<Card title="See on TradingView" icon="chart-line" href="https://www.tradingview.com/script/khrZLDD4/" horizontal>
+  Open the Long-Term Trend & Valuation Model on TradingView. Invite-only.
+</Card>
+
+## Overview
+
+This invite-only tool is a **two-layer framework** designed to simplify
+long-horizon decision-making:
+
+- **Valuation Engine** - measures how extended price is relative to its own
+  regime. Outputs a single oscillator centered on zero, bounded by
+  configurable overbought / oversold thresholds.
+- **Trend Model** - aggregates several independent long-term subsystems
+  into a composite **strength score**, mapped to a long / cash / short
+  stance.
+
+The separation of "where we are in the cycle" from "what to do about it"
+makes this model particularly suited to assets with strong boom-bust
+structures (like crypto). Each layer answers one question, and they're
+designed to be read **together**, not as standalone signals.
+
+## Valuation Engine
+
+The valuation oscillator is a **weighted blend of six standardized
+components**. Each component measures a different facet of "extension"
+relative to the asset's own historical regime, then gets normalized so
+that all signals sit on the same scale before they're combined.
+
+### How it is built
+
+| Stage | What happens |
+| --- | --- |
+| **Standardization** | Each component is converted to a z-score over a configurable lookback (default `1100` bars), so different scales become comparable. |
+| **Weighted blend** | Components are combined with user-controllable weights so you can emphasize the lenses you trust most. |
+| **Optional smoothing** | A moving average (`SMA`, `EMA`, `RMA`, `HULL`, `WMA`, `DEMA`, `TEMA`, `LINREG`, `ALMA`, `T3`) can be applied to filter whipsaws. Default is `RMA` over `45` bars. |
+| **Bounded scaling** | A `tanh`-based compression keeps the oscillator readable across cycles - extreme outliers don't break the chart. |
+| **Volatility-aware re-expansion** | After compression, the signal is re-expanded by rolling standard deviation, so "overbought / oversold" stays meaningful when volatility regimes change. |
+| **Threshold logic** | Thresholds can be **fixed** (default ±1.5) or **dynamic** (k·σ bands around the rolling mean or around zero). |
+
+### Reading the oscillator
+
+| State | Meaning |
+| --- | --- |
+| **Above 0** | Supportive regime - backdrop favors continuation. |
+| **Below 0** | Deterioration / risk aversion regime. |
+| **Tagging upper band** | Optimistic stretch - late-cycle risk, take-profit context. |
+| **Tagging lower band** | Pessimistic stretch - washouts, early-base context. |
+
+### Configurable inputs
+
+| Input | Default | What it changes |
+| --- | --- | --- |
+| **Calculation Source** | `close` | Price source used everywhere downstream. |
+| **Z-Score Lookback** | `1100` | The master regime lookback. Longer = smoother / longer-term framing. |
+| **Per-component lookbacks** | various | Each component has its own length - defaults are tuned for daily/weekly horizons. |
+| **Per-component weights** | `1.0`–`1.5` | Relative importance of each component in the final score. Set any to `0` to disable. |
+| **Smooth Valuation** | on | Apply a moving-average filter to the final composite. |
+| **MA Type / Period / Sigma** | RMA / 45 / 2 | Smoothing kernel and length (Sigma only used by ALMA). |
+| **Normalization Length** | `90` | Window used by the volatility-aware compression. |
+| **Re-expand Cap** | `2.0` σ units | Maximum width of the post-compression swing. |
+| **Alpha mode** | `Manual` | Compression strength - set manually, or auto-mapped so 1σ→0.76, 2σ→0.95, or 3σ→0.99. |
+| **Scale by Volatility** | on | Toggles the compression / re-expansion stage. |
+
+### Threshold modes
+
+- **Fixed thresholds** - default ±`1.5`, configurable.
+- **Dynamic (`k · σ`)** - thresholds become `mean ± k · σ` over a rolling
+  window (default `100` bars, `k = 1.5`). Optionally **center at zero**
+  to use `±k · σ` regardless of mean drift.
+
+### Built-in summary table
+
+A right-corner summary table prints each component's current z-score plus
+a 🟢 / 🔴 status emoji, the **Final Score**, and the overall valuation
+emoji. Toggle on/off via *Show Summary Table*. The table works in light
+or dark mode (controlled by the *Light or Dark Mode* input).
+
+## Trend Model
+
+The trend layer combines **seven independent long-term subsystems**.
+Each subsystem produces its own long / short / neutral vote on the
+prevailing regime, and the votes are averaged into a single composite
+score in the range `[-1, +1]`.
+
+The subsystems are deliberately diverse - each looks at trend from a
+different mathematical lens (price-anchor alignment, persistence checks,
+macro regime confirmation, higher-timeframe overlays, etc.). You can
+toggle any subsystem on or off independently.
+
+### Subsystem toggles
+
+| Toggle | Default |
+| --- | --- |
+| Use Component One | on |
+| Use Component Two | on |
+| Use Component Three | on |
+| Use Component Four | on |
+| Use Component Five | on |
+| Use Component Six | on |
+| Use Component Seven | on |
+
+<Note>
+  Disabling a subsystem reweights the composite among the remaining
+  active subsystems - so you can trim the model down to only the lenses
+  you trust without throwing the score off scale.
+</Note>
+
+### Interpretation
+
+| Composite (`tpi`) | Stance |
+| --- | --- |
+| Above **Long Threshold** *(default `0`)* | Long |
+| Below **Short Threshold** *(default `0`)* | Short |
+| Between thresholds | Neutral / Cash |
+
+A colored signal line is plotted on the **price chart** (overlay),
+optional bar coloring is available, and a right-corner table reports
+the current strength (%), rate of change, and position state.
+
+### Configurable inputs
+
+| Input | Default | What it changes |
+| --- | --- | --- |
+| **Show Signal Line** | on | Plots a colored MA on price reflecting current regime. |
+| **Show Trend Table** | on | Right-corner table with strength %, RoC, and position. |
+| **Show Background Coloring** | off | Tints the chart background by regime. |
+| **Show Bar Color** | off | Repaints candles by regime. |
+| **Long / Short Thresholds** | `0` / `0` | Where the composite must cross to flip stance. |
+| **Long / Short / Neutral Colors** | green / red / gray | Visual palette. |
+
+## How to Use
+
+### Cycle framing
+
+Read **valuation** and **trend** as a 2×2 matrix - the combination tells
+you what stage of the cycle the asset is in.
+
+| Valuation | Trend Composite | Cycle Context |
+| --- | --- | --- |
+| Deep negative | Neutral / Short | **Accumulation context** - bases are built here. |
+| Positive | Strong Long | **Participate in expansion** - trend is doing the work. |
+| Extended positive | Weakening | **Late cycle caution** - start trimming, tighten risk. |
+| Negative | Short | **Distribution / unwind** - risk-off, capital preservation. |
+
+### Workflow examples
+
+- **Regime allocation** - increase exposure when trend is Long *and*
+  valuation is rising; reduce when trend is Short *and* valuation is
+  falling.
+- **Signal gating** - only run shorter-term entry systems in the
+  composite trend's direction.
+- **Sizing overlay** - scale smaller near upper-band stretches; scale
+  larger after valuation resets near zero.
+- **DCA context** - accumulate while valuation is negative but
+  *stabilizing* (slope flattening), not while it's still falling.
+- **Cross-asset rotation** - compare valuations across multiple assets
+  on the daily timeframe and rotate to where conditions are most
+  favorable.
+
+## Alerts
+
+Built-in alert conditions:
+
+### Valuation alerts
+
+| Alert | Fires when |
+| --- | --- |
+| **Overbought Enter / Exit** | Valuation crosses into / out of the OB zone. |
+| **Oversold Enter / Exit** | Valuation crosses into / out of the OS zone. |
+| **Bullish Zero Cross** | Valuation crosses above 0. |
+| **Bearish Zero Cross** | Valuation crosses below 0. |
+
+### Trend alerts
+
+| Alert | Fires when |
+| --- | --- |
+| **Long-Term Trend Long** | Composite crosses above the long threshold. |
+| **Long-Term Trend Short** | Composite crosses below the short threshold. |
+| **Long-Term Trend Flip** | Composite crosses the short threshold (regime change). |
+
+## Strengths
+
+- **Separates cycle context from trend stance** - two questions, two
+  answers, no conflation.
+- **Multi-component voting** - both layers use diverse subsystems so no
+  single component can drag the model off course.
+- **Volatility-aware scaling** - keeps "extreme" meaningful across
+  changing regimes.
+- **Per-component toggles + weights** - you can tune the model to your
+  preferred lenses without rewriting the script.
+- **Clear visuals and alerts** - encourages long-horizon discipline
+  rather than minute-to-minute reactivity.
+
+## Final Notes
+
+<Note>
+  The Long-Term Trend & Valuation Model is **not designed to catch every
+  swing**. It is built to keep you aligned with the dominant trend, help
+  manage risk around cycle extremes, and provide a consistent language
+  for allocation decisions across timeframes and assets.
+</Note>

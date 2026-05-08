@@ -1,0 +1,89 @@
+---
+title: "TradingView Indicators"
+description: "BackQuant's suite of invite-only TradingView indicators for discretionary execution and study."
+sidebarTitle: "Overview"
+mode: "wide"
+---
+
+BackQuant ships a curated set of TradingView indicators built around the
+same philosophy as the terminal API: **read conditions, not isolated
+signals.** Each script is designed to work standalone, but the real edge
+comes from stacking them so that momentum, pressure, structure, and
+volatility tell a coherent story.
+
+<Note>
+  All BackQuant TradingView indicators are **invite-only** and require an
+  active **yearly BackQuant subscription** for access. Once subscribed,
+  invites are granted to your TradingView username and the scripts appear
+  under *Indicators - Invite-only scripts* inside TradingView.
+</Note>
+
+## Available Indicators
+
+<CardGroup cols={2}>
+  <Card title="Oscillator Suite" icon="wave-square" href="/tradingview/oscillator-suite">
+    Coordinated momentum, money flow, confluence, divergence, reversal,
+    and bar-coloring modules in a single pane.
+  </Card>
+  <Card title="Trading Module" icon="chart-candlestick" href="/tradingview/trading-module">
+    Modular execution overlay: trend, impulse, stop loss, RSI screener,
+    market structure, FVGs, volumetric order blocks, S/R, and reversal bands.
+  </Card>
+  <Card title="Long-Term Trend & Valuation" icon="chart-line" href="/tradingview/long-term-trend-valuation">
+    Two-layer cycle framework: a valuation oscillator plus a composite
+    long-term trend score for allocation decisions.
+  </Card>
+  <Card title="Browse on TradingView" icon="external-link" href="https://www.tradingview.com/u/BackQuant/#published-scripts">
+    See every published BackQuant script directly on TradingView.
+  </Card>
+</CardGroup>
+
+## Getting Access
+
+<Steps>
+  <Step title="Subscribe to BackQuant">
+    Pick up a yearly plan at [backquant.com](https://backquant.com/). The
+    yearly tier is what unlocks the TradingView indicator bundle.
+  </Step>
+  <Step title="Add your TradingView username in settings">
+    Enter your TradingView username in your BackQuant account settings.
+    Access is **auto-granted** as soon as it's saved - no manual approval
+    or email needed.
+  </Step>
+  <Step title="Open the scripts in TradingView">
+    The indicators will be visible under *Indicators - Invite-only scripts*
+    in your TradingView chart.
+  </Step>
+</Steps>
+
+## How These Docs Are Written
+
+Indicator pages are written for **live-market use**, not as a list of
+inputs. Every page covers the same five things:
+
+<CardGroup cols={2}>
+  <Card title="What the script does" icon="bullseye">
+    The single job the indicator was built for, stated up front.
+  </Card>
+  <Card title="Module breakdown" icon="layer-group">
+    What every component reads from the tape, and what it shows on chart.
+  </Card>
+  <Card title="Reading order" icon="list-ol">
+    How to interpret outputs as a sequence of conditions, not a checklist
+    of signals.
+  </Card>
+  <Card title="Settings that matter" icon="sliders">
+    The inputs that genuinely change behavior, with the direction each one
+    pushes the indicator.
+  </Card>
+</CardGroup>
+
+A **Practical Playbooks** section also appears on each indicator page,
+showing the trade scenarios the script is designed for - trend
+participation, dip catching, top selling, exhaustion fading, and so on.
+
+## Support
+
+Questions about access, invites, or how to use a specific indicator on a
+specific market? Reach the team at **dev@backquant.com** or in the
+BackQuant Discord.

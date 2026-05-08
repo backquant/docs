@@ -1,6 +1,7 @@
 ---
 title: "OI history"
 openapi: "GET /options/oi/history"
+mode: "wide"
 ---
 
 Cursor-paginated time-series of total / call / put open interest for
@@ -8,7 +9,7 @@ the underlying. Use cursor pagination (`?limit` + `?before=<ts>`) to
 walk backwards through history without missing rows or double-counting
 at page boundaries.
 
-The response carries `next_cursor` — pass it as `?before=` on the next
+The response carries `next_cursor` - pass it as `?before=` on the next
 call to fetch the previous page.
 
 Useful for:

@@ -27,7 +27,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Terminal API",
         "groups": [
           {
             "group": "Get Started",
@@ -146,6 +146,25 @@
             "group": "API — Multi-symbol",
             "pages": [
               "api/v2/multi/gex-levels"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "TradingView Indicators",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "tradingview/overview"
+            ]
+          },
+          {
+            "group": "Indicators",
+            "pages": [
+              "tradingview/oscillator-suite",
+              "tradingview/trading-module",
+              "tradingview/long-term-trend-valuation"
             ]
           }
         ]

@@ -1,12 +1,13 @@
 ---
 title: "API metadata"
 openapi: "GET /meta"
+mode: "wide"
 ---
 
 Static metadata about the API itself: name, version, the auth scheme,
 the rate-limit ladder, the response envelope shape, the full error code
 catalog with HTTP status mapping, and the supported symbol + exchange
-catalogs. No I/O — pure in-memory dict, sub-millisecond.
+catalogs. No I/O - pure in-memory dict, sub-millisecond.
 
 Use this when you want a single programmatic source of truth for
 client-side validation: the supported-symbols list, the error-code

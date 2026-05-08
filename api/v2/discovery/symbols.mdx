@@ -1,6 +1,7 @@
 ---
 title: "Symbol catalog"
 openapi: "GET /symbols"
+mode: "wide"
 ---
 
 The first call most integrators make. Returns every symbol the API
@@ -14,7 +15,7 @@ Use it to:
 - Check at a glance whether a symbol has live cache data before hitting downstream endpoints
 - Build a dynamic UI that lists supported endpoints without hard-coding paths
 
-Powered by a single Redis `MGET` round-trip — sub-millisecond when warm.
+Powered by a single Redis `MGET` round-trip - sub-millisecond when warm.
 
 ## See also
 

@@ -1,0 +1,358 @@
+---
+title: "Oscillator Suite"
+description: "A coordinated set of momentum, money flow, confluence, divergence, and reversal modules - built to turn live market noise into a readable sequence of conditions."
+mode: "wide"
+---
+
+<Frame>
+  <img src="https://s3.tradingview.com/p/PL52R8Kq_mid.webp?v=1767621513" alt="Oscillator Suite" />
+</Frame>
+
+<Card title="See on TradingView" icon="chart-line" href="https://www.tradingview.com/script/PL52R8Kq/" horizontal>
+  Open the Oscillator Suite on TradingView.
+</Card>
+
+## What This Suite Does
+
+Oscillator Suite is built for one job: **turn live market noise into a
+readable sequence of conditions.** Not "one signal." Not "one oscillator." A
+coordinated set of modules that track momentum, money pressure, agreement
+between them, and exhaustion - so you can see when moves have real backing,
+when they're fading, and when reversal conditions are worth treating as a
+serious event.
+
+The suite ships with **six interlocking modules**, all in one pane:
+
+1. **Momentum Ribbon** - the core oscillator + signal line + crossover events.
+2. **Modified Money Flow Index (MFI)** - pressure overlay with adaptive
+   thresholds.
+3. **Confluence Zones** - bands that fill when momentum and money flow agree.
+4. **Reversal Signals** - Major (`ℝ`) and Minor (cross) reversal events,
+   filtered by volume.
+5. **Divergences** - auto-drawn divergence lines on extended momentum.
+6. **Momentum Velocity** - a slower, structural momentum lens.
+7. **Bar Coloring** - projects the suite's read directly onto candles.
+
+## Why This Suite Feels Different in Live Markets
+
+This suite is designed to show the *why* behind the candle:
+
+- Is the move being **driven** or just **drifting**?
+- Is participation **accumulating** or **exiting**?
+- Are components telling the **same story**, or is the market split?
+- When a reversal appears, is it a **real shift** or a random wiggle?
+
+<Note>
+  When components **converge**, you get higher clarity. When they **diverge**,
+  you get a warning before price makes it obvious.
+</Note>
+
+## How to Read the Suite in Order
+
+If you want the indicator to feel "alive" instead of confusing, use this
+order of operations:
+
+1. **Money Flow** - for pressure and participation
+2. **Momentum Ribbon** - for direction and shift timing
+3. **Confluence** - to measure agreement and regime quality
+4. **Reversals** - to mark turning points inside those regimes
+5. **Divergences** - for early "engine weakness" warnings
+6. **Bar Coloring** - to project the whole read onto price
+
+## Core Modules
+
+### Momentum Ribbon - Timing Engine
+
+The Momentum Ribbon is the oscillator at the center of the suite. It's a
+normalized momentum read with two visible lines: the raw **signal**
+(`sig`) and a smoothed **signal-of-signal** (`sgD`). The fill between them
+flips color on every cross, and circle markers print at every crossover.
+
+**Controls you'll touch:**
+
+| Input | Default | What it changes |
+| --- | --- | --- |
+| **Calculation Period** | `7` | Lookback for the oscillator base. Higher = smoother / fewer signals. Lower = faster / more signals. |
+| **Signal Line type** | `SMA` | Smoothing kernel applied to the ribbon's signal-of-signal. Choose between `SMA`, `EMA`, `WMA`, `LINREG`, `T3`, `ALMA`, `DEMA`, `TEMA`, `RMA`. |
+| **Smoothing length** | `3` | The smoothing length for the signal-line kernel. Higher = cleaner shifts. Lower = earlier shifts. |
+| **Positive / Negative colors + transparency** | green / red / 40 | The ribbon fill colors and opacity. |
+
+**What you'll see on chart:**
+
+- A **filled ribbon** above and below zero, colored bullish or bearish.
+- **Circle markers** at every momentum crossover (signal vs signal-of-signal).
+- **Black inner-line outlines** so the ribbon is readable on any background.
+
+<Tip>
+  **In live markets:** This is what you watch when price is chopping. The
+  ribbon will often show momentum actually resolving even if price looks
+  messy for a few candles.
+</Tip>
+
+### Modified Money Flow Index (MFI) - Pressure Layer
+
+A modified Money Flow Index that uses an **adaptive threshold** rather than
+fixed 80/20 levels. The script tracks rolling averages of bullish and
+bearish MFI readings, so "strong pressure" is judged relative to the
+asset's own recent participation - not a textbook constant.
+
+**Controls:**
+
+| Input | Default | What it changes |
+| --- | --- | --- |
+| **Calculation Period** | `35` | MFI lookback. Higher = smoother. Lower = more reactive. |
+| **Smoothing Period** | `6` | Extra smoothing applied to the modified MFI. |
+| **Money Flow Colors** | green / red | Colors used in the MFI fill and inside confluence zones. |
+
+**What you'll see on chart:**
+
+- A line plotted between the ribbon and the zero level, colored by sign.
+- **Stronger fills** (less transparent) where MFI exceeds its own bullish or
+  bearish running average - the script highlights *when pressure is
+  actually elevated*, not just present.
+- A faint fill between MFI and zero when readings are weak, so you don't
+  mistake "barely positive" for accumulation.
+
+The Money Flow wave is your context filter. It exists to separate:
+
+| Condition | What it means |
+| --- | --- |
+| Real buy-side pressure | A push that has genuine participation behind it |
+| Weak participation | A move that looks bullish but lacks support |
+| Heavy distribution | A selloff with real selling pressure |
+| Selling running out of fuel | A dip where pressure is fading |
+
+<Frame caption="Money Flow showing strong accumulation behavior">
+  <img src="https://www.tradingview.com/x/e4xOsE8b/" alt="Money Flow accumulation" />
+</Frame>
+
+### Confluence Zones - Regime Detection
+
+The bands at ±50 / ±60 fill with color based on how Momentum and MFI agree.
+You pick the fill style:
+
+| Zone Type | What it shows |
+| --- | --- |
+| **None** | Bands plotted in gray, no fills. |
+| **Confluence Zones** *(default)* | Both bands fill bullish when momentum > 0 and MFI > 0; both fill bearish when both < 0; muted/transparent when split. |
+| **Overbought / Oversold Strength** | Band opacity scales with how extreme momentum is - the more stretched the read, the more saturated the fill. |
+
+**Reading it:**
+
+| Zone state | Meaning |
+| --- | --- |
+| **Bullish Confluence** | Momentum is constructive **and** pressure supports it |
+| **Bearish Confluence** | Momentum is bearish **and** selling pressure supports it |
+| **Mixed / faded** | Components disagree - expect chop, fakeouts, low follow-through |
+
+<Info>
+  **This is how you stop forcing trades.** When confluence is strong, you
+  can hold with more confidence. When confluence fades, you tighten
+  expectations and demand better structure or confirmation.
+</Info>
+
+### Reversal Signals - Turning Points
+
+Reversal events are filtered by **volume expansion** combined with momentum
+and money flow conditions - they're not raw oscillator extremes. The suite
+prints two tiers:
+
+| Tier | Marker | Triggered when |
+| --- | --- | --- |
+| **Major** | `ℝ` label at ±65 + soft background tint | Volume expands strongly **and** momentum is past the reversal threshold **and** money flow agrees with the direction (above bullish-MFI average / below bearish-MFI average). |
+| **Minor** | Cross marker at ±65 | Lighter volume expansion **and** momentum past ±20 **and** the volume's own RSI confirms direction. |
+
+**Reversal Factor (`1`–`10`, default `4`)** scales the strictness:
+
+- **Lower** → more reversal events, more sensitive.
+- **Higher** → fewer events, but each is more strongly filtered.
+
+**Live-Market Mindset:**
+
+- A reversal print during **heavy opposing pressure** is often just a pause.
+- A reversal print when **money flow pressure is weakening** or shifting is
+  a different animal.
+- A reversal print as **confluence transitions** is where dips and tops
+  become actionable ideas.
+
+<Frame caption="Strong reversal examples">
+  <img src="https://www.tradingview.com/x/F2WLSuR0/" alt="Strong reversal examples" />
+</Frame>
+
+<Frame caption="Catching dips and selling strong turns">
+  <img src="https://www.tradingview.com/x/gYDssQN9/" alt="Reversals catching dips" />
+</Frame>
+
+### Divergences - Early Warning
+
+Divergences here only evaluate **when momentum is past the divergence
+threshold** (default `20`). That filter is intentional - it stops the
+indicator from spamming low-quality divergence lines in mid-range chop.
+
+**Controls:**
+
+| Input | Default | What it changes |
+| --- | --- | --- |
+| **Divergence Threshold** | `20` | Lower = more (shorter-term) divergences. Higher = fewer (longer-term) divergences. |
+| **Show Divergences** | on | Toggle the auto-drawn lines. |
+| **Bull / Bear Divergence Colors** | green / red | Line colors. |
+
+**What gets drawn:** when the ribbon is in extended territory and crosses
+its own signal line, the script compares the most recent momentum extreme
+against the previous extreme (in the same regime). If price has made a new
+extreme but momentum hasn't, a line is drawn between the two.
+
+**What divergence is used for here:**
+
+- Spot **engine weakness** when price attempts to extend but momentum does
+  not match.
+- Warn you early so you can manage risk **before** the obvious reversal
+  candle shows up.
+- Help you identify when a trend is losing quality, especially when
+  confluence begins fading.
+
+**Divergence → Confirmation Sequence:**
+
+1. Momentum ribbon shifts
+2. Money flow eases or flips
+3. Confluence transitions
+4. Reversal marker appears
+
+### Momentum Velocity - Structural Layer
+
+A second momentum lens that's slower and more "structural." It's a
+weighted-price for-loop momentum read normalized over a longer lookback
+(default `100` bars) - useful for confirming whether the broader momentum
+environment is actually supporting what the ribbon is doing.
+
+**Visual feedback:** plotted as columns at the bottom of the pane in a
+**graduated color scale** - light tints at low magnitude, vivid green or
+red as readings get extreme. So you can read background regime strength at
+a glance without reading numbers.
+
+**How traders use this in practice:**
+
+- As a **permission layer** to avoid fighting stronger background pressure.
+- To confirm when momentum shifts are **likely to hold**, not just flip
+  for a bar.
+- To spot when short-term momentum is turning inside a larger supportive
+  environment.
+
+<Frame caption="Momentum Ribbon leading with added longer-term momentum confluence">
+  <img src="https://www.tradingview.com/x/T65krhkZ/" alt="Momentum Velocity" />
+</Frame>
+
+### Bar Coloring - Speed Layer
+
+Bar coloring projects the suite's current read directly onto candles so
+you can process conditions without staring at the panel. Pick the mode
+that matches how you trade:
+
+| Mode | Bars colored when… |
+| --- | --- |
+| **None** | No bar coloring. |
+| **Momentum direction** | Ribbon signal is above / below its own smoothed signal. |
+| **Momentum above/below midline** | Ribbon signal is above / below zero. |
+| **MFI above/below midline** | Money flow is above / below zero. |
+| **Confluence (Mom + MFI)** | Both momentum and MFI agree (both bullish or both bearish). |
+| **Strong Confluence Only** *(default)* | Confluence **plus** money flow exceeds its own running bullish/bearish average. The strictest mode. |
+| **Momentum Velocity** | Bars colored by the structural-layer reading. |
+
+<Frame caption="Multiple bar coloring methods">
+  <img src="https://www.tradingview.com/x/bRYXrhXq/" alt="Bar coloring methods" />
+</Frame>
+
+## Practical Playbooks
+
+<CardGroup cols={3}>
+  <Card title="Trend Participation" icon="trending-up">
+    Without chasing.
+
+    - Start with confluence - get aggressive only when agreement is present
+    - Use the ribbon to time entries on momentum shifts
+    - Confirm with money flow pressure
+    - When confluence fades, manage tighter
+  </Card>
+  <Card title="Dip Catching" icon="arrow-down">
+    That is not blind.
+
+    - Let price pull back while you watch money flow
+    - Heavy selling = you are early
+    - Easing pressure = you are getting close
+    - Best dips show up during confluence transitions
+  </Card>
+  <Card title="Selling Tops" icon="arrow-up">
+    Without guessing.
+
+    - Watch for momentum weakening while price extends
+    - Divergence is your first warning
+    - Confluence fading + money flow shifting = high-interest reversal
+    - This sequence catches "strong reversals"
+  </Card>
+</CardGroup>
+
+## Settings That Matter
+
+### Calculation Period (Momentum)
+
+| Lower | Higher |
+| --- | --- |
+| Faster, more reactive, more signals | Smoother, fewer signals, cleaner regimes |
+
+### Signal Line Type + Smoothing
+
+Pick a kernel that matches asset behavior - `SMA` / `EMA` for general use,
+`LINREG` or `T3` for cleaner regime tracking, `ALMA` / `DEMA` / `TEMA` for
+faster response without raw whipsaw.
+
+| More smoothing | Less smoothing |
+| --- | --- |
+| Cleaner shifts, less noise | Earlier shifts, more activity |
+
+### MFI Calculation + Smoothing
+
+| Lower | Higher |
+| --- | --- |
+| Faster pressure read | Clearer accumulation/distribution structure |
+
+### Divergence Threshold
+
+| Lower | Higher |
+| --- | --- |
+| More divergence events (shorter-term) | Fewer events (more selective, longer-term) |
+
+### Reversal Factor
+
+| Lower | Higher |
+| --- | --- |
+| More reversal events | Fewer, stronger events through heavier filtering |
+
+## Alerts
+
+Built-in alert conditions you can wire into TradingView:
+
+| Alert | Fires when |
+| --- | --- |
+| **Ribbon Long / Short** | Momentum signal crosses above / below its smoothed signal-line. |
+| **Ribbon Cross Up / Down Midline** | Momentum signal crosses zero in either direction. |
+| **Money Flow Long / Short** | Modified MFI crosses zero in either direction. |
+| **Reversal Major Long / Short** | A major (`ℝ`) reversal prints. |
+| **Reversal Minor Long / Short** | A minor (cross-marker) reversal prints. |
+
+## How to Know You Are Reading It Right
+
+When you get comfortable, you will start noticing the suite produces
+**states**, not random prints:
+
+| State | What it looks like |
+| --- | --- |
+| **Strong Bullish** | Momentum drives, pressure supports, candles align |
+| **Bullish Weakening** | Momentum begins fading, pressure cools, divergence may warn |
+| **Mixed** | More fakeouts, fewer clean runs, demand stronger confirmation |
+| **Transition** | Where the best reversals and dip catches often appear |
+| **Strong Bearish** | Downside pressure is real, short-side regimes behave cleaner |
+
+<Note>
+  If you trade based on **states** instead of isolated signals, the suite
+  stops being "an indicator" and becomes a **live market interpreter**.
+</Note>

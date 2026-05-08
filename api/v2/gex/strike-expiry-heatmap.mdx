@@ -1,6 +1,7 @@
 ---
 title: "Strike × expiry heatmap"
 openapi: "GET /gex/strike-expiry-heatmap"
+mode: "wide"
 ---
 
 2D matrix of net GEX with rows=strikes, cols=expiries (sorted ascending DTE). `?max_strikes` and `?max_expiries` downsample around spot / front of curve.

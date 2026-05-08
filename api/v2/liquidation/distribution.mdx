@@ -1,11 +1,12 @@
 ---
 title: "Liquidation distribution"
 openapi: "GET /liquidation/distribution"
+mode: "wide"
 ---
 
 Per-price-level long and short liquidation volumes with a leverage-tier
 estimate based on distance from spot. Use it as a histogram visualisation
-or as input to position-sizing logic — clusters of leverage near current
+or as input to position-sizing logic - clusters of leverage near current
 price are where stop-cascades typically trigger.
 
 Leverage tiers are estimated from distance to spot:

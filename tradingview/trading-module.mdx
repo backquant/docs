@@ -1,0 +1,414 @@
+---
+title: "Trading Module"
+description: "A modular overlay combining Trend, Impulse, Stop Loss, RSI screener, market structure, FVGs, volumetric order blocks, volumetric S/R, and reversal bands. Built for discretionary execution and study."
+sidebarTitle: "Trading Module"
+mode: "wide"
+---
+
+<Frame>
+  <img src="https://s3.tradingview.com/b/BFj0cuSF_mid.webp?v=1765767526" alt="Trading Module" />
+</Frame>
+
+<Card title="See on TradingView" icon="chart-line" href="https://www.tradingview.com/script/BFj0cuSF/" horizontal>
+  Open the Trading Module on TradingView. Current version: **v2.0.1**.
+</Card>
+
+## What This Script Is
+
+The Trading Module is a single overlay that bundles the components of a real
+discretionary process: a directional **bias filter**, a **timing engine**, a
+**risk framework**, a **multi-symbol watchlist**, and a **price-action layer**.
+Every module is independently switchable, so you can run it as a clean
+trend-follower, a structure-driven execution chart, or a watchlist scanner -
+without juggling multiple scripts.
+
+It is intentionally **not** a "buy/sell arrow" tool. The script's job is to
+keep five questions answered at all times:
+
+1. What direction am I biased toward? *(Trend)*
+2. Is now a moment worth engaging? *(Impulse)*
+3. Where is the idea wrong? *(Stop Loss)*
+4. What else in my universe is doing the same thing? *(Screener)*
+5. Where on the chart actually matters? *(Structure, FVGs, Order Blocks, S/R)*
+
+## Module Map
+
+<CardGroup cols={3}>
+  <Card title="Trend Model">
+    Direction filter - 5 selectable engines from a composite multi-factor
+    model down to a simple EMA cross.
+  </Card>
+  <Card title="Impulse Model">
+    Timing engine - flags expansion / pressure events with `𝕃` (engage)
+    and `ℂ` (cash) labels.
+  </Card>
+  <Card title="Stop Loss">
+    Three structural risk frameworks - volatility, fixed-percent, or
+    bar-to-bar invalidation.
+  </Card>
+  <Card title="RSI Screener">
+    10-slot multi-symbol multi-timeframe RSI watchlist, gradient-colored
+    by strength.
+  </Card>
+  <Card title="Market Structure">
+    Independent swing and internal pivot tracking with BOS / MSB / MSB+ tagging.
+  </Card>
+  <Card title="Volumetric Order Blocks">
+    Pivot-anchored OB zones with internal buy/sell volume split and
+    relevance %.
+  </Card>
+  <Card title="Fair Value Gaps">
+    Multi-timeframe imbalance boxes with mid-line and right-extension.
+  </Card>
+  <Card title="Volumetric S/R">
+    High-volume pivot-based support/resistance with touch counting and
+    auto-cleanup on break.
+  </Card>
+  <Card title="Reversal Bands (NEW)">
+    Volatility-and-percentile bands for top finding, dip hunting, and
+    exhaustion detection.
+  </Card>
+</CardGroup>
+
+## Trend Models
+
+The Trend Model is your bias filter. The script ships five engines so you can
+pick the one whose behavior matches the asset and timeframe you trade. Only
+one is active at a time.
+
+| Model | What It Reads | Best For |
+| --- | --- | --- |
+| **Universal Trend+** | A composite of five families - RSI regime, smoothed Rate-of-Change, fast/slow EMA spread, a normalized T3 oscillator, and a DEMA-ATR band - each emitting its own long/short/neutral vote, then averaged. | The default if you want one trend read that is hard to fake out by any single indicator failing. |
+| **EMA Cross** | Fast vs slow EMA. Color flips with the cross. | Simple, responsive, but expects you to handle range-bound chop yourself. |
+| **DEMA ATR** | A double-EMA midline with an ATR envelope; the line only shifts color when it actually breaks structure, not on every wiggle. | Cleaner than a basic cross in choppy assets. |
+| **Relative Strength Overlay** | A "for-loop" RSI scoring system that ranks the current RSI against a band of historical readings and flips on persistent strength shifts. | A "strength state" trend rather than a moving-average state. |
+| **Hull Trend** | A long-period Hull moving average, painted by its own slope. | Smooth, lag-reduced trend backdrop for higher timeframes. |
+
+<Tip>
+  Treat the trend model as a **regime filter**, not a signal. Long bias =
+  filter shorts, look for impulse longs. Short bias = the inverse.
+</Tip>
+
+## Impulse Models
+
+Impulse is the timing layer. It is decoupled from trend on purpose - a market
+can be trending without currently *impulsing*, and impulses can occur
+counter-trend (where they're useful as warnings rather than entries).
+
+Both impulse engines share the same scoring core: a current oscillator value
+is **compared against many of its own historical bars at once** and counted
+into a single score. The score crosses a long threshold to print `𝕃`, and
+crosses a short threshold to print `ℂ` (cash). This makes them more
+selective than a raw oscillator cross.
+
+| Model | Underlying Read |
+| --- | --- |
+| **BBPct FL Impulse** | Bollinger %B normalized into the for-loop score. Reacts to where price sits inside its volatility envelope, not just its slope. |
+| **DM Impulse Enhanced** | Built on Directional Movement. Cleaner read on directional pressure, less reactive to single bar volatility spikes. |
+
+**Labels you'll see:**
+
+- `𝕃` (long) - the impulse score flipped above the long threshold.
+- `ℂ` (cash) - the impulse score crossed under the short threshold; treat as
+  exit / stand-aside, not necessarily an active short.
+
+<Note>
+  Counter-trend impulses are not invalid signals - they're early-warning
+  events. Use them to take profits or tighten stops, not to fight the trend
+  model.
+</Note>
+
+## Stop Loss Frameworks
+
+Three independent risk-overlay styles. None of them are "the" stop - they're
+visual frameworks for structuring invalidation.
+
+| Mode | What It Plots | When To Use |
+| --- | --- | --- |
+| **Dynamic** | Two volatility bands above and below price, scaled by RMA of True Range × 1.5. Expands in volatile regimes, tightens when range contracts. | Default for most trend or impulse setups - it adapts. |
+| **Fixed** | Three pairs of percentage bands at ±1%, ±2.5%, and ±4% from the bar's reference price. | Rule-based / mechanical risk sizing where you want flat percentages instead of vol-aware ones. |
+| **Bar-to-Bar** | Marks the prior bar's low (on up bars) or high (on down bars) as the immediate invalidation. | Tight intra-trend management - "if last bar gets violated, the move is broken." |
+
+<Warning>
+  Stops belong where the **trade idea is wrong**, not where you start to feel
+  pain. If you take entries from impulses, your stop has to be wide enough to
+  survive impulse-volatility, not just last-bar noise.
+</Warning>
+
+## RSI Screener
+
+A built-in multi-symbol, multi-timeframe RSI watchlist that draws as a stacked
+overlay on the right side of your chart - no extra panes, no second tab.
+
+**What you control:**
+
+- **10 symbol slots** with sensible crypto majors as defaults; each slot can
+  be swapped to any TradingView ticker.
+- **Per-slot timeframe** (empty = current chart timeframe). Mix HTF and LTF
+  reads in the same screener.
+- **RSI length** and a configurable **midline threshold** (default 50) used
+  as the bull/bear divider.
+- **Gradient coloring**: when enabled, each row interpolates between long and
+  short colors based on its RSI value (20 → 80 range), so you read strength
+  by hue rather than just reading numbers.
+- **Label size** and X/Y offsets for fitting the screener cleanly into your
+  layout.
+
+**How to read it:**
+
+- Read the **midline crosses**, not the OB/OS extremes - RSI > midline =
+  bull regime, < midline = bear regime.
+- Stack a higher-timeframe slot on top for regime, lower-timeframe slots
+  below for timing within that regime.
+- Use the screener as **context**, not a trade trigger.
+
+<Note>
+  Each slot is a `request.security()` call. Heavy use on lower-end machines
+  may impact load time - disable slots you don't actively watch.
+</Note>
+
+## Market Structure
+
+Tracks pivots and prints **structural events** as labels on the chart.
+Two independent layers: **Swing** (slower, macro) and **Internal** (faster,
+intra-trend). Each has its own lookback.
+
+**Events plotted:**
+
+| Event | Meaning |
+| --- | --- |
+| **BOS** *(Break of Structure)* | A continuation event - trend extends past the most recent swing in the same direction. |
+| **MSB** *(Market Structure Break)* | A directional shift - the structure breaks against the prior trend. |
+| **MSB+** | A higher-confidence MSB filter for users who want fewer, stronger shift signals. |
+
+**Configurable per layer:**
+
+- Display mode: `All` / `MSB` / `MSB+` / `BOS` / `None` - show only what you care about.
+- Independent lookback: swing default `50`, internal default `5`.
+- Independent bull/bear colors and line styles (Solid / Dashed / Dotted).
+
+**Use it for:**
+
+- **Swing layer** → confirm the larger regime (does the trend model align
+  with structural reality?).
+- **Internal layer** → time entries inside the swing regime.
+
+## Volumetric Order Blocks
+
+Order Blocks (OBs) are pivot-anchored zones that mark where the last
+opposite-direction candle pushed the move that created a structural pivot.
+The Trading Module's OB engine adds **volume context** so you can tell apart
+"a textbook OB" from "an OB the market actually traded heavily through."
+
+**Anatomy of each OB box:**
+
+| Component | What it shows |
+| --- | --- |
+| **Top / Bottom of zone** | The OB price range itself. |
+| **Mid-line** | A horizontal mid-price reference for partial reactions. |
+| **Internal Buy/Sell metric (`Internal Buy/Sell Activity`)** | Two stacked sub-zones inside each OB box that grow as later bars print up vs down inside the zone. Lets you see at a glance whether buyers or sellers are actually engaging it. |
+| **Volume label + relevance %** | Total volume that built the OB, plus what percentage of the visible OB stack that volume represents. The OB carrying more weight is doing more work. |
+| **Right-extension box** | The OB projected forward so you can see future tests at a glance. |
+
+**Detection & filtering:**
+
+- **Filtering** - restrict OB creation to break events of a specific type
+  (`None`, `BOS`, `MSB`, `MSB+`).
+- **Mitigation** - choose how an OB gets considered "used up": `Absolute`
+  (full body breach) or `Middle` (mid-line breach).
+- **Hide Overlap** - when two OBs overlap, the engine keeps either the
+  more recent or earlier one (default: keep previous), so the chart doesn't
+  clutter with stacked duplicates.
+- **OB count** - how many active OBs to keep on chart at once.
+- **Swing OBs** - optional separate set of OBs anchored to swing structure
+  rather than internal structure.
+- **Grayscale mode** - desaturate the OBs if you'd rather use color for
+  other modules.
+
+<Tip>
+  An OB with a high relevance % and an internal metric that **agrees** with
+  the OB direction (buy metric dominant inside a bull OB) is doing real
+  work. An OB whose internal metric disagrees with its direction is already
+  losing its edge before price even returns.
+</Tip>
+
+## Fair Value Gaps (FVGs)
+
+Three-bar imbalance boxes - places where price moved fast enough that the
+candle in the middle did not overlap with its neighbors. The script draws
+them as zones and adds a mid-line for partial fills.
+
+**Controls:**
+
+- **Enable** - toggle FVGs on/off (off by default).
+- **Show Last** - cap of how many recent FVGs to display (default 5).
+- **Timeframe** - detect FVGs on a different timeframe than your chart
+  (e.g. mark 1H FVGs on a 5m chart). Empty = chart timeframe.
+- **Extend** - how many bars to project the FVG box into the future.
+- **Bull/Bear color** - both default to a soft tint of your long color so
+  the chart doesn't fight your other modules; you can override.
+
+**Interpretation:**
+
+- An FVG is an **area of interest**, not a trade by itself. Many traders
+  use them as targets (price likes to revisit unfilled imbalances) or as
+  decision zones for entry/rejection.
+- The engine **auto-removes** an FVG once price closes through it from
+  the wrong side - so what's on the chart is always still active.
+
+## Volumetric Support & Resistance
+
+A pivot-based S/R engine that only respects pivots **confirmed by elevated
+volume**. Plain pivots are ignored - the level has to be earned.
+
+**Detection logic:**
+
+| Input | Effect |
+| --- | --- |
+| **Detection Sensitivity** *(default 5)* | The pivot lookback. Lower = more pivots, higher = stricter. |
+| **Volume Multiplier** *(default 1.0×)* | The pivot's volume must be at least this multiple of average volume to qualify as a level. |
+| **Analysis Period** *(default 100)* | Bars used for the volume baseline. |
+| **Min Distance %** *(default 0.5%)* | Levels closer to an existing one are skipped, so the chart doesn't fill with near-duplicates. |
+| **Max Levels** *(default 15)* | Hard cap on active levels. |
+| **Remove Broken** | Auto-deletes levels once price closes through them by more than ~0.3 × ATR - keeps only "still active" zones. |
+
+**What each box shows:**
+
+- A **box around the level** with thickness scaled to ATR (so the zone is
+  visually proportionate to volatility).
+- **Border thickness** - high-volume levels get a thicker border, so the
+  chart highlights the zones built on the most participation.
+- **Touch counter** - every time price comes back into the zone, the touch
+  count goes up. Repeat tests are more meaningful than one-and-done levels.
+- **Volume text** - optionally displayed inside the box (or beside it).
+- **Right-extend** - toggle whether levels project into future bars.
+
+<Tip>
+  Pair volumetric S/R with the impulse model: an `𝕃` printing **at** a
+  high-volume support that has multiple touches is much higher quality than
+  the same `𝕃` printing in open air.
+</Tip>
+
+## Reversal Bands
+
+<Info>NEW in v2.0.1</Info>
+
+A volatility-aware band system designed for **top finding, dip hunting, and
+local exhaustion**. It combines two ideas:
+
+1. **A percentile envelope** - the script tracks where the source has
+   historically traded within a configurable lookback (default 200 bars,
+   95th percentile) and uses that as a "stretched" anchor.
+2. **A volatility-multiplied deviation band** - built off a baseline length
+   (default 50) and a volatility length (default 53), then scaled by a
+   multiplier (default 3.1×).
+
+Together, they highlight **price behaving extremely relative to its own
+recent regime** - not just "above an SMA."
+
+**Inputs you'll touch most:**
+
+| Input | What it changes |
+| --- | --- |
+| **Percentile Lookback / Level** | How far back the percentile is measured, and how extreme a reading must be (95 = top 5% / bottom 5%). |
+| **Baseline Length** | The smoothing of the central reference. Lower = faster, higher = cleaner. |
+| **Volatility Length & Multiplier** | The width of the deviation envelope. Higher multiplier = fewer signals, more selective. |
+| **Show Reversal Signals** | Toggle the in-band Dip / Top reversal signal markers on or off. |
+
+**How to read it:**
+
+- Price tagging the **upper band** in conditions of strong trend = late-cycle
+  caution / take-profit zone, not a blind short.
+- Price tagging the **lower band** with weakening down-impulse = high-quality
+  dip-hunt context.
+- Use it as a **filter on top of impulse signals**: an `ℂ` near the upper
+  band is more meaningful than an `ℂ` mid-range.
+
+## Core Philosophy
+
+This indicator is not "one model to rule them all." It exists to let you
+build a process where each layer answers exactly one question:
+
+| Layer | Decides |
+| --- | --- |
+| **Trend** | bias |
+| **Impulse** | timing |
+| **Structure / OB / FVG / S/R** | location |
+| **Stop Loss** | risk |
+| **Screener** | focus |
+| **Reversal Bands** | exhaustion |
+
+If you only use one layer, you're discarding most of the edge the script is
+designed to build. The strength is in **confluence and filtering** - multiple
+modules agreeing on the same idea at the same place.
+
+## Suggested Presets
+
+<CardGroup cols={3}>
+  <Card title="Preset A - Clean Trend Following">
+    - Trend: Universal Trend+ or DEMA ATR
+    - Impulse: BBPct FL or DM Enhanced
+    - Stop Loss: Dynamic
+    - Structure / FVG / OB: Off
+    - Screener: On (high TF)
+  </Card>
+  <Card title="Preset B - Execution & Structure">
+    - Trend: Hull Trend or Universal Trend+
+    - Impulse: On
+    - Market Structure: Swing + Internal
+    - FVG + Volumetric Order Blocks: On
+    - Stop Loss: Dynamic or Bar-to-Bar
+  </Card>
+  <Card title="Preset C - Watchlist Scanner">
+    - Screener: On (10 slots, mixed TFs)
+    - Minimal chart overlays
+    - Reversal Bands: On for context
+    - Drill into individual charts when alignment shows up
+  </Card>
+</CardGroup>
+
+## Quick Input Map
+
+| Group | Key inputs |
+| --- | --- |
+| **Main / Models** | Trend, Impulse, Stop Loss model selectors • Show Screener • Long/Short colors • Reversal Bands toggles |
+| **Screener** | 10 symbol slots • per-slot timeframe + toggle • RSI length & midline • label size + offsets • gradient coloring |
+| **Reversal Bands** | Percentile source, lookback, level • Deviation source, baseline length, volatility length & multiplier |
+| **Volume Order Blocks** | Show on chart • OB count • Internal buy/sell metric • Swing OBs • Filtering (None / BOS / MSB / MSB+) • Mitigation (Absolute / Middle) • Grayscale |
+| **Market Structure** | Swing & Internal mode (All / MSB / MSB+ / BOS / None) • per-layer lookback • bull/bear colors • line styles |
+| **Fair Value Gaps** | Enable • Show Last (count) • Timeframe • Extend bars • bull/bear colors |
+| **Volumetric S/R** | Sensitivity • Volume multiplier • Analysis period • Max levels • Min distance % • Remove broken • Right-extend • Volume text inside |
+
+## Version History
+
+### v2.0.1 - Latest
+
+- Added **Reversal Bands** with volatility-adjusted percentile calculations.
+- New reversal signals (Green for Dip, Red for Top).
+- 7 new inputs for band sensitivity calibration.
+- Bug fixes for calculation errors.
+- Larger lookback without losing calculation time.
+
+### v1.1.0
+
+- Added **Hull Trend** model.
+- Static screener color option (inverse of chart background).
+- Volumetric S/R on/off toggle.
+- Improved Market Structure inputs.
+- Enhanced Order Block plotting with internal buy/sell volume metric.
+- Significant runtime improvement.
+- Temporary removal of `alerts()`.
+
+## Final Notes
+
+This is a full visual decision-support overlay for discretionary traders who
+want trend, timing, structure, and watchlist scanning in one place. Use it
+to build a repeatable process, then validate that process with proper
+testing and journaling before risking real capital.
+
+<Warning>
+  This is a heavy script when many modules are enabled - it draws live
+  objects and requests multiple symbols. Not every combination is optimal
+  for every market or timeframe; the modules are deliberately independent
+  so you can disable what you're not using.
+</Warning>
