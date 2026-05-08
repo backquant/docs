@@ -1,36 +1,44 @@
 /* BackQuant docs - global layout overrides
  * Mintlify auto-loads any .css file at the repo root. */
 
-/* ---- Left navigation sidebar - wider ---- */
-#sidebar-content {
-  width: 340px !important;
-  max-width: 340px !important;
+/* ===== Wider left sidebar on desktop ===== */
+@media (min-width: 1280px) {
+  #sidebar-content {
+    width: 320px !important;
+    max-width: 320px !important;
+  }
 }
 
-/* Sidebar link spacing */
-#sidebar-content a {
-  padding-top: 0.4rem !important;
-  padding-bottom: 0.4rem !important;
-  font-size: 0.92rem;
+@media (min-width: 1600px) {
+  #sidebar-content {
+    width: 360px !important;
+    max-width: 360px !important;
+  }
 }
 
-/* ---- Main content area - wider ---- */
-#content-area {
-  max-width: 1100px !important;
+/* ===== Sidebar link polish ===== */
+@media (min-width: 768px) {
+  #sidebar-content a {
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+    font-size: 0.92rem;
+  }
 }
 
-/* ---- Hide right "On this page" TOC ---- */
-aside[class*="toc"],
-nav[class*="toc"],
-div[class*="TableOfContents"] {
-  display: none !important;
-}
-
-/* ---- Tighten table density ---- */
+/* ===== Tables ===== */
 table {
   font-size: 0.92rem;
 }
 table th,
 table td {
   padding: 0.5rem 0.75rem;
+}
+
+@media (max-width: 767px) {
+  table {
+    font-size: 0.85rem;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
