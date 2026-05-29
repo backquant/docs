@@ -1,0 +1,48 @@
+---
+title: "Venue coverage"
+description: "Which exchanges BackQuant ingests for options chains, GEX, IV, levels and the tape — plus where each venue's data shows up in the API."
+---
+
+BackQuant ingests crypto options data from four exchanges and folds them into one canonical surface. This page describes which venues feed which endpoints, and how to filter by venue when relevant.
+
+## Venues at a glance
+
+| Venue | Tape | Chain / IV / GEX inputs | Source |
+|---|---|---|---|
+| **Deribit** | ✅ live WS | ✅ primary | Public WebSocket + REST chain. The deepest BTC + ETH books in the market. |
+| **Bybit** | ✅ live WS | ✅ multi-venue OI roll-up | Public V5 WebSocket (`publicTrade.{coin}.option`) + chain REST. |
+| **OKX** | ✅ live WS | ✅ multi-venue OI roll-up | Public V5 WebSocket (`option-trades`, `instFamily=BTC-USD` / `ETH-USD`). |
+| **Binance** | ✅ REST poll | Limited (no live WS on options) | `eapi.binance.com/eapi/v1/trades` polled for the top-30 most-active BTC + ETH contracts every 30 seconds. |
+
+### Coins
+
+`BTC` and `ETH` are fully covered across all four venues. `SOL` and `HYPE` are valid symbols in the API schema (some venues have started listing them) but live coverage is currently thin.
+
+## Where venues show up
+
+| Endpoint family | Per-venue filter? | Default behaviour |
+|---|---|---|
+| [Tape REST](/api/v2/tape/overview) | ✅ `?venues=deribit,bybit,...` | All four venues unioned |
+| [Tape WebSocket](/api/v2/tape/websocket) | ✅ per-channel subscription `tape.{coin}.{venue}` | Subscribe to `tape.{coin}.agg` for the union |
+| [GEX](/api/v2/gex/levels) — strike profile / levels / heatmaps | Deribit-primary; multi-venue OI roll-up | Multi-venue blended view |
+| [IV](/api/v2/options/iv/surface) — surface / term / skew / smile | Deribit-derived | Single, Deribit-rooted view |
+| [Greeks profiles](/api/v2/options/greeks/by-greek) | Deribit-derived | Deribit-rooted |
+| [Open interest](/api/v2/options/oi/by-expiry) | Multi-venue blended | Union of all venues |
+
+When a metric is documented as "multi-venue blended," it means OI from every venue that lists the coin is rolled into one weighted view. Bid/ask depth is Deribit-only — the other venues don't make the chain pricing usable at retail latency.
+
+## Why Binance isn't on the live WS
+
+The public Binance options WebSocket host (`nbstream.binance.com/eoptions/...`) is not reachable from our infrastructure, despite the REST chain on `eapi.binance.com` working normally.
+
+We therefore poll Binance's REST trade endpoint every 30 seconds for the most-actively-traded BTC and ETH contracts (hot list refreshed every 5 minutes by 24-hour volume). In practice this captures ~95 % of Binance options premium because volume concentrates in the top 20-30 strikes. Tail strikes that print rarely will be missed.
+
+We're tracking the issue and will move Binance to the live WS as soon as the upstream path becomes usable.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Tape overview" href="/api/v2/tape/overview" icon="table-list" />
+  <Card title="Data freshness" href="/concepts/data-freshness" icon="clock" />
+  <Card title="Multi-symbol bundle" href="/concepts/multi-symbol" icon="layer-group" />
+</CardGroup>

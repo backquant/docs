@@ -1,0 +1,15 @@
+---
+title: "Tape — recent trades"
+openapi: "GET /tape/recent"
+---
+
+Shorthand for the latest N trades across the requested venues, sorted newest-first. Equivalent to `GET /v2/tape?limit=N&order=desc`, with no cursor state to manage.
+
+Use this when you just want a sanity sample or a "what's been happening" dump. Use [`/v2/tape`](/api/v2/tape/tape) when you need filters or pagination.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Full tape with filters" href="/api/v2/tape/tape" icon="filter" />
+  <Card title="Live WebSocket" href="/api/v2/tape/websocket" icon="bolt" />
+</CardGroup>

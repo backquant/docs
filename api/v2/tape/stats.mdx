@@ -1,0 +1,42 @@
+---
+title: "Tape — aggregate stats"
+openapi: "GET /tape/stats"
+---
+
+Aggregate roll-up over a configurable window (up to 7 days). Returns overall + per-venue totals: trade count, total premium in USD, contract volume, call/put split, and buy-side vs sell-side premium.
+
+Use this when you don't need raw trades — just the headline numbers for a scoring model, dashboard, or alert.
+
+## Example response shape
+
+```json
+{
+  "success": true,
+  "data": {
+    "window_hours": 24,
+    "overall": {
+      "trades": 59145,
+      "premium_usd": 65332823.53,
+      "contracts": 59627.75,
+      "calls": 31431,
+      "puts": 27714,
+      "buy_premium_usd": 31252458.99,
+      "sell_premium_usd": 34080364.54
+    },
+    "per_venue": {
+      "deribit": { "trades": 14610, "premium_usd": 51521299.5, ... },
+      "bybit":   { "trades": 44406, "premium_usd": 5759987.3,  ... },
+      "okx":     { "trades": 123,   "premium_usd": 8051378.5,  ... },
+      "binance": { "trades": 6,     "premium_usd": 158.0,      ... }
+    }
+  },
+  "meta": { "version": "2.0", "computed_at": "...", "source": [...] }
+}
+```
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Full tape with filters" href="/api/v2/tape/tape" icon="filter" />
+  <Card title="Live WebSocket" href="/api/v2/tape/websocket" icon="bolt" />
+</CardGroup>

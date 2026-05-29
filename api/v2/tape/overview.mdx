@@ -1,0 +1,92 @@
+---
+title: "Tape overview"
+description: "Multi-venue crypto options trade tape — REST history + live WebSocket streaming, every trade across Deribit, Bybit, OKX and Binance, normalised into one canonical shape."
+---
+
+The **Options Tape API** is BackQuant's multi-venue, real-time and historical record of every options trade we observe. The same canonical payload powers both a cursor-paginated REST history and a live WebSocket stream.
+
+If you're scoring methodologies, building flow dashboards, or running execution analytics, this is the surface to integrate against.
+
+## What's in it
+
+- **Every trade**, normalised — venue / coin / instrument / strike / expiry / direction / amount / price / index price / IV (when present) / premium in USD / block-trade flag / ms timestamp.
+- **4 venues** ingested continuously (see [Venue coverage](#venue-coverage)).
+- **5-year retention** in the persistence layer — backfill of pre-`2026-05-17` history is available on request via our archive partner.
+- **Sub-second freshness** on the WebSocket; REST `/recent` reflects the latest trade as soon as it lands in Postgres (~200ms after the venue WS emits it).
+- **Filters** for venue, instrument, option type, strike range, premium minimum, and derived tags (`0dte`, `atm`, `whale`).
+
+<CardGroup cols={2}>
+  <Card title="REST endpoints" href="/api/v2/tape/rest" icon="table-list" />
+  <Card title="WebSocket broadcaster" href="/api/v2/tape/websocket" icon="bolt" />
+</CardGroup>
+
+## Venue coverage
+
+| Venue | Source | Latency to tape | Coverage |
+|---|---|---|---|
+| **Deribit** | Native public WebSocket | < 200 ms | Full BTC + ETH chains, every trade |
+| **Bybit** | Native public WebSocket (`publicTrade.{coin}.option`) | < 200 ms | Full BTC + ETH option chains |
+| **OKX** | Native public WebSocket (`option-trades` channel, `BTC-USD` + `ETH-USD` instFamilies) | < 200 ms | Every trade on listed BTC + ETH instruments |
+| **Binance** | REST polling — `eapi.binance.com/eapi/v1/trades` for the top-30 most-active BTC + ETH contracts every 30 s | ~ 30 s | Top-volume strikes only (~95% of total Binance options volume) |
+
+Binance polls the most-active contracts rather than every instrument because the Binance options public WS endpoint is not reachable from our infrastructure. The hot-contract list refreshes every 5 minutes by 24-hour volume.
+
+## Coins
+
+- `BTC` and `ETH` are fully covered across all four venues.
+- `SOL` and `HYPE` are accepted by the API schema (some venues are starting to list them) but coverage is currently thin to non-existent. Filter for those at your own risk.
+
+## Tape coverage vs derived metrics
+
+| Surface | Live? | History? |
+|---|---|---|
+| **Tape** (this section) | ✅ live, multi-venue | ✅ 5y persisted, cursor-paginated |
+| **GEX / IV / levels / greeks profiles** ([Options API](/api/v2/options/chain)) | ✅ refreshed 30 s–5 min | Rolling ~24 h in Redis; forward-only Postgres history accumulating since `2026-05-29` |
+| **Probability density / Expected move / OPEX / PCR** | ✅ live | Same as above |
+
+If you need deep history of GEX, IV or levels (not the raw tape), please reach out — we can scope a custom engagement using replayed chain snapshots.
+
+## Quick start
+
+<CodeGroup>
+
+```bash curl — recent trades
+curl https://api.backquant.com/v2/tape/recent?symbol=BTCUSDT&limit=5 \
+  -H "X-API-Key: $BQ_API_KEY"
+```
+
+```python Python — WebSocket
+import asyncio, json, os, websockets
+
+URL = "wss://api.backquant.com/v2/ws/options?api_key=" + os.environ["BQ_API_KEY"]
+
+async def main():
+    async with websockets.connect(URL) as ws:
+        welcome = json.loads(await ws.recv())
+        print("welcome:", welcome["subscription_tier"])
+
+        await ws.send(json.dumps({
+            "action": "subscribe",
+            "channels": ["tape.BTC.agg"],
+        }))
+        async for raw in ws:
+            msg = json.loads(raw)
+            if msg.get("event") == "trade":
+                t = msg["data"]
+                print(t["venue"], t["instrument"], t["direction"], "$", t["premium_usd"])
+
+asyncio.run(main())
+```
+
+</CodeGroup>
+
+Need a working demo client? Grab [`ws_tape_demo.py`](https://github.com/backquant/backquant-terminal/blob/main/scripts/v2_ws_demo/ws_tape_demo.py) from the repo — single file, no setup beyond `pip install websockets`.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Authentication" href="/authentication" icon="key" />
+  <Card title="Data freshness" href="/concepts/data-freshness" icon="clock" />
+  <Card title="Rate limits" href="/concepts/rate-limits" icon="gauge" />
+  <Card title="Response envelope" href="/concepts/response-format" icon="brackets-curly" />
+</CardGroup>

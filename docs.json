@@ -47,6 +47,7 @@
               "concepts/iv-suite",
               "concepts/greeks",
               "concepts/multi-symbol",
+              "concepts/venues",
               "concepts/data-freshness",
               "concepts/response-format",
               "concepts/rate-limits",
@@ -146,6 +147,16 @@
             "group": "API — Multi-symbol",
             "pages": [
               "api/v2/multi/gex-levels"
+            ]
+          },
+          {
+            "group": "API — Tape & WebSocket",
+            "pages": [
+              "api/v2/tape/overview",
+              "api/v2/tape/tape",
+              "api/v2/tape/recent",
+              "api/v2/tape/stats",
+              "api/v2/tape/websocket"
             ]
           }
         ]

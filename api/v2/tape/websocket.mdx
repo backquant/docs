@@ -1,0 +1,157 @@
+---
+title: "Tape — live WebSocket"
+description: "Channel-multiplexed live stream of every options trade across Deribit, Bybit, OKX and Binance, with API-key auth, per-tier connection caps, and slow-consumer protection."
+---
+
+`wss://api.backquant.com/v2/ws/options`
+
+Single connection, multiple subscriptions. The same canonical trade payload from the REST tape, pushed sub-second after the upstream venue emits it.
+
+## Authentication
+
+Pass your API key on the WebSocket handshake — either of:
+
+- **Query parameter** — `wss://api.backquant.com/v2/ws/options?api_key=bq_live_...` (easiest from browsers).
+- **`Authorization: Bearer` header** — preferred from server-to-server clients.
+- **`X-API-Key` header** — accepted as a fallback for clients that can set arbitrary handshake headers.
+
+The handshake validates the key, subscription status and tier eligibility. Failures close the connection with a `1008` policy-violation code and a human-readable reason.
+
+## Channel inventory
+
+| Channel | Payload | Frequency |
+|---|---|---|
+| `tape.{coin}.{venue}` | One trade per frame | Per trade (~10–100/s in burst) |
+| `tape.{coin}.agg` | Same trade payload, aggregated across all venues for that coin | Per trade |
+| `status.heartbeat` | Server liveness + per-client queue stats | Every 15 s |
+
+`{coin}` is `BTC` or `ETH`. `{venue}` is `deribit`, `bybit`, `okx`, or `binance` (case-insensitive on subscribe; the server normalises to lowercase). See [Tape overview → Venue coverage](/api/v2/tape/overview#venue-coverage) for what each venue ships.
+
+Max **32 channels per connection**.
+
+## Protocol
+
+### Server → client envelope
+
+Every server frame is a JSON object with an `event` field:
+
+```json
+{ "event": "welcome",       "ts": "...", "subscription_tier": "enterprise",
+                            "client_id": "abc...", "max_channels": 32,
+                            "available_channels": [...] }
+
+{ "event": "subscribed",    "ts": "...", "channels": [...], "added": [...] }
+{ "event": "unsubscribed",  "ts": "...", "channels": [...], "removed": [...] }
+
+{ "event": "trade",         "ts": "...", "channel": "tape.BTC.deribit",
+                            "data": { ...trade payload... } }
+
+{ "event": "heartbeat",     "ts": "...", "channel": "status.heartbeat",
+                            "queue": { "size": 7, "capacity": 1000 },
+                            "channels": ["tape.BTC.agg", ...] }
+
+{ "event": "pong",          "ts": "..." }
+{ "event": "error",         "ts": "...", "detail": "...",
+                            "invalid": [...], "available_channels": [...] }
+{ "event": "slow_consumer", "ts": "...", "detail": "Queue full for >5s ..." }
+```
+
+### Client → server commands
+
+```json
+{ "action": "subscribe",   "channels": ["tape.BTC.agg", "tape.BTC.deribit"] }
+{ "action": "unsubscribe", "channels": ["tape.BTC.deribit"] }
+{ "action": "ping" }
+```
+
+Each command receives a corresponding ack frame.
+
+### Trade payload
+
+```json
+{
+  "venue":          "deribit",          // "deribit" | "bybit" | "okx" | "binance"
+  "coin":           "BTC",              // "BTC" | "ETH"
+  "instrument":     "BTC-30JUN26-100000-C",
+  "trade_id":      "12345",
+  "direction":      "buy",              // "buy" | "sell" (taker side)
+  "option_type":    "call",             // "call" | "put"
+  "strike":         100000.0,
+  "expiry_date":    "2026-06-30",
+  "amount":         1.5,                // contracts
+  "price":          0.0525,             // venue-quoted (BTC for Deribit/OKX, USDT for Bybit/Binance)
+  "mark_price":     0.0530,             // venue mark at trade time (when published)
+  "index_price":    67234.10,           // spot index at trade time (when published)
+  "iv":             65.4,               // implied vol % (when published)
+  "premium_usd":    5293.60,            // canonical USD premium = price × amount × (index_price OR 1)
+  "is_block_trade": false,
+  "ts_ms":          1748480000000
+}
+```
+
+`premium_usd` is the field to rank, filter or score by — venue quotation differences are already normalised away.
+
+## Connection lifecycle
+
+1. **Connect** with API key → server validates → counts connection against your per-tier cap.
+2. **Receive `welcome`** → sanity-check `subscription_tier` and `available_channels`.
+3. **Send `subscribe`** → server replies with `subscribed` ack + immediately starts streaming matching trades.
+4. **Stream** — trades arrive on their channel; `status.heartbeat` arrives every 15 s if subscribed.
+5. **Heartbeat liveness** — the server expects at least one client frame (subscribe / unsubscribe / ping) within 60 s. Otherwise it closes with code `1001`.
+6. **Slow consumer** — each client has a 1000-message send buffer. If full for > 5 s the server sends a `slow_consumer` event then closes with code `1013`. Reduce your subscription set or process frames faster.
+7. **Disconnect** → connection counter decrements; reconnect any time.
+
+## Per-tier connection caps
+
+| Tier | Concurrent WS connections per API key |
+|---|---|
+| API Monthly | 2 |
+| API Yearly | 4 |
+| Enterprise | 10 (customisable) |
+
+Exceeding the cap on connect returns close code `1008` with `Connection cap reached for tier 'X' (max N)`.
+
+## Reconnect template
+
+The server has no replay — `$` cursor is used on the underlying Redis stream, so a reconnect resumes with whatever's live, not whatever you missed. For zero-gap consumers, also poll [`/v2/tape?after=<last_ts>`](/api/v2/tape/tape) on reconnect to fetch trades that arrived during the gap.
+
+```python
+import asyncio, json, os, random, websockets
+
+URL = "wss://api.backquant.com/v2/ws/options?api_key=" + os.environ["BQ_API_KEY"]
+CHANNELS = ["tape.BTC.agg", "status.heartbeat"]
+
+async def run():
+    attempt = 0
+    while True:
+        try:
+            async with websockets.connect(URL, ping_interval=20) as ws:
+                await ws.recv()  # welcome
+                await ws.send(json.dumps({"action": "subscribe", "channels": CHANNELS}))
+                attempt = 0
+                async for raw in ws:
+                    msg = json.loads(raw)
+                    if msg.get("event") == "trade":
+                        handle(msg["data"])
+        except (websockets.ConnectionClosed, ConnectionError) as e:
+            attempt += 1
+            backoff = min(60, 2 ** attempt) * (1 + random.uniform(-0.2, 0.2))
+            print(f"reconnect in {backoff:.1f}s ({e})")
+            await asyncio.sleep(backoff)
+
+def handle(trade):
+    print(trade["venue"], trade["instrument"], trade["direction"], f"${trade['premium_usd']:,.0f}")
+
+asyncio.run(run())
+```
+
+Full working client: [`scripts/v2_ws_demo/ws_tape_demo.py`](https://github.com/backquant/backquant-terminal/blob/main/scripts/v2_ws_demo/ws_tape_demo.py).
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="REST tape with filters" href="/api/v2/tape/tape" icon="filter" />
+  <Card title="Tape overview" href="/api/v2/tape/overview" icon="circle-info" />
+  <Card title="Authentication" href="/authentication" icon="key" />
+  <Card title="Rate limits & caps" href="/concepts/rate-limits" icon="gauge" />
+</CardGroup>
