@@ -7,6 +7,10 @@ Desk dashboards routinely watch the entire crypto-options universe at
 once: BTC + ETH + SOL + HYPE. Hitting `/v2/gex/levels` four times means
 four HTTP round-trips. The multi endpoint collapses that into one.
 
+Default **`positioning=flow`**, with the same per-symbol fallbacks as
+single-symbol levels (SOL/HYPE usually fall back to std). See
+[Positioning](/concepts/positioning).
+
 ## The endpoint
 
 [`/v2/multi/gex/levels`](/api/v2/multi/gex-levels) takes a CSV of

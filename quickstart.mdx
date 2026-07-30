@@ -111,13 +111,17 @@ integration" in five steps.
 
     Common filters you'll use across the API:
 
-    - `?symbol=BTCUSDT|ETHUSDT|SOLUSDT|HYPEUSDT` — supported symbols
-    - `?exchanges=deribit,bybit,okx,binance` — venue filter
-    - `?expiry=all|0dte|<token>` — single expiry slice
-    - `?dte_min` / `?dte_max` / `?weekly_only=true` — DTE-axis filter
-    - `?moneyness_min` / `?moneyness_max` — strike/spot ratio bounds
-    - `?include=...` — opt-in to optional response sections
-    - `?fields=...` — top-level projection on heavy endpoints
+    - `?symbol=BTCUSDT|ETHUSDT|SOLUSDT|HYPEUSDT` - supported symbols
+    - `?exchanges=deribit,bybit,okx,binance` - venue filter
+    - `?expiry=all|0dte|<token>` - single expiry slice
+    - `?dte_min` / `?dte_max` / `?weekly_only=true` - DTE-axis filter
+    - `?moneyness_min` / `?moneyness_max` - strike/spot ratio bounds
+    - `?positioning=flow|std` - dealer signing (default flow on live GEX)
+    - `?include=...` - opt-in to optional response sections
+    - `?fields=...` - top-level projection on heavy endpoints
+
+    Live GEX defaults to flow positioning. Details:
+    [Positioning](/concepts/positioning).
   </Step>
 
   <Step title="Try the OPEX calendar">

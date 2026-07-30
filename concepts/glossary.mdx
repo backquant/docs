@@ -58,6 +58,15 @@ front-month IV. The "normal" regime in low-vol periods.
 
 ## D
 
+**Dealer flow** — Estimated dealer hedge pressure across successive
+chain snapshots (gamma, charm, optional vanna components + cumulative).
+See [`/v2/gex/dealer-flow`](/api/v2/gex/dealer-flow). Distinct from
+customer **delta flow**.
+
+**Delta flow** — Customer signed Black-Scholes delta notional from the
+options tape (HIRO-style customer line). See
+[`/v2/gex/delta-flow`](/api/v2/gex/delta-flow).
+
 **DEX** — Dollar delta exposure. Net delta dealers carry per strike,
 in USD terms. See [Greeks beyond delta](/concepts/greeks).
 
@@ -75,6 +84,10 @@ March 28 2025. Every endpoint that returns one also returns
 `expiry_date` (ISO) when parseable.
 
 ## F
+
+**Flow positioning** — Dealer size signed from multi-venue aggressor
+tape (sold minus bought per call/put side). Default on live GEX and
+TRACE. See [Positioning](/concepts/positioning).
 
 **`freshness_seconds`** — `now − computed_at`. Useful for staleness
 alarms. See [Data freshness](/concepts/data-freshness).
@@ -152,6 +165,9 @@ distribution of the underlying at a future expiry. See
 **Pin risk** — The likelihood of price pinning to a strike on expiry
 day. Highest when max pain and gamma walls cluster near spot.
 
+**Positioning** — How live GEX/TRACE sign dealer size: `flow` (default)
+or `std`. See [Positioning](/concepts/positioning).
+
 **Premium tide** — Net options premium and notional volume tilt. See
 [`/v2/options/premium-tide`](/api/v2/options/premium-tide).
 
@@ -204,6 +220,10 @@ Slope tells you the market's vol forecast across time.
 passes. Useful as a rough estimate of dealer income from selling
 premium. See [Greeks beyond delta](/concepts/greeks).
 
+**TRACE** — Forward (time × price) projection of dealer greek exposure
+from today's chain. Greeks: `gamma`, `charm`, `vanna`, `delta_change`.
+See [`/v2/options/greeks/trace`](/api/v2/options/greeks/trace).
+
 ## V
 
 **Vanna** — `∂Delta/∂IV`. Drives "vol-rallies-the-tape" hedging
@@ -217,6 +237,9 @@ implied vol exceeds realised vol. See
 [`/v2/options/vrp`](/api/v2/options/vrp).
 
 ## W
+
+**Whale print** — Large options trade by `premium_usd`. REST helper:
+[`/v2/tape/whale`](/api/v2/tape/whale).
 
 **Weekly expiry** — A Friday expiration that is *not* the last Friday
 of the month. Lighter OI than monthlies, more responsive to short-term

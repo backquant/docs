@@ -3,11 +3,15 @@ title: "GEX by expiry"
 openapi: "GET /gex/expiry-profile"
 ---
 
-Net / call / put gamma per expiration date with DTE. `?weekly_only=true` excludes monthly + quarterly anchors.
+Net / call / put gamma per expiration date with DTE.
+`?weekly_only=true` excludes monthly + quarterly anchors.
+
+Default **`positioning=flow`**. See [Positioning](/concepts/positioning).
 
 ## See also
 
 <CardGroup cols={2}>
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
+  <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
   <Card title="OPEX calendar" href="/concepts/opex" icon="bookmark" />
 </CardGroup>

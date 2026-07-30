@@ -64,6 +64,46 @@ within 30 seconds. Use exponential backoff (2s, 4s, 8s) and your
 client should recover automatically. If it persists past a minute,
 hit [`/v2/health`](/api/v2/health) for the current subsystem status.
 
+## Positioning (flow vs std)
+
+### Why did my GEX levels change without a big move in spot?
+
+Live GEX defaults to **`positioning=flow`**: dealer size is aggressor
+sold minus bought from the multi-venue options tape, not textbook OI
+sign. Walls and HVL can shift when flow rotates even if spot is quiet.
+Use `?positioning=std` for the older call-positive / put-negative model.
+See [Positioning](/concepts/positioning).
+
+### SOL or HYPE returned `positioning: "std"` even though I asked for flow?
+
+Those coins do not have a full multi-venue aggressor tape yet. The API
+falls back to std and sets
+`meta.extra.positioning_fallback_reason` (for example
+`no_aggressor_tape_for_symbol`). BTC and ETH also fall back if the tape
+is empty.
+
+### Is `/v2/gex/history` on the same model as live levels?
+
+No. History and stress-history are stored **std** series. Live levels,
+strike profile, TRACE, and greek profiles default to **flow**. Do not
+mix them in one chart without noting the model.
+
+### Dealer-flow vs delta-flow: which is HIRO-style customer flow?
+
+- **`/v2/gex/delta-flow`** and tape **`weight=delta`**: customer signed
+  delta notional from the options tape.
+- **`/v2/gex/dealer-flow`** / **`gamma-flow`**: estimated **dealer**
+  hedge from successive chain snapshots (spot moves × prior GEX/charm).
+
+Positive dealer-flow ≈ dealers buying the underlying to re-hedge.
+Positive delta-flow ≈ net customer buy-side delta.
+
+### WebSocket `gex.levels.BTCUSDT` vs REST `/v2/gex/levels`?
+
+REST rebuilds with default **flow** (unless you pass `positioning=std`).
+The WebSocket levels channel pushes a **std** levels snapshot when it
+updates (~30s). Use REST when you need flow; use WS for a light std pulse.
+
 ## Pagination, filters, and projection
 
 ### How does cursor pagination work?

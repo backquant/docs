@@ -3,10 +3,17 @@ title: "GEX by strike"
 openapi: "GET /gex/strike-profile"
 ---
 
-Gamma exposure aggregated by strike. Filter by `?expiry=all|0dte|<token>` and by strike window (`strike_min/max`, `moneyness_min/max`, `spot_window_pct`).
+Gamma exposure aggregated by strike. Filter by `?expiry=all|0dte|<token>`
+and by strike window (`strike_min/max`, `moneyness_min/max`,
+`spot_window_pct`).
+
+Default **`positioning=flow`**. See [Positioning](/concepts/positioning).
 
 ## See also
 
 <CardGroup cols={2}>
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
+  <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
+  <Card title="GEX levels" href="/api/v2/gex/levels" icon="chart-simple" />
+  <Card title="Dealer flow by level" href="/api/v2/gex/dealer-flow-by-level" icon="chart-bar" />
 </CardGroup>

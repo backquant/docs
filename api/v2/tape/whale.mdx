@@ -1,0 +1,17 @@
+---
+title: "Whale prints"
+openapi: "GET /tape/whale"
+---
+
+Largest options prints by `premium_usd` in the window. Default floor
+$100k. Returns full trade fields (venue, instrument, direction, strike,
+expiry, IV).
+
+Coins: BTC, ETH.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Full tape" href="/api/v2/tape/tape" icon="filter" />
+  <Card title="Strike heat" href="/api/v2/tape/strike-heat" icon="fire" />
+</CardGroup>

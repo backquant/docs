@@ -1,0 +1,76 @@
+---
+title: "Dealer positioning: flow vs std"
+description: "How GEX and TRACE sign dealer exposure, multi-venue aggregation, and when each model applies"
+---
+
+Dealer exposure needs a **sign** at every contract: is the desk long or
+short that option's gamma? Two models are available on the live GEX and
+TRACE surfaces.
+
+## Models
+
+| Mode | Meaning | When to use |
+| --- | --- | --- |
+| **`flow`** (default) | Dealer size = aggressor **sold minus bought** per call/put side from the multi-venue options tape | Best match to how price behaves when tape exists (BTC, ETH) |
+| **`std`** | Textbook convention: call OI positive, put OI negative | Backtests, comparisons to public GEX, or symbols without tape |
+
+Pass `?positioning=flow` or `?positioning=std`. Omit the param to get **flow**.
+
+Every response that rebuilds live exposure reports the effective model in:
+
+- `data.positioning` when present
+- `meta.extra.positioning` and `meta.extra.positioning_requested`
+- `meta.extra.positioning_fallback_reason` when flow was requested but std ran instead
+
+## Aggregation
+
+Live signed surfaces use:
+
+1. **Chain** - multi-venue options chain (Deribit, Bybit, OKX, Binance) for greeks and OI.
+2. **Tape (flow only)** - multi-venue aggressor trades for the same coins. Size is coin-normalized so venues can be summed.
+
+GEX dollar unit is unchanged: **γ × S² × qty × 0.01** (USD impact per 1%
+spot move), where `qty` is flow sold-bought or std signed OI.
+
+Details also appear under `meta.extra.aggregation` (`chain_venues`,
+`flow_venues`, `flow_method`, `gex_scale`, `note`).
+
+## Coin coverage
+
+| Symbol | Flow tape | Default behaviour |
+| --- | --- | --- |
+| BTCUSDT, ETHUSDT | Yes | Flow when tape is non-empty |
+| SOLUSDT, HYPEUSDT | No | Auto-fallback to **std** (`no_aggressor_tape_for_symbol`) |
+
+If flow is empty for BTC/ETH, the API also falls back to std and sets a
+reason such as `flow_tape_empty` or `flow_qty_all_zero`.
+
+## Live vs history
+
+| Surface | Positioning |
+| --- | --- |
+| Levels, strike profile, expiry profile, heatmaps, TRACE, multi levels, greek profiles | **flow** default |
+| `/v2/gex/history`, `/v2/gex/stress-history` | **std** only (stored series) |
+| WebSocket `gex.levels.{SYMBOL}` | **std** snapshot (REST levels stay flow by default) |
+| Max pain, IV, PCR, OI, expected move, probability | Not a signed dealer model |
+
+## Customer flow vs dealer hedge flow
+
+Do not mix these up:
+
+| Endpoint family | Side | Source |
+| --- | --- | --- |
+| `/v2/gex/delta-flow`, tape `weight=delta` | **Customer** signed delta from trades | Options tape |
+| `/v2/gex/gamma-flow`, `/v2/gex/dealer-flow` | **Dealer** hedge estimate from chain × moves | GEX snapshots |
+
+Positive on dealer-flow ≈ estimated dealer **buying** the underlying to
+re-hedge. Positive on delta-flow ≈ net **customer** buy-side delta notional.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
+  <Card title="GEX levels" href="/api/v2/gex/levels" icon="chart-simple" />
+  <Card title="Greek TRACE" href="/api/v2/options/greeks/trace" icon="chart-area" />
+  <Card title="Dealer flow" href="/api/v2/gex/dealer-flow" icon="chart-line" />
+</CardGroup>

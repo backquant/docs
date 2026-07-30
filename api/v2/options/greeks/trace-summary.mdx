@@ -1,0 +1,22 @@
+---
+title: "Greek TRACE summary"
+openapi: "GET /options/greeks/trace/{greek}/summary"
+---
+
+Same forward projection as [TRACE](/api/v2/options/greeks/trace), but
+returns an interpretability summary instead of the full 2D field:
+
+- pin zones (high mean absolute field)
+- near-spot acceleration pockets
+- late vs early lean along spot
+- zero-contour samples at the horizon
+
+Supports `gamma`, `charm`, `vanna`, and `delta_change`. Default
+`positioning=flow`.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Full TRACE field" href="/api/v2/options/greeks/trace" icon="chart-area" />
+  <Card title="Positioning models" href="/concepts/positioning" icon="bookmark" />
+</CardGroup>

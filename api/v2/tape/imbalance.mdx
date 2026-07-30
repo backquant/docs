@@ -1,0 +1,26 @@
+---
+title: "Tape imbalance"
+openapi: "GET /tape/imbalance"
+---
+
+Server-side time-bucketed rollup of the options tape. One row per
+bucket so long windows stay small.
+
+| `weight` | Meaning |
+| --- | --- |
+| `flow` (default) | Multi-venue aggressive premium by call/put × buy/sell, plus passive |
+| `delta` | Customer BS delta notional (HIRO-style). Deribit-quality prints for IV/units |
+
+Each point includes `net` and `cumulative_net` so you can plot a
+running line without another pass.
+
+Coins: BTC, ETH.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Delta flow" href="/api/v2/gex/delta-flow" icon="chart-line" />
+  <Card title="Strike heat" href="/api/v2/tape/strike-heat" icon="fire" />
+  <Card title="Whale prints" href="/api/v2/tape/whale" icon="fish" />
+  <Card title="Tape overview" href="/api/v2/tape/overview" icon="circle-info" />
+</CardGroup>

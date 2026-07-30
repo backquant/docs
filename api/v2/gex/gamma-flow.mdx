@@ -1,0 +1,19 @@
+---
+title: "Gamma flow"
+openapi: "GET /gex/gamma-flow"
+---
+
+Dealer gamma hedge series only: each point is `ΔS% × net_GEX` under the
+selected positioning model, plus a cumulative sum of those increments.
+
+Positive ≈ dealer buying pressure from gamma hedging on the move.
+Negative ≈ selling.
+
+Default `positioning=flow`. See [Positioning](/concepts/positioning).
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Full dealer flow" href="/api/v2/gex/dealer-flow" icon="chart-line" />
+  <Card title="Delta flow (customer)" href="/api/v2/gex/delta-flow" icon="chart-line" />
+</CardGroup>

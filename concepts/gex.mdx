@@ -23,11 +23,15 @@ sell on dips and buy on rallies (amplifying).
 ## What we compute for you
 
 For every active option contract across Deribit, Bybit, OKX, and Binance,
-we compute the dollar gamma exposure (the USD impact per 1% spot move),
-sign it using the standard dealer-positioning convention (puts negative,
-calls positive), and aggregate the result per strike, per expiry, and
-per venue. You get the aggregated values directly — no reconstruction
-needed on your side.
+we compute the dollar gamma exposure (USD impact per 1% spot move) and
+aggregate it per strike, per expiry, and per venue. You get the
+aggregated values directly; no reconstruction needed on your side.
+
+**Signing the book (positioning).** Live GEX defaults to **flow**:
+dealer size per contract is multi-venue aggressor **sold minus bought**
+from the options tape. Pass `?positioning=std` for the textbook model
+(call OI positive, put OI negative). Full rules, fallbacks, and
+history caveats: [Dealer positioning: flow vs std](/concepts/positioning).
 
 The [`/v2/gex/strike-profile`](/api/v2/gex/strike-profile) endpoint is
 the strike-level aggregation; [`/v2/gex/levels`](/api/v2/gex/levels)
@@ -113,13 +117,19 @@ clamp the analysis to ATM ±10%, or `?spot_window_pct=5` for a symmetric
 ## Related concepts
 
 <CardGroup cols={2}>
+  <Card title="Flow vs std positioning" icon="scale-balanced" href="/concepts/positioning">
+    How live GEX and TRACE sign dealer size, and when history stays std.
+  </Card>
   <Card title="Max pain" icon="bullseye" href="/concepts/max-pain">
-    The strike where option writers profit most — different metric from
+    The strike where option writers profit most. Different metric from
     GEX walls but often near them.
   </Card>
   <Card title="Greeks beyond delta" icon="function" href="/concepts/greeks">
-    Vanna, charm, vega — what they measure and how to use them alongside
+    Vanna, charm, vega: what they measure and how to use them alongside
     GEX.
+  </Card>
+  <Card title="Dealer flow" icon="chart-line" href="/api/v2/gex/dealer-flow">
+    Estimated hedge pressure across chain snapshots (gamma, charm, total).
   </Card>
   <Card title="OPEX calendar" icon="calendar-days" href="/concepts/opex">
     Why monthly/quarterly expirations dominate the GEX picture for a

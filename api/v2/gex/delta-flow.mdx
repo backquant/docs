@@ -1,0 +1,24 @@
+---
+title: "Delta flow (customer)"
+openapi: "GET /gex/delta-flow"
+---
+
+Time-bucketed **customer** signed Black-Scholes delta notional from the
+options tape (HIRO-style delta line), with cumulative net.
+
+- Coins: **BTC**, **ETH**
+- BS inputs use high-quality prints (Deribit for unit and IV consistency)
+- Distinct from [dealer-flow](/api/v2/gex/dealer-flow) (chain × price moves)
+
+Positive net ≈ customer buy-side delta. Negative ≈ customer sell-side delta.
+
+For multi-venue premium quadrants (not delta), use
+[tape imbalance](/api/v2/tape/imbalance) with `weight=flow`.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Tape imbalance" href="/api/v2/tape/imbalance" icon="chart-area" />
+  <Card title="Dealer flow" href="/api/v2/gex/dealer-flow" icon="chart-line" />
+  <Card title="Tape overview" href="/api/v2/tape/overview" icon="circle-info" />
+</CardGroup>

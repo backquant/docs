@@ -1,0 +1,20 @@
+---
+title: "Dealer flow by level"
+openapi: "GET /gex/dealer-flow/by-level"
+---
+
+Expected cumulative dealer hedge dollars if spot walks from the current
+price to each strike (dealer-flow ladder). Built from the signed strike
+GEX profile.
+
+Positive at a strike ≈ expected dealer **buying** if spot reaches that
+level. Negative ≈ selling.
+
+Default `positioning=flow`. See [Positioning](/concepts/positioning).
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Strike profile" href="/api/v2/gex/strike-profile" icon="chart-bar" />
+  <Card title="Dealer flow series" href="/api/v2/gex/dealer-flow" icon="chart-line" />
+</CardGroup>

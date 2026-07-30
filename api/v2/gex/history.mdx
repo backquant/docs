@@ -3,10 +3,16 @@ title: "GEX history"
 openapi: "GET /gex/history"
 ---
 
-Cursor-paginated time-series of total GEX, net-local-5pct, call wall, put wall.
+Cursor-paginated time-series of total GEX, net-local-5pct, call wall,
+put wall.
+
+**Positioning is std only.** Stored history was written under the
+textbook model. Live levels default to flow. See
+[Positioning](/concepts/positioning).
 
 ## See also
 
 <CardGroup cols={2}>
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
+  <Card title="Stress history" href="/api/v2/gex/stress-history" icon="clock" />
 </CardGroup>

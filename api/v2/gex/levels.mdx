@@ -3,11 +3,18 @@ title: "GEX levels"
 openapi: "GET /gex/levels"
 ---
 
-Composable HVL / call wall / put support / 0DTE levels in one call. Use `?include=` to opt into max-pain, expected move, ranked top-10, gamma flip zones, spot, candles.
+Composable HVL / call wall / put support / 0DTE levels in one call. Use
+`?include=` to opt into max-pain, expected move, ranked top-10, gamma
+flip zones, spot, candles.
+
+Default **`positioning=flow`**. Pass `?positioning=std` for textbook
+call/put OI signing. See [Positioning](/concepts/positioning).
 
 ## See also
 
 <CardGroup cols={2}>
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
+  <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
+  <Card title="Strike profile" href="/api/v2/gex/strike-profile" icon="chart-bar" />
   <Card title="Multi-symbol bundle" href="/concepts/multi-symbol" icon="bookmark" />
 </CardGroup>

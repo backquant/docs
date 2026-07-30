@@ -23,11 +23,20 @@ The handshake validates the key, subscription status and tier eligibility. Failu
 |---|---|---|
 | `tape.{coin}.{venue}` | One trade per frame | Per trade (~10–100/s in burst) |
 | `tape.{coin}.agg` | Same trade payload, aggregated across all venues for that coin | Per trade |
+| `gex.levels.{SYMBOL}` | GEX levels snapshot (HVL, walls, spot) | When levels update (~30 s) |
 | `status.heartbeat` | Server liveness + per-client queue stats | Every 15 s |
 
-`{coin}` is `BTC` or `ETH`. `{venue}` is `deribit`, `bybit`, `okx`, or `binance` (case-insensitive on subscribe; the server normalises to lowercase). See [Tape overview → Venue coverage](/api/v2/tape/overview#venue-coverage) for what each venue ships.
+`{coin}` is `BTC` or `ETH`. `{venue}` is `deribit`, `bybit`, `okx`, or
+`binance` (case-insensitive on subscribe; the server normalises to
+lowercase). `{SYMBOL}` is `BTCUSDT`, `ETHUSDT`, `SOLUSDT`, or
+`HYPEUSDT`. See [Tape overview → Venue coverage](/api/v2/tape/overview#venue-coverage)
+for what each venue ships.
 
-Max **32 channels per connection**.
+**Levels caveat:** `gex.levels.*` pushes a **std** (textbook) levels
+snapshot. REST [`/v2/gex/levels`](/api/v2/gex/levels) defaults to
+**flow**. See [Positioning](/concepts/positioning).
+
+Max **48 channels per connection**.
 
 ## Protocol
 
@@ -37,7 +46,7 @@ Every server frame is a JSON object with an `event` field:
 
 ```json
 { "event": "welcome",       "ts": "...", "subscription_tier": "enterprise",
-                            "client_id": "abc...", "max_channels": 32,
+                            "client_id": "abc...", "max_channels": 48,
                             "available_channels": [...] }
 
 { "event": "subscribed",    "ts": "...", "channels": [...], "added": [...] }
@@ -45,6 +54,11 @@ Every server frame is a JSON object with an `event` field:
 
 { "event": "trade",         "ts": "...", "channel": "tape.BTC.deribit",
                             "data": { ...trade payload... } }
+
+{ "event": "levels",        "ts": "...", "channel": "gex.levels.BTCUSDT",
+                            "data": { "symbol": "BTCUSDT", "hvl": ...,
+                                      "call_resistance": ..., "put_support": ...,
+                                      "spot_price": ..., "positioning_note": "..." } }
 
 { "event": "heartbeat",     "ts": "...", "channel": "status.heartbeat",
                             "queue": { "size": 7, "capacity": 1000 },
@@ -59,7 +73,7 @@ Every server frame is a JSON object with an `event` field:
 ### Client → server commands
 
 ```json
-{ "action": "subscribe",   "channels": ["tape.BTC.agg", "tape.BTC.deribit"] }
+{ "action": "subscribe",   "channels": ["tape.BTC.agg", "gex.levels.BTCUSDT"] }
 { "action": "unsubscribe", "channels": ["tape.BTC.deribit"] }
 { "action": "ping" }
 ```
@@ -152,6 +166,6 @@ Full working client: [`scripts/v2_ws_demo/ws_tape_demo.py`](https://github.com/b
 <CardGroup cols={2}>
   <Card title="REST tape with filters" href="/api/v2/tape/tape" icon="filter" />
   <Card title="Tape overview" href="/api/v2/tape/overview" icon="circle-info" />
+  <Card title="GEX levels (REST, flow default)" href="/api/v2/gex/levels" icon="chart-simple" />
   <Card title="Authentication" href="/authentication" icon="key" />
-  <Card title="Rate limits & caps" href="/concepts/rate-limits" icon="gauge" />
 </CardGroup>

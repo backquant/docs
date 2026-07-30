@@ -41,6 +41,7 @@
             "group": "Concepts",
             "pages": [
               "concepts/gex",
+              "concepts/positioning",
               "concepts/opex",
               "concepts/max-pain",
               "concepts/probability-density",
@@ -86,7 +87,11 @@
               "api/v2/gex/time-heatmap",
               "api/v2/gex/history",
               "api/v2/gex/stress-history",
-              "api/v2/gex/max-pain"
+              "api/v2/gex/max-pain",
+              "api/v2/gex/dealer-flow",
+              "api/v2/gex/gamma-flow",
+              "api/v2/gex/delta-flow",
+              "api/v2/gex/dealer-flow-by-level"
             ]
           },
           {
@@ -123,7 +128,8 @@
               "api/v2/options/greeks/by-greek",
               "api/v2/options/greeks/surfaces",
               "api/v2/options/greeks/3d-surface",
-              "api/v2/options/greeks/trace"
+              "api/v2/options/greeks/trace",
+              "api/v2/options/greeks/trace-summary"
             ]
           },
           {
@@ -156,6 +162,9 @@
               "api/v2/tape/tape",
               "api/v2/tape/recent",
               "api/v2/tape/stats",
+              "api/v2/tape/imbalance",
+              "api/v2/tape/strike-heat",
+              "api/v2/tape/whale",
               "api/v2/tape/websocket"
             ]
           }

@@ -1,0 +1,34 @@
+---
+title: "Dealer flow (time series)"
+openapi: "GET /gex/dealer-flow"
+---
+
+Estimated **dealer** hedging pressure across successive chain
+snapshots: gamma, charm (and vanna when available), total, and
+cumulative.
+
+## Formula (summary)
+
+- `gamma_flow` = spot move (%) × prior net GEX
+- `charm_flow` = −elapsed hours × prior net charm
+- `total_flow` = sum of components
+- `cumulative_flow` = running sum of `total_flow`
+
+Positive ≈ dealers buying the underlying to re-hedge. Negative ≈ selling.
+
+Uses `?positioning=flow|std` (default **flow**). Needs at least two
+chain snapshots; otherwise 404.
+
+This is **not** customer tape delta. For that, use
+[delta flow](/api/v2/gex/delta-flow).
+
+Full model notes: [Positioning](/concepts/positioning).
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Gamma flow" href="/api/v2/gex/gamma-flow" icon="chart-line" />
+  <Card title="Delta flow (customer)" href="/api/v2/gex/delta-flow" icon="chart-line" />
+  <Card title="By level" href="/api/v2/gex/dealer-flow-by-level" icon="chart-bar" />
+  <Card title="Positioning models" href="/concepts/positioning" icon="bookmark" />
+</CardGroup>

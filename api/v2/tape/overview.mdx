@@ -1,23 +1,38 @@
 ---
 title: "Tape overview"
-description: "Multi-venue crypto options trade tape — REST history + live WebSocket streaming, every trade across Deribit, Bybit, OKX and Binance, normalised into one canonical shape."
+description: "Multi-venue crypto options trade tape: REST history, live WebSocket, and rollup analytics across Deribit, Bybit, OKX and Binance."
 ---
 
-The **Options Tape API** is BackQuant's multi-venue, real-time and historical record of every options trade we observe. The same canonical payload powers both a cursor-paginated REST history and a live WebSocket stream.
+The **Options Tape API** is BackQuant's multi-venue, real-time and
+historical record of every options trade we observe. The same
+canonical payload powers cursor-paginated REST history and a live
+WebSocket stream.
 
-If you're scoring methodologies, building flow dashboards, or running execution analytics, this is the surface to integrate against.
+Use it for scoring methodologies, flow dashboards, and execution
+analytics.
 
 ## What's in it
 
-- **Every trade**, normalised — venue / coin / instrument / strike / expiry / direction / amount / price / index price / IV (when present) / premium in USD / block-trade flag / ms timestamp.
+- **Every trade**, normalised: venue / coin / instrument / strike /
+  expiry / direction / amount / price / index price / IV (when present) /
+  premium in USD / block-trade flag / ms timestamp.
 - **4 venues** ingested continuously (see [Venue coverage](#venue-coverage)).
-- **5-year retention** in the persistence layer — backfill of pre-`2026-05-17` history is available on request via our archive partner.
-- **Sub-second freshness** on the WebSocket; REST `/recent` reflects the latest trade as soon as it lands in Postgres (~200ms after the venue WS emits it).
-- **Filters** for venue, instrument, option type, strike range, premium minimum, and derived tags (`0dte`, `atm`, `whale`).
+- **5-year retention** in the persistence layer. Backfill of history
+  before `2026-05-17` is available on request via our archive partner.
+- **Sub-second freshness** on the WebSocket. REST `/recent` reflects
+  the latest trade as soon as it lands in Postgres (~200ms after the
+  venue WS emits it).
+- **Filters** for venue, instrument, option type, strike range, premium
+  minimum, and derived tags (`0dte`, `atm`, `whale`).
+- **Analytics helpers**: time-bucket imbalance, strike heat, whale prints.
 
 <CardGroup cols={2}>
-  <Card title="REST endpoints" href="/api/v2/tape/rest" icon="table-list" />
-  <Card title="WebSocket broadcaster" href="/api/v2/tape/websocket" icon="bolt" />
+  <Card title="REST tape" href="/api/v2/tape/tape" icon="table-list" />
+  <Card title="WebSocket" href="/api/v2/tape/websocket" icon="bolt" />
+  <Card title="Imbalance" href="/api/v2/tape/imbalance" icon="chart-area" />
+  <Card title="Strike heat" href="/api/v2/tape/strike-heat" icon="fire" />
+  <Card title="Whale prints" href="/api/v2/tape/whale" icon="fish" />
+  <Card title="Customer delta flow" href="/api/v2/gex/delta-flow" icon="chart-line" />
 </CardGroup>
 
 ## Venue coverage
@@ -27,35 +42,44 @@ If you're scoring methodologies, building flow dashboards, or running execution 
 | **Deribit** | Native public WebSocket | < 200 ms | Full BTC + ETH chains, every trade |
 | **Bybit** | Native public WebSocket (`publicTrade.{coin}.option`) | < 200 ms | Full BTC + ETH option chains |
 | **OKX** | Native public WebSocket (`option-trades` channel, `BTC-USD` + `ETH-USD` instFamilies) | < 200 ms | Every trade on listed BTC + ETH instruments |
-| **Binance** | REST polling — `eapi.binance.com/eapi/v1/trades` for the top-30 most-active BTC + ETH contracts every 30 s | ~ 30 s | Top-volume strikes only (~95% of total Binance options volume) |
+| **Binance** | REST polling: top-30 most-active BTC + ETH contracts every 30 s | ~ 30 s | Top-volume strikes only (~95% of total Binance options volume) |
 
-Binance polls the most-active contracts rather than every instrument because the Binance options public WS endpoint is not reachable from our infrastructure. The hot-contract list refreshes every 5 minutes by 24-hour volume.
+Binance polls the most-active contracts rather than every instrument
+because the Binance options public WS endpoint is not reachable from
+our infrastructure. The hot-contract list refreshes every 5 minutes by
+24-hour volume.
 
 ## Coins
 
 - `BTC` and `ETH` are fully covered across all four venues.
-- `SOL` and `HYPE` are accepted by the API schema (some venues are starting to list them) but coverage is currently thin to non-existent. Filter for those at your own risk.
+- `SOL` and `HYPE` are accepted by the API schema (some venues are
+  starting to list them) but coverage is currently thin to non-existent.
+  Filter for those at your own risk.
 
-## Tape coverage vs derived metrics
+## Tape vs derived GEX
 
-| Surface | Live? | History? |
-|---|---|---|
-| **Tape** (this section) | ✅ live, multi-venue | ✅ 5y persisted, cursor-paginated |
-| **GEX / IV / levels / greeks profiles** ([Options API](/api/v2/options/chain)) | ✅ refreshed 30 s–5 min | Rolling ~24 h in Redis; forward-only Postgres history accumulating since `2026-05-29` |
-| **Probability density / Expected move / OPEX / PCR** | ✅ live | Same as above |
+| Surface | Live? | History? | Positioning |
+|---|---|---|---|
+| **Tape** (this section) | Yes, multi-venue | Yes, 5y cursor-paginated | N/A (raw trades) |
+| **Live GEX / TRACE / greek profiles** | Yes, ~30s refresh | Rolling Redis window | **flow** default; `?positioning=std` opt-in |
+| **GEX history / stress-history** | N/A | Stored series | **std** only |
+| **WS `gex.levels.*`** | Yes (~30s) | No | **std** snapshot |
 
-If you need deep history of GEX, IV or levels (not the raw tape), please reach out — we can scope a custom engagement using replayed chain snapshots.
+See [Positioning](/concepts/positioning) for flow vs std.
+
+If you need deep history of GEX, IV or levels (not the raw tape),
+contact us for a custom engagement using replayed chain snapshots.
 
 ## Quick start
 
 <CodeGroup>
 
-```bash curl — recent trades
+```bash curl - recent trades
 curl https://api.backquant.com/v2/tape/recent?symbol=BTCUSDT&limit=5 \
   -H "X-API-Key: $BQ_API_KEY"
 ```
 
-```python Python — WebSocket
+```python Python - WebSocket
 import asyncio, json, os, websockets
 
 URL = "wss://api.backquant.com/v2/ws/options?api_key=" + os.environ["BQ_API_KEY"]
@@ -80,7 +104,9 @@ asyncio.run(main())
 
 </CodeGroup>
 
-Need a working demo client? Grab [`ws_tape_demo.py`](https://github.com/backquant/backquant-terminal/blob/main/scripts/v2_ws_demo/ws_tape_demo.py) from the repo — single file, no setup beyond `pip install websockets`.
+Need a working demo client? Grab
+[`ws_tape_demo.py`](https://github.com/backquant/backquant-terminal/blob/main/scripts/v2_ws_demo/ws_tape_demo.py)
+from the repo. Single file; needs `pip install websockets`.
 
 ## See also
 

@@ -3,10 +3,15 @@ title: "Strike × expiry heatmap"
 openapi: "GET /gex/strike-expiry-heatmap"
 ---
 
-2D matrix of net GEX with rows=strikes, cols=expiries (sorted ascending DTE). `?max_strikes` and `?max_expiries` downsample around spot / front of curve.
+2D matrix of net GEX with rows=strikes, cols=expiries (sorted ascending
+DTE). `?max_strikes` and `?max_expiries` downsample around spot / front
+of curve.
+
+Default **`positioning=flow`**. See [Positioning](/concepts/positioning).
 
 ## See also
 
 <CardGroup cols={2}>
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
+  <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
 </CardGroup>

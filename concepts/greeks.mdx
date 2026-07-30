@@ -8,6 +8,11 @@ greek exposure per strike** for the four underlyings. Same idea as
 [GEX](/concepts/gex) but for the higher-order greeks that drive
 hedging flows the gamma profile alone misses.
 
+Profiles default to **`positioning=flow`** (tape sold−bought size).
+Pass `?positioning=std` for textbook call/put OI sign. Forward
+(time × price) maps live under
+[TRACE](/api/v2/options/greeks/trace).
+
 ## The five exposure profiles
 
 | Greek | Endpoint | What dealer holds | What it drives |
@@ -105,8 +110,14 @@ spot when the cell count exceeds 5000 to keep payload bounded.
 
 <CardGroup cols={2}>
   <Card title="What is GEX?" icon="chart-line" href="/concepts/gex">
-    Gamma is the special case — start there before reading the higher
+    Gamma is the special case. Start there before reading the higher
     order greeks.
+  </Card>
+  <Card title="Flow vs std" icon="scale-balanced" href="/concepts/positioning">
+    How profiles and TRACE sign dealer size.
+  </Card>
+  <Card title="TRACE" icon="chart-area" href="/api/v2/options/greeks/trace">
+    Forward time × price projection of dealer greeks.
   </Card>
   <Card title="Probability density" icon="chart-area" href="/concepts/probability-density">
     Vanna and charm shape how the implied PDF evolves.

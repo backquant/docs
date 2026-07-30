@@ -36,7 +36,7 @@ https://api.backquant.com/v2/
   </Card>
 
   <Card title="API reference" icon="book-open" href="/api/v2/gex/levels">
-    Browse all 38 endpoints with interactive try-it-out.
+    Browse the full endpoint set with interactive try-it-out.
   </Card>
 
   <Card title="Code examples" icon="terminal" href="/examples/python">
@@ -52,13 +52,18 @@ trade against. Everything is computed by us from raw exchange chains
 
 | Category | What's in it |
 | --- | --- |
-| **GEX** | Composable levels (HVL / call wall / put support / max-pain / expected move / gamma flip zones), strike profiles, expiry profiles, strike × expiry heatmap, time heatmap with greek + DTE filters, history, Postgres-backed stress history |
+| **GEX** | Composable levels (HVL / call wall / put support / max-pain / expected move / gamma flip zones), strike + expiry profiles, heatmaps, history, stress history, dealer/gamma/delta flow |
 | **Options chain** | Filtered chain with two-layer projection (`?fields` + `?include`), expiry summary table, OPEX calendar with daily/weekly/monthly/quarterly classification |
 | **IV analytics** | Surface, term structure, 25Δ/10Δ skew, butterfly, full smile per expiry, single-expiry smile, IV-RV history, VRP |
-| **Greeks** | DEX, theta, vanna, charm, vega — per-strike profiles + strike × time surfaces + 3D strike × expiry surface |
+| **Greeks** | DEX, theta, vanna, charm, vega: per-strike profiles, strike × time surfaces, 3D surface, TRACE field + summary |
+| **Tape** | Multi-venue REST + WebSocket, imbalance, strike heat, whale prints, optional live GEX levels channel |
 | **Probability** | Breeden-Litzenberger PDF/CDF + 3D probability surface + confidence-band interpolation |
 | **Open interest** | By expiry, time-series with cursor pagination, put/call ratio (intraday + daily) |
 | **Other** | Premium tide (0DTE + weekly), dated-futures basis, liquidation heatmap + distribution, multi-symbol GEX bundle |
+
+Live dealer exposure defaults to **flow** positioning
+(`?positioning=std` for textbook OI sign). See
+[Positioning](/concepts/positioning).
 
 ## Concepts before reference
 
@@ -68,6 +73,9 @@ this data means in trader terms:
 <CardGroup cols={2}>
   <Card title="What is GEX?" icon="chart-line" href="/concepts/gex">
     Gamma exposure, dealer positioning, walls and support levels.
+  </Card>
+  <Card title="Flow vs std" icon="scale-balanced" href="/concepts/positioning">
+    How live GEX and TRACE sign dealer size.
   </Card>
   <Card title="OPEX calendar" icon="calendar-days" href="/concepts/opex">
     Why monthly and quarterly expirations matter.

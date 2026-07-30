@@ -1,56 +1,82 @@
 ---
-title: "Greek trace - forward (time × price) projection"
+title: "Greek TRACE - forward (time × price) projection"
 openapi: "GET /options/greeks/trace/{greek}"
 ---
 
-Forward Black-Scholes projection of dealer **gamma**, **charm**, or **vanna** across a `(time × price)` grid - the same view that powers BackQuant Pro's TRACE panel, exposed as raw data for your own renderer.
+Forward Black-Scholes projection of dealer **gamma**, **charm**,
+**vanna**, or **delta_change** across a `(time × price)` grid. Same
+view as BackQuant Pro TRACE, as raw data for your own renderer.
 
-Holding today's chain constant, the endpoint walks each point on the grid (a future timestamp + a future spot price), recomputes per-contract τ and the requested greek under those conditions, sums across the chain weighted by per-contract OI, and returns the resulting field.
+Holding today's chain constant, the endpoint walks each grid point
+(future timestamp + future spot), recomputes per-contract τ and the
+requested greek, sums across the chain with positioning-weighted size,
+and returns the field.
+
+Default **`positioning=flow`**. Pass `?positioning=std` for textbook
+OI sign. See [Positioning](/concepts/positioning).
 
 ## Why use it
 
-A single point-in-time greek profile only tells you what dealer exposure looks like *now*. Trace tells you what it'll look like **as time and price evolve** - where gamma walls develop, decay, or migrate as τ runs to zero. It's the difference between a snapshot and a forward map.
+A point-in-time greek profile only shows exposure *now*. TRACE shows
+how walls develop, decay, or migrate as time and price evolve.
 
 Common uses:
 
-- **Intraday flow planning** - `greek=gamma&expiry=0dte` shows where 0DTE dealer hedging will concentrate as the session progresses.
-- **Charm bleed** - `greek=charm` exposes the passive delta drift dealers will accumulate from time alone, even with spot frozen.
-- **Vol-shock surfaces** - `vol_shift_pct=±10` builds an instant what-if view for vol up / down without a re-fetch.
-- **Multi-day overlays** - `expiry=all&horizon_hours=168` projects across the next week's term structure.
+- **Intraday flow planning** - `greek=gamma&expiry=0dte` shows where
+  0DTE dealer hedging concentrates as the session progresses.
+- **Charm bleed** - `greek=charm` exposes passive delta drift from
+  time alone, even with spot frozen.
+- **Delta change** - `greek=delta_change` maps how dealer delta shifts
+  relative to spot/now as the grid walks (useful for hedge path views).
+- **Vol-shock surfaces** - `vol_shift_pct=±10` for instant vol up/down
+  without a re-fetch.
+- **Multi-day overlays** - `expiry=all&horizon_hours=168` across the
+  next week's term structure.
+
+For pin zones / acceleration pockets without the full grid, use
+[TRACE summary](/api/v2/options/greeks/trace-summary).
 
 ## Sign convention
 
-`+1` for calls, `−1` for puts. A **positive** cell value means the call book dominates the put book at that `(time, price)` - supportive flow. A **negative** cell means the reverse. Identical to the rest of the BackQuant stack so cross-references between TRACE and the per-strike profiles are coherent.
+Under **std**, calls contribute positive size and puts negative (same
+as the rest of the stack). Under **flow**, size is aggressor sold
+minus bought per side. A positive cell means the signed book leans
+supportive at that `(time, price)`; negative means the reverse.
 
 ## Units
 
-| `greek` | Unit | Formula per cell |
+| `greek` | Unit | Formula per cell (std qty = OI; flow qty = sold−bought) |
 | --- | --- | --- |
-| `gamma` | $ per 1% spot move | `Σ sign × γ × S² × OI × 0.01` |
-| `charm` | per year | `Σ sign × ∂Δ/∂τ × OI` |
-| `vanna` | per IV unit | `Σ sign × ∂Δ/∂σ × OI` |
+| `gamma` | $ per 1% spot move | `Σ sign × γ × S² × qty × 0.01` |
+| `charm` | per year | `Σ sign × ∂Δ/∂τ × qty` |
+| `vanna` | per IV unit | `Σ sign × ∂Δ/∂σ × qty` |
+| `delta_change` | delta units | change in summed signed delta vs reference (spot now, τ now) |
 
-`field_units` is echoed on every response so renderers don't need to hardcode this.
+`field_units` is echoed on every response so renderers need not hardcode this.
 
 ## Cells, axes, and shape
-
-The response body is rectangular:
 
 ```
 field[t][p]   ← cell value at time_axis_ms[t], price_axis[p]
 ```
 
-`time_axis_ms` runs from "now" to `now + horizon_hours`. `price_axis` runs from `spot × (1 − range/100)` to `spot × (1 + range/100)`. Both are evenly spaced.
+`time_axis_ms` runs from "now" to `now + horizon_hours`. `price_axis`
+runs from `spot × (1 − range/100)` to `spot × (1 + range/100)`. Both
+are evenly spaced.
 
-`abs_field_max = max(|field_min|, |field_max|)` is included to make symmetric colour scales trivial: `value / abs_field_max` clamped to `[−1, +1]` is the standard input for diverging palettes.
+`abs_field_max = max(|field_min|, |field_max|)` supports symmetric
+colour scales: `value / abs_field_max` clamped to `[−1, +1]`.
 
 ## What-if vol shifts
 
-`vol_shift_pct` adds a flat percent shift to every contract's IV - e.g. `vol_shift_pct=5` multiplies each σ by `1.05` before evaluation. Use it to build vol-up / vol-down surfaces in two requests instead of waiting for an actual vol move.
+`vol_shift_pct` adds a flat percent shift to every contract's IV.
+Example: `vol_shift_pct=5` multiplies each σ by `1.05` before evaluation.
 
 ## Performance
 
-Cached for **30 seconds** per `(symbol, full-param-hash)`. Identical repeated calls are essentially free; varying any parameter (greek, expiry, grid resolution, vol shift, OI threshold) creates a fresh cache entry. Cold compute is typically **50–100 ms** for default grid sizes; payload runs **30–80 KB** of JSON.
+Cached for **30 seconds** per `(symbol, full-param-hash)`. Cold compute
+is typically **50–100 ms** for default grids; payload is often
+**30–80 KB** of JSON.
 
 ## Caps
 
@@ -68,8 +94,8 @@ Going past the caps returns a `VALIDATION_ERROR` with a 422.
 ## See also
 
 <CardGroup cols={2}>
+  <Card title="TRACE summary" href="/api/v2/options/greeks/trace-summary" icon="list" />
+  <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
   <Card title="Greeks beyond delta" href="/concepts/greeks" icon="bookmark" />
   <Card title="Greek profile" href="/api/v2/options/greeks/by-greek" icon="bookmark" />
-  <Card title="Greek surfaces" href="/api/v2/options/greeks/surfaces" icon="bookmark" />
-  <Card title="3D greek surface" href="/api/v2/options/greeks/3d-surface" icon="bookmark" />
 </CardGroup>
