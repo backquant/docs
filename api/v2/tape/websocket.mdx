@@ -1,6 +1,6 @@
 ---
-title: "Tape — live WebSocket"
-description: "Channel-multiplexed live stream of every options trade across Deribit, Bybit, OKX and Binance, with API-key auth, per-tier connection caps, and slow-consumer protection."
+title: "Tape - live WebSocket"
+description: "Channel-multiplexed live stream of options trades across all tape venues (Deribit, Bybit, OKX, Binance, Derive, Thalex, Delta India, Delta Global), with API-key auth, per-tier connection caps, and slow-consumer protection."
 ---
 
 `wss://api.backquant.com/v2/ws/options`
@@ -9,11 +9,11 @@ Single connection, multiple subscriptions. The same canonical trade payload from
 
 ## Authentication
 
-Pass your API key on the WebSocket handshake — either of:
+Pass your API key on the WebSocket handshake - either of:
 
-- **Query parameter** — `wss://api.backquant.com/v2/ws/options?api_key=bq_live_...` (easiest from browsers).
-- **`Authorization: Bearer` header** — preferred from server-to-server clients.
-- **`X-API-Key` header** — accepted as a fallback for clients that can set arbitrary handshake headers.
+- **Query parameter** - `wss://api.backquant.com/v2/ws/options?api_key=bq_live_...` (easiest from browsers).
+- **`Authorization: Bearer` header** - preferred from server-to-server clients.
+- **`X-API-Key` header** - accepted as a fallback for clients that can set arbitrary handshake headers.
 
 The handshake validates the key, subscription status and tier eligibility. Failures close the connection with a `1008` policy-violation code and a human-readable reason.
 
@@ -21,20 +21,28 @@ The handshake validates the key, subscription status and tier eligibility. Failu
 
 | Channel | Payload | Frequency |
 |---|---|---|
-| `tape.{coin}.{venue}` | One trade per frame | Per trade (~10–100/s in burst) |
+| `tape.{coin}.{venue}` | One trade per frame | Per trade (~10-100/s in burst) |
 | `tape.{coin}.agg` | Same trade payload, aggregated across all venues for that coin | Per trade |
-| `gex.levels.{SYMBOL}` | GEX levels snapshot (HVL, walls, spot) | When levels update (~30 s) |
+| `gex.levels.{SYMBOL}` | FLOW-signed GEX levels (all-expiry + 0DTE HVL, walls, spot) | When levels update (~30 s) |
 | `status.heartbeat` | Server liveness + per-client queue stats | Every 15 s |
 
-`{coin}` is `BTC` or `ETH`. `{venue}` is `deribit`, `bybit`, `okx`, or
-`binance` (case-insensitive on subscribe; the server normalises to
-lowercase). `{SYMBOL}` is `BTCUSDT`, `ETHUSDT`, `SOLUSDT`, or
-`HYPEUSDT`. See [Tape overview → Venue coverage](/api/v2/tape/overview#venue-coverage)
-for what each venue ships.
+`{coin}` is typically `BTC` or `ETH` (SOL/HYPE appear when tape exists).
+`{venue}` is one of `deribit`, `bybit`, `okx`, `binance`, `derive`,
+`thalex`, `delta_india`, `delta` (case-insensitive on subscribe; the
+server normalises to lowercase). `{SYMBOL}` is `BTCUSDT`, `ETHUSDT`,
+`SOLUSDT`, or `HYPEUSDT`. See [Venue coverage](/concepts/venues) for
+what each venue ships.
 
-**Levels caveat:** `gex.levels.*` pushes a **std** (textbook) levels
-snapshot. REST [`/v2/gex/levels`](/api/v2/gex/levels) defaults to
-**flow**. See [Positioning](/concepts/positioning).
+**Levels note (changed in 2.6.0):** `gex.levels.*` pushes **flow**-signed
+levels - the same model and the same builder as REST
+[`/v2/gex/levels`](/api/v2/gex/levels), so the two surfaces always agree.
+Before 2.6.0 this channel pushed a **std** (textbook) snapshot while REST
+defaulted to flow.
+
+When the aggressor tape is unavailable for a symbol the payload falls back
+to the worker's std snapshot and says so: `positioning: "std"` plus a
+`fallback_reason`. Always read `positioning` before overlaying the numbers
+on anything else. See [Positioning](/concepts/positioning).
 
 Max **48 channels per connection**.
 
@@ -56,9 +64,15 @@ Every server frame is a JSON object with an `event` field:
                             "data": { ...trade payload... } }
 
 { "event": "levels",        "ts": "...", "channel": "gex.levels.BTCUSDT",
-                            "data": { "symbol": "BTCUSDT", "hvl": ...,
-                                      "call_resistance": ..., "put_support": ...,
-                                      "spot_price": ..., "positioning_note": "..." } }
+                            "data": { "symbol": "BTCUSDT", "spot_price": ...,
+                                      "all_expiry": { "hvl": ..., "call_resistance": ...,
+                                                      "put_support": ...,
+                                                      "call_wall_2": null, "call_wall_3": null,
+                                                      "put_wall_2": null, "put_wall_3": null },
+                                      "odte": { "hvl": ..., "call_resistance": ...,
+                                                "put_support": ... },
+                                      "positioning": "flow", "fallback_reason": null,
+                                      "ts": "...", "positioning_note": "..." } }
 
 { "event": "heartbeat",     "ts": "...", "channel": "status.heartbeat",
                             "queue": { "size": 7, "capacity": 1000 },
@@ -84,50 +98,61 @@ Each command receives a corresponding ack frame.
 
 ```json
 {
-  "venue":          "deribit",          // "deribit" | "bybit" | "okx" | "binance"
-  "coin":           "BTC",              // "BTC" | "ETH"
+  "venue":          "deribit",
+  "coin":           "BTC",
   "instrument":     "BTC-30JUN26-100000-C",
   "trade_id":      "12345",
-  "direction":      "buy",              // "buy" | "sell" (taker side)
-  "option_type":    "call",             // "call" | "put"
+  "direction":      "buy",
+  "option_type":    "call",
   "strike":         100000.0,
   "expiry_date":    "2026-06-30",
-  "amount":         1.5,                // contracts
-  "price":          0.0525,             // venue-quoted (BTC for Deribit/OKX, USDT for Bybit/Binance)
-  "mark_price":     0.0530,             // venue mark at trade time (when published)
-  "index_price":    67234.10,           // spot index at trade time (when published)
-  "iv":             65.4,               // implied vol % (when published)
-  "premium_usd":    5293.60,            // canonical USD premium = price × amount × (index_price OR 1)
+  "amount":         1.5,
+  "price":          0.0525,
+  "mark_price":     0.0530,
+  "index_price":    67234.10,
+  "iv":             65.4,
+  "premium_usd":    5293.60,
   "is_block_trade": false,
   "ts_ms":          1748480000000
 }
 ```
 
-`premium_usd` is the field to rank, filter or score by — venue quotation differences are already normalised away.
+| Field | Meaning |
+|---|---|
+| `venue` | `deribit` \| `bybit` \| `okx` \| `binance` \| `derive` \| `thalex` \| `delta_india` \| `delta` |
+| `amount` | **Coin-equivalent** size (normalized at ingest) |
+| `price` | Venue-quoted price (units vary by venue) |
+| `premium_usd` | Canonical USD premium - **rank and filter on this** |
+
+`amount` and `premium_usd` are comparable across venues. For Delta ingest
+details see [Venue coverage → Delta units](/concepts/venues#delta-exchange-units).
 
 ## Connection lifecycle
 
 1. **Connect** with API key → server validates → counts connection against your per-tier cap.
 2. **Receive `welcome`** → sanity-check `subscription_tier` and `available_channels`.
 3. **Send `subscribe`** → server replies with `subscribed` ack + immediately starts streaming matching trades.
-4. **Stream** — trades arrive on their channel; `status.heartbeat` arrives every 15 s if subscribed.
-5. **Heartbeat liveness** — the server expects at least one client frame (subscribe / unsubscribe / ping) within 60 s. Otherwise it closes with code `1001`.
-6. **Slow consumer** — each client has a 1000-message send buffer. If full for > 5 s the server sends a `slow_consumer` event then closes with code `1013`. Reduce your subscription set or process frames faster.
+4. **Stream** - trades arrive on their channel; `status.heartbeat` arrives every 15 s if subscribed.
+5. **Heartbeat liveness** - the server expects at least one client frame (subscribe / unsubscribe / ping) within 60 s. Otherwise it closes with code `1001`.
+6. **Slow consumer** - each client has a 1000-message send buffer. If full for > 5 s the server sends a `slow_consumer` event then closes with code `1013`. Reduce your subscription set or process frames faster.
 7. **Disconnect** → connection counter decrements; reconnect any time.
 
 ## Per-tier connection caps
 
-| Tier | Concurrent WS connections per API key |
+| Level | Concurrent WS connections |
 |---|---|
-| API Monthly | 2 |
-| API Yearly | 4 |
-| Enterprise | 10 (customisable) |
+| Starter | 1 |
+| Standard | 2 |
+| Pro | 5 |
+| Enterprise | up to 25 (custom) |
 
-Exceeding the cap on connect returns close code `1008` with `Connection cap reached for tier 'X' (max N)`.
+Exceeding the cap on connect returns close code `1008` with a
+connection-cap message. WS usage does **not** draw down monthly REST
+quota - see [Rate limits](/concepts/rate-limits).
 
 ## Reconnect template
 
-The server has no replay — `$` cursor is used on the underlying Redis stream, so a reconnect resumes with whatever's live, not whatever you missed. For zero-gap consumers, also poll [`/v2/tape?after=<last_ts>`](/api/v2/tape/tape) on reconnect to fetch trades that arrived during the gap.
+The server has no replay - `$` cursor is used on the underlying Redis stream, so a reconnect resumes with whatever's live, not whatever you missed. For zero-gap consumers, also poll [`/v2/tape?after=<last_ts>`](/api/v2/tape/tape) on reconnect to fetch trades that arrived during the gap.
 
 ```python
 import asyncio, json, os, random, websockets

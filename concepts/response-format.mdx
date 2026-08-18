@@ -77,7 +77,7 @@ See [Errors](/concepts/errors) for the full list of error codes.
 
 <ResponseField name="data" type="object">
   The response payload. Present when `success` is `true`. The shape
-  varies by endpoint — see the [API reference](/api/v2/gex/levels) for
+  varies by endpoint - see the [API reference](/api/v2/gex/levels) for
   each endpoint's schema. The top 10 most-traffic endpoints have
   Pydantic-typed schemas in the OpenAPI spec; the rest are documented
   with examples.
@@ -94,7 +94,7 @@ See [Errors](/concepts/errors) for the full list of error codes.
       Human-readable description.
     </ResponseField>
     <ResponseField name="error.details" type="object">
-      Optional structured payload — e.g. `RATE_LIMIT_EXCEEDED` returns
+      Optional structured payload - e.g. `RATE_LIMIT_EXCEEDED` returns
       `retry_after_seconds`; `VALIDATION_ERROR` returns the failing
       field list.
     </ResponseField>
@@ -102,7 +102,7 @@ See [Errors](/concepts/errors) for the full list of error codes.
 </ResponseField>
 
 <ResponseField name="meta" type="object" required>
-  Metadata included in **every** response — success or error.
+  Metadata included in **every** response - success or error.
 
   <Expandable title="properties">
     <ResponseField name="meta.version" type="string" required>
@@ -113,7 +113,7 @@ See [Errors](/concepts/errors) for the full list of error codes.
     </ResponseField>
     <ResponseField name="meta.request_id" type="string">
       Per-request UUID, propagated from `X-Request-ID` header. Include
-      this when reporting issues — we trace by it in our logs and Sentry.
+      this when reporting issues - we trace by it in our logs and Sentry.
     </ResponseField>
     <ResponseField name="meta.symbol" type="string">
       Symbol the response is about, when applicable

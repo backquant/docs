@@ -1,156 +1,117 @@
 ---
 title: "Rate limits"
-description: "Per-tier limits, response headers, and backoff strategy"
+description: "Per-tier burst and monthly quotas, response headers, and backoff strategy"
 ---
 
-Rate limits are enforced per API key based on your subscription tier.
-Exceeding your limit returns a `429` response with the
-`RATE_LIMIT_EXCEEDED` error code and a `Retry-After` header.
+Rate limits are enforced per **user** (shared across that user's API
+keys) based on subscription level. Exceeding a limit returns `429` with
+`RATE_LIMIT_EXCEEDED`.
 
-## Limits by tier
+As of API **v2.5.0** there are two dimensions:
 
-| Tier | Requests per minute | Annual savings |
-| --- | --- | --- |
-| **Monthly** | 60 | — |
-| **Yearly** | 120 | ~15% off monthly × 12 |
-| **Enterprise** | Unlimited | Custom |
+1. **Per-minute burst** - short-window ceiling (headers `X-RateLimit-*`).
+2. **Monthly request quota** - UTC calendar-month budget (headers
+   `X-Quota-*`). Sustained polling at the burst rate will exhaust the
+   month early.
 
-[Get or upgrade your key at backquant.com/api-access](https://backquant.com/api-access).
+WebSocket sessions count against the **concurrent connection** cap only.
+They do **not** draw down the monthly REST quota.
 
-## Rate limit headers
+## Limits by level
 
-Every response — success **or** error — includes:
+| Level | Monthly requests | Burst / min | API keys | WS connections |
+| --- | ---: | ---: | ---: | ---: |
+| **Starter** | 10,000 | 10 | 1 | 1 |
+| **Standard** | 250,000 | 60 | 2 | 2 |
+| **Pro** | 1,000,000 (fair use) | 120 | 5 | 5 |
+| **Enterprise** | Uncapped monthly | 600 | custom | up to 25 |
+
+Plan mapping notes (2.5.0):
+
+- Crypto API plans `api_only_monthly` / `api_only_yearly` → **standard**.
+- Terminal Yearly (`yearly`) includes **starter** API access.
+- Bundle `api_monthly` maps to **pro** (120/min). Legacy `api` is also treated as pro.
+
+[Get or upgrade access at backquant.com/api-access](https://backquant.com/api-access).
+
+## Response headers
+
+Every authenticated REST response includes:
 
 | Header | Description |
 | --- | --- |
-| `X-RateLimit-Limit` | Your per-minute cap |
-| `X-RateLimit-Remaining` | Calls left in the current window |
-| `X-RateLimit-Reset` | Unix timestamp when the window resets |
-| `Retry-After` | Seconds until safe to retry (on 429 only) |
+| `X-RateLimit-Limit` | Per-minute burst cap |
+| `X-RateLimit-Remaining` | Calls left in the current minute window |
+| `X-RateLimit-Reset` | Unix timestamp when the minute window resets |
+| `Retry-After` | Seconds until safe to retry (**on 429 only**) |
+| `X-Quota-Limit` | Monthly request cap |
+| `X-Quota-Used` | Requests counted this UTC month |
+| `X-Quota-Remaining` | Monthly remaining |
+| `X-Quota-Period` | Period id `YYYYMM` (UTC) |
 
-The same triple is also echoed inside `meta.rate_limit` in the response
-body, so browser-based dashboards can read it without inspecting
-headers.
+The per-minute triple is also echoed in `meta.rate_limit` when present.
+`GET /v2/meta` returns the full per-level ladder under `rate_limits`.
 
 ```bash
 curl -I "https://api.backquant.com/v2/gex/levels?symbol=BTCUSDT" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
-```text
-HTTP/2 200
-X-RateLimit-Limit: 120
-X-RateLimit-Remaining: 87
-X-RateLimit-Reset: 1714478160
-```
-
 ## What happens at the limit
 
-1. The 121st request in a minute (on the Yearly tier) returns:
+1. Burst or monthly exhaustion returns HTTP **429** with
+   `RATE_LIMIT_EXCEEDED`. Monthly messages name the monthly cap.
+2. Respect `Retry-After` (and/or wait for the minute window / next month).
+3. Do not spin-retry without backoff.
 
-   ```json
-   {
-     "success": false,
-     "error": {
-       "code": "RATE_LIMIT_EXCEEDED",
-       "message": "Rate limit exceeded. Try again in 32 seconds.",
-       "details": {
-         "retry_after_seconds": 32,
-         "limit": "120 per 1 minute"
-       }
-     },
-     "meta": { ... }
-   }
-   ```
+## Auth vs entitlement
 
-2. HTTP status is `429`.
+| Status | Meaning |
+| --- | --- |
+| **401** `UNAUTHORIZED` | Missing, malformed, revoked, or expired key |
+| **403** `FORBIDDEN` | Key is valid but the **plan does not permit** this use |
+| **429** | Rate / quota exceeded |
 
-3. `Retry-After: 32` header tells you exactly how long to wait.
+Clients that treat every 401 as “refresh credentials” must treat **403**
+as “upgrade / wrong plan,” not as a bad key.
 
-4. `X-RateLimit-Remaining: 0` confirms you're out for the window.
+API access requires subscription status **`active`**. `trialing` grants
+the terminal but **not** the API until the trial converts.
 
-## Strategy: how to think about throttling
+## Strategy
 
-**Cache aggressively at your end.** The data refreshes every 30s
-server-side anyway. If you're showing GEX levels in a dashboard,
-polling once every 30 seconds (= 2 req/min per panel) gives you the
-freshest possible data without burning quota. Polling every second is
-wasted — you'd see the same `computed_at` 30 times in a row.
+**Cache aggressively.** Chain/GEX snapshots refresh ~30s server-side.
+Polling once per 30s per panel is enough.
 
-**Use multi-symbol bundling.** Hitting
-[`/v2/multi/gex/levels`](/api/v2/multi/gex-levels) once for all four
-symbols counts as **one** request, not four. For desk dashboards
-watching the universe, this is the difference between 240/min (4
-symbols × 60s) and 60/min on the Monthly tier.
+**Use multi-symbol bundling.**
+[`/v2/multi/gex/levels`](/api/v2/multi/gex-levels) for several symbols
+counts as **one** request.
 
-**Use composable `?include=`.** `/v2/gex/levels?include=ranked,max_pain,
-expected_move,zones` returns four blocks of data in one request that
-would otherwise take four separate calls.
+**Use composable `?include=` / `?fields`.** Fewer round trips, lighter
+payloads.
 
-**Project payloads with `?fields` and `?include`.** Heavy endpoints
-like `/v2/options/chain` support both top-level (`?fields=contracts`)
-and per-row (`?include=oi,iv`) projection. Lighter responses = faster
-parsing client-side and lower egress on our side.
-
-**Implement exponential backoff on 429.** Wait `Retry-After` seconds,
-then if you 429 again, wait 2× as long. Don't hammer.
+**Prefer WebSocket for tape.** Live prints over WS avoid burning
+monthly REST quota on `/tape/recent` polling.
 
 ```python
 import time, requests
 
-def call_with_backoff(url, headers, max_attempts=4):
-    for i in range(max_attempts):
-        r = requests.get(url, headers=headers)
+def get_with_backoff(url, headers, max_tries=5):
+    delay = 1.0
+    for _ in range(max_tries):
+        r = requests.get(url, headers=headers, timeout=30)
         if r.status_code != 429:
             return r
-        delay = int(r.headers.get("Retry-After", 60))
-        time.sleep(delay * (2 ** i))   # 60s, 120s, 240s, 480s
-    raise RuntimeError("rate-limit retries exhausted")
+        wait = int(r.headers.get("Retry-After", delay))
+        time.sleep(wait)
+        delay = min(delay * 2, 60)
+    return r
 ```
-
-**Monitor `X-RateLimit-Remaining`.** When it drops below ~10% of your
-limit, throttle yourself rather than waiting for a 429. Better to slow
-down voluntarily than to handle errors after the fact.
-
-## Endpoint cost notes
-
-Most endpoints are pure cache reads (~1ms server-side). A handful do
-on-the-fly computation:
-
-- `/v2/options/chain` with novel filter combos — first call computes,
-  subsequent calls (same filters) hit a 30s cache
-- `/v2/gex/max-pain?expiry=all` — computes per-expiry max-pain across
-  the chain, cached 30s
-- `/v2/options/greeks/{greek}?dte_max=N` — recomputes from raw chain
-  for the DTE-filtered slice, cached 30s
-- `/v2/options/greeks/3d/surface` — strike × expiry matrix per greek,
-  cached 30s
-
-All four count as one request against your rate limit, regardless of
-whether they hit cold or warm cache.
-
-## Need more throughput?
-
-If 120 req/min isn't enough — typically when you're powering a paid
-product downstream, or running >100 concurrent dashboards — contact
-**dev@backquant.com** about Enterprise. Enterprise removes the
-per-minute limit and includes:
-
-- Dedicated capacity
-- Custom symbol additions (e.g. SUI, AVAX)
-- Historical bulk export (CSV / Parquet)
-- SLA + priority support
 
 ## See also
 
 <CardGroup cols={2}>
-  <Card title="Errors" icon="circle-exclamation" href="/concepts/errors">
-    Full error code list with recommended retry strategies.
-  </Card>
-  <Card title="Multi-symbol bundle" icon="layer-group" href="/concepts/multi-symbol">
-    The cheapest way to watch the universe.
-  </Card>
-  <Card title="Data freshness" icon="bolt" href="/concepts/data-freshness">
-    Why polling faster than 30s wastes quota.
-  </Card>
+  <Card title="Errors" href="/concepts/errors" icon="triangle-exclamation" />
+  <Card title="Meta" href="/api/v2/discovery/meta" icon="circle-info" />
+  <Card title="Authentication" href="/authentication" icon="key" />
 </CardGroup>

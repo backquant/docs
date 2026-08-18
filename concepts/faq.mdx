@@ -15,7 +15,7 @@ liquidation. A `freshness_seconds` value between 0 and 60 on a
 
 ### Polling once a second is hammering the rate limit. What's the right frequency?
 
-Polling faster than **30 seconds** is wasted work — you'll see the
+Polling faster than **30 seconds** is wasted work - you'll see the
 same `computed_at` 30 times in a row. For dashboard panels, 30s is the
 sweet spot. For OPEX-day or volatile windows where you want every
 refresh, you could go to 15s, but anything below that returns
@@ -26,7 +26,7 @@ budgeting.
 
 Not a bug. The historical endpoints (`/v2/gex/stress-history`,
 `/v2/options/iv/iv-rv`, `/v2/options/vrp`) return *historical* time
-series — the `computed_at` reflects when each historical row was
+series - the `computed_at` reflects when each historical row was
 written, which can be days or weeks ago. For these endpoints,
 freshness isn't a staleness signal; it's a retention signal.
 
@@ -38,14 +38,14 @@ A 404 on an authed v2 endpoint means "no cache available for this
 symbol/expiry/window right now," not "endpoint doesn't exist."
 Possible causes:
 
-1. The symbol is supported but cold — call [`/v2/symbols`](/api/v2/discovery/symbols) and check `categories_live`. If your category isn't in the list, the worker hasn't populated it yet.
+1. The symbol is supported but cold - call [`/v2/symbols`](/api/v2/discovery/symbols) and check `categories_live`. If your category isn't in the list, the worker hasn't populated it yet.
 2. The symbol is unsupported. The supported set is `BTCUSDT`, `ETHUSDT`, `SOLUSDT`, `HYPEUSDT`. Anything else returns a `VALIDATION_ERROR` (422), not a 404.
 3. You asked for a specific expiry token that doesn't exist. Call [`/v2/expiries?symbol=...`](/api/v2/discovery/expiries) for the active token list.
 
 ### Why does my client see `success: false` even when the data looks fine?
 
 You're probably reading `data` before checking `success`. The envelope
-**always** has `success` first — branch on it before touching `data` or
+**always** has `success` first - branch on it before touching `data` or
 `error`. See the [response format](/concepts/response-format).
 
 ### I just hit `RATE_LIMIT_EXCEEDED`. What now?
@@ -53,13 +53,13 @@ You're probably reading `data` before checking `success`. The envelope
 Check the `Retry-After` response header (or the
 `error.details.retry_after_seconds` field in the body). Wait that
 many seconds, then retry. If it happens repeatedly, your polling
-cadence is too aggressive — see the rate-limits page or consider
+cadence is too aggressive - see the rate-limits page or consider
 upgrading your tier at
 [backquant.com/api-access](https://backquant.com/api-access).
 
 ### What does `UPSTREAM_ERROR` mean?
 
-A transient failure reaching our cache or database — usually clears
+A transient failure reaching our cache or database - usually clears
 within 30 seconds. Use exponential backoff (2s, 4s, 8s) and your
 client should recover automatically. If it persists past a minute,
 hit [`/v2/health`](/api/v2/health) for the current subsystem status.
@@ -110,7 +110,7 @@ updates (~30s). Use REST when you need flow; use WS for a light std pulse.
 
 History endpoints (`/v2/gex/history`, `/v2/options/oi/history`) accept
 `?limit` (page size) and `?before=<ISO timestamp>` (cursor). Each
-response includes `next_cursor` — pass it as the next call's `?before`
+response includes `next_cursor` - pass it as the next call's `?before`
 to walk backwards. Iterate until `timestamps` comes back empty.
 
 ```python
@@ -135,7 +135,7 @@ You can use both in the same call.
 
 ### How do I filter by strike around spot without knowing spot price?
 
-Use **moneyness bounds** (`?moneyness_min=0.9&moneyness_max=1.1`) — the
+Use **moneyness bounds** (`?moneyness_min=0.9&moneyness_max=1.1`) - the
 server resolves them against current spot for you. Or
 `?spot_window_pct=5` for a symmetric ±5% window. Both work on every
 endpoint that accepts strike-axis filters.
@@ -157,7 +157,7 @@ expiration with its expiry token, ISO date, and DTE.
 
 ### Are weekly / monthly / quarterly classifications consistent across symbols?
 
-Yes — the classification is calendar-based (last Friday of month →
+Yes - the classification is calendar-based (last Friday of month →
 monthly; last Friday of Mar/Jun/Sep/Dec → quarterly), not
 symbol-specific. So `28MAR25` is `quarterly` for BTC, ETH, SOL, and HYPE.
 
@@ -165,7 +165,7 @@ symbol-specific. So `28MAR25` is `quarterly` for BTC, ETH, SOL, and HYPE.
 
 ### Can I cache responses on my end?
 
-Yes, and you should. Server-side data refreshes every 30s anyway —
+Yes, and you should. Server-side data refreshes every 30s anyway -
 caching responses for 15-30s on your end is standard practice and
 saves you rate-limit budget. Use the `meta.computed_at` field as your
 cache key so you can detect refreshes.
@@ -191,7 +191,7 @@ We trace by request ID so the more specific the better.
 
 ### How do I get an API key?
 
-[backquant.com/api-access](https://backquant.com/api-access) — sign up
+[backquant.com/api-access](https://backquant.com/api-access) - sign up
 or sign in, create a key, copy. Same key works across all v2
 endpoints; tier determines your rate limit.
 
@@ -202,7 +202,7 @@ applies on your next API call.
 
 ### Is my data redistributable?
 
-No — personal-use plans don't permit redistribution. If you're
+No - personal-use plans don't permit redistribution. If you're
 building a product on top of the API that resells the data, contact
 **dev@backquant.com** for an enterprise discussion. See
 [Terms of Service](https://www.backquant.com/terms).

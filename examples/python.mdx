@@ -121,7 +121,7 @@ if next_monthly:
         "confidence_band": 0.68,
     })
     band = pdf["data"]["expiries"][expiry]["confidence_band"]
-    print(f"{expiry} 1σ implied range: ${band['lower']:.0f} – ${band['upper']:.0f}")
+    print(f"{expiry} 1σ implied range: ${band['lower']:.0f} - ${band['upper']:.0f}")
 ```
 
 ## Paginate the GEX history
@@ -145,7 +145,7 @@ for _ in range(10):  # safety cap
 print(f"Pulled {len(all_points)} history points, oldest={all_points[-1][0]}")
 ```
 
-## Backtest setup — historical levels
+## Backtest setup - historical levels
 
 Pull 30 days of HVL / walls / net GEX for a regime study:
 

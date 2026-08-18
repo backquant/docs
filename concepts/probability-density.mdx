@@ -1,18 +1,18 @@
 ---
 title: "Probability density"
-description: "Risk-neutral PDF / CDF via Breeden-Litzenberger — the market's implied price distribution"
+description: "Risk-neutral PDF / CDF via Breeden-Litzenberger - the market's implied price distribution"
 ---
 
 **Risk-neutral probability density** is the full implied probability
 distribution of the underlying's price at a future expiry, extracted
 from option prices. It tells you not just where the market expects
-price to land (the mean / mode) but the full *shape* of expectations —
+price to land (the mean / mode) but the full *shape* of expectations -
 including skew toward downside crashes or upside squeezes.
 
 ## The intuition
 
 Breeden and Litzenberger (1978) showed that the shape of an option
-chain — specifically the way call prices respond to strike — implicitly
+chain - specifically the way call prices respond to strike - implicitly
 encodes the market's probability distribution for the underlying at
 expiry. We do the heavy lifting on our side and return a clean,
 normalised PDF over the strike grid for every active expiry.
@@ -52,18 +52,18 @@ returns:
 
 | Field | Meaning |
 | --- | --- |
-| `pdf` | Probability density per strike (un-normalized — sum × strike spacing ≈ 1) |
+| `pdf` | Probability density per strike (un-normalized - sum × strike spacing ≈ 1) |
 | `pdf_normalized` | PDF divided by total mass, sums to 1 over the strike grid |
-| `cdf_below` | Cumulative probability `P(price < strike)` — monotone non-decreasing |
+| `cdf_below` | Cumulative probability `P(price < strike)` - monotone non-decreasing |
 | `cdf_above` | Survival function `P(price > strike)` = 1 − cdf_below |
 | `mean` | Expected price at expiry under the risk-neutral measure |
 | `mode` | Most likely single price (peak of the PDF) |
 | `std` | Standard deviation in price units |
-| `skewness` | Distribution skew — negative = downside-skewed (crash risk priced in) |
-| `kurtosis` | Tail-fatness — > 3 means fat tails, < 3 means thin |
+| `skewness` | Distribution skew - negative = downside-skewed (crash risk priced in) |
+| `kurtosis` | Tail-fatness - > 3 means fat tails, < 3 means thin |
 | `prob_25 / 50 / 75` | The 25th / 50th / 75th percentile prices |
 
-## Confidence bands — the easiest way to use this
+## Confidence bands - the easiest way to use this
 
 Pass `?confidence_band=0.68` (≈ 1σ) or `?confidence_band=0.95` (≈ 2σ)
 and each expiry payload gets an extra block:
@@ -89,8 +89,8 @@ directly as range bounds in dashboards or mean-reversion strategies.
 
 ## Filtering
 
-- `?expiry=28MAR25` — slice to a single expiry token (case-insensitive)
-- `?dte_max=30` — drop expiries beyond N days, focus on the front
+- `?expiry=28MAR25` - slice to a single expiry token (case-insensitive)
+- `?dte_max=30` - drop expiries beyond N days, focus on the front
 
 ## How traders use it
 
@@ -103,7 +103,7 @@ range. Position sizing that assumes a tighter range is taking a vol
 view; sizing that assumes wider is hedged.
 
 **Strike selection**: looking at the PDF for the next monthly, you can
-see where the "shoulders" of the distribution are — strikes with
+see where the "shoulders" of the distribution are - strikes with
 elevated PDF density that aren't the mode. These are often the strikes
 where dealer hedging clusters and worth knowing for execution.
 
@@ -120,7 +120,7 @@ pricing volatility expansion or compression over the next few weeks.
   far-OTM strikes, so the tails of the PDF are noisier than the body.
   Use the body for sizing decisions; treat the tails as informational.
 - **Not free.** It's computationally heavy. The endpoint is cached at
-  the worker layer — refreshed every 30s, not real-time.
+  the worker layer - refreshed every 30s, not real-time.
 
 ## See also
 

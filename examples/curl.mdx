@@ -36,7 +36,7 @@ symbol=BTCUSDT\
   -H "X-API-Key: $BACKQUANT_API_KEY" | jq '.data | {hvl: .all_expiry.hvl, max_pain, expected_move}'
 ```
 
-## OPEX calendar — anchors only, next 90 days
+## OPEX calendar - anchors only, next 90 days
 
 ```bash
 curl -s "https://api.backquant.com/v2/options/opex?\

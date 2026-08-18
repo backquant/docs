@@ -9,11 +9,24 @@ and by strike window (`strike_min/max`, `moneyness_min/max`,
 
 Default **`positioning=flow`**. See [Positioning](/concepts/positioning).
 
+## Venues
+
+Optional `?exchanges=` CSV filters the multi-venue OI roll-up.
+Allowed IDs: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`,
+`delta_india`, `delta`.
+
+Responses include `available_exchanges` with the full chain set so
+clients can render stable filter chips even when a venue contributed
+zero OI on this cycle.
+
+Underlying OI is **coin-unit** across venues.
+[Venue coverage](/concepts/venues).
+
 ## See also
 
 <CardGroup cols={2}>
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
   <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
   <Card title="GEX levels" href="/api/v2/gex/levels" icon="chart-simple" />
-  <Card title="Dealer flow by level" href="/api/v2/gex/dealer-flow-by-level" icon="chart-bar" />
+  <Card title="Flow by strike" href="/api/v2/tape/flow-by-strike" icon="chart-column" />
 </CardGroup>

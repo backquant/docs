@@ -63,7 +63,7 @@ that all signals sit on the same scale before they're combined.
 | **Calculation Source** | `close` | Price source used everywhere downstream. |
 | **Z-Score Lookback** | `1100` | The master regime lookback. Longer = smoother / longer-term framing. |
 | **Per-component lookbacks** | various | Each component has its own length - defaults are tuned for daily/weekly horizons. |
-| **Per-component weights** | `1.0`–`1.5` | Relative importance of each component in the final score. Set any to `0` to disable. |
+| **Per-component weights** | `1.0`-`1.5` | Relative importance of each component in the final score. Set any to `0` to disable. |
 | **Smooth Valuation** | on | Apply a moving-average filter to the final composite. |
 | **MA Type / Period / Sigma** | RMA / 45 / 2 | Smoothing kernel and length (Sigma only used by ALMA). |
 | **Normalization Length** | `90` | Window used by the volatility-aware compression. |

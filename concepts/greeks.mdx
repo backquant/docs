@@ -1,6 +1,6 @@
 ---
 title: "Greeks beyond delta"
-description: "DEX, theta, vanna, charm, vega — what they measure and how to use them"
+description: "DEX, theta, vanna, charm, vega - what they measure and how to use them"
 ---
 
 The greek profile endpoints in v2 give you the **dealer-aggregated
@@ -36,7 +36,7 @@ All five share the same shape:
 }
 ```
 
-## DEX — the workhorse
+## DEX - the workhorse
 
 Net delta exposure tells you how much underlying dealers must hold
 *right now* to be neutral at each strike. Large positive DEX above spot
@@ -47,7 +47,7 @@ DEX is essentially the *integral* of GEX across price. Use both:
 **GEX** for "where will dealers turn the boat?", **DEX** for "how big
 is their current position?"
 
-## Vanna — the vol-rallies-the-tape effect
+## Vanna - the vol-rallies-the-tape effect
 
 Vanna is **dDelta/dVol**. Positive vanna means: when IV rises, dealer
 delta increases (they need to buy underlying); when IV falls, dealer
@@ -55,51 +55,51 @@ delta decreases (they sell). The classic "vol crush rallies the
 underlying" pattern is vanna in action.
 
 In crypto, vanna concentrates around 25Δ strikes (where vega is
-biggest). Watch for cliffs in the vanna profile near current spot —
+biggest). Watch for cliffs in the vanna profile near current spot -
 those are levels where a vol move triggers hedging flows that move
 price.
 
-## Charm — the time-bleed delta drift
+## Charm - the time-bleed delta drift
 
 Charm is **dDelta/dTime**. As an option ages with no underlying move,
 its delta drifts (calls toward 0 or 1, puts toward 0 or -1). Dealers
 hedge that drift, which creates predictable end-of-day flows.
 
 Watch this in the last hour before close (especially before OPEX
-days) — large charm at strikes near spot means dealers will be
+days) - large charm at strikes near spot means dealers will be
 adjusting deltas just from time passing, even if price doesn't move.
 
-## Vega — vol P&L geography
+## Vega - vol P&L geography
 
 Where dealers will gain or lose if IV moves. Useful as a complement to
-the [IV surface](/concepts/iv-suite) — high vega at a strike means a
+the [IV surface](/concepts/iv-suite) - high vega at a strike means a
 vol move there has outsized impact on the dealer book.
 
 ## Filtering the greek profiles
 
 Each greek endpoint accepts:
 
-- `?exchanges=deribit,bybit,okx,binance` — venue filter
-- `?moneyness_min=0.9&moneyness_max=1.1` — focus on ATM ±10%
-- `?dte_max=7` — recompute from raw chain limited to short-DTE
+- `?exchanges=deribit,bybit,okx,binance,derive,thalex,delta_india,delta` - venue filter
+- `?moneyness_min=0.9&moneyness_max=1.1` - focus on ATM ±10%
+- `?dte_max=7` - recompute from raw chain limited to short-DTE
   contracts (cached 30s per `(symbol, greek, dte_max)` so repeated
   requests stay sub-millisecond)
 
-The `?dte_max` filter is particularly useful — the cached profiles span
+The `?dte_max` filter is particularly useful - the cached profiles span
 *every* expiry, but for intraday workflows you usually only care about
 0DTE / weekly contributions.
 
-## Surfaces — strike × time
+## Surfaces - strike × time
 
 Two endpoints expose the *evolution* of exposure over time:
 
-- [`/v2/options/greeks/surfaces/charm`](/api/v2/options/greeks/surfaces) — strike × time charm surface
-- [`/v2/options/greeks/surfaces/vega`](/api/v2/options/greeks/surfaces) — strike × time vega surface
+- [`/v2/options/greeks/surfaces/charm`](/api/v2/options/greeks/surfaces) - strike × time charm surface
+- [`/v2/options/greeks/surfaces/vega`](/api/v2/options/greeks/surfaces) - strike × time vega surface
 
 These are useful when you want to see where exposure is *building* over
 the day, not just the current snapshot.
 
-## 3D — strike × expiry for any greek
+## 3D - strike × expiry for any greek
 
 [`/v2/options/greeks/3d/surface?greek=gamma`](/api/v2/options/greeks/3d-surface)
 returns a `Z` matrix of `Σ(greek × OI)` per `(strike, expiry)` cell for

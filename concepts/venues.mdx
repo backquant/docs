@@ -1,48 +1,107 @@
 ---
 title: "Venue coverage"
-description: "Which exchanges BackQuant ingests for options chains, GEX, IV, levels and the tape — plus where each venue's data shows up in the API."
+description: "Which exchanges BackQuant ingests for options chains, GEX, IV, levels and the tape - plus how to filter by venue."
 ---
 
-BackQuant ingests crypto options data from four exchanges and folds them into one canonical surface. This page describes which venues feed which endpoints, and how to filter by venue when relevant.
+BackQuant ingests crypto options from multiple exchanges and folds them
+into one canonical surface. Filterable venue IDs on public v2 are:
+
+`deribit` · `bybit` · `okx` · `binance` · `derive` · `thalex` · `delta_india` · `delta`
 
 ## Venues at a glance
 
-| Venue | Tape | Chain / IV / GEX inputs | Source |
-|---|---|---|---|
-| **Deribit** | ✅ live WS | ✅ primary | Public WebSocket + REST chain. The deepest BTC + ETH books in the market. |
-| **Bybit** | ✅ live WS | ✅ multi-venue OI roll-up | Public V5 WebSocket (`publicTrade.{coin}.option`) + chain REST. |
-| **OKX** | ✅ live WS | ✅ multi-venue OI roll-up | Public V5 WebSocket (`option-trades`, `instFamily=BTC-USD` / `ETH-USD`). |
-| **Binance** | ✅ REST poll | Limited (no live WS on options) | `eapi.binance.com/eapi/v1/trades` polled for the top-30 most-active BTC + ETH contracts every 30 seconds. |
+| Venue ID | Tape | Chain / OI / GEX | How we ingest | Notes |
+|---|---|---|---|---|
+| **`deribit`** | ✅ live WS | ✅ primary depth | Public WS + REST | Deepest BTC/ETH books; primary bid/ask for IV |
+| **`bybit`** | ✅ live WS | ✅ multi-venue OI | V5 `publicTrade.{coin}.option` + chain REST | BTC/ETH |
+| **`okx`** | ✅ live WS | ✅ multi-venue OI | V5 `option-trades` (`BTC-USD` / `ETH-USD`) | Size coin-normalized at ingest |
+| **`binance`** | ✅ REST poll | ✅ multi-venue OI | `eapi` trades on a hot list (~30s) | No live options WS from our infra; top-volume strikes (~95% of venue premium) |
+| **`derive`** | ✅ live WS | ✅ when enabled | WS `trades.{coin}` + ticker cache | **Flag-gated on compute** (`DERIVE_*`); BTC/ETH/SOL/HYPE. **HYPE tape is live-only** (no Timescale history) |
+| **`thalex`** | ✅ live WS | ✅ always-on | Book channel `book.{INSTR}.none.10.100ms` `trades[]` | BTC/ETH; USD-settled premium |
+| **`delta_india`** | ✅ live WS | ✅ always-on | `api.india.delta.exchange` + `socket.india.delta.exchange` | BTC/ETH minis; see [units](#delta-exchange-units) |
+| **`delta`** | ✅ live WS | ✅ always-on | `api.delta.exchange` + `socket.delta.exchange` | Global Delta book (thinner than India) |
 
 ### Coins
 
-`BTC` and `ETH` are fully covered across all four venues. `SOL` and `HYPE` are valid symbols in the API schema (some venues have started listing them) but live coverage is currently thin.
+| Coin | Chain / GEX | Flow tape |
+|---|---|---|
+| **BTC**, **ETH** | Full multi-venue | Full multi-venue (all eight IDs when live) |
+| **SOL**, **HYPE** | When Derive / Deribit linear HYPE are enabled | FLOW falls back to `std` if no aggressor tape |
 
 ## Where venues show up
 
 | Endpoint family | Per-venue filter? | Default behaviour |
 |---|---|---|
-| [Tape REST](/api/v2/tape/overview) | ✅ `?venues=deribit,bybit,...` | All four venues unioned |
-| [Tape WebSocket](/api/v2/tape/websocket) | ✅ per-channel subscription `tape.{coin}.{venue}` | Subscribe to `tape.{coin}.agg` for the union |
-| [GEX](/api/v2/gex/levels) — strike profile / levels / heatmaps | Deribit-primary; multi-venue OI roll-up | Multi-venue blended view |
-| [IV](/api/v2/options/iv/surface) — surface / term / skew / smile | Deribit-derived | Single, Deribit-rooted view |
-| [Greeks profiles](/api/v2/options/greeks/by-greek) | Deribit-derived | Deribit-rooted |
-| [Open interest](/api/v2/options/oi/by-expiry) | Multi-venue blended | Union of all venues |
+| [Tape REST](/api/v2/tape/overview) | ✅ `?venues=...` | Union of all tape venues |
+| [Tape WebSocket](/api/v2/tape/websocket) | ✅ `tape.{coin}.{venue}` or `.agg` | Subscribe `tape.{coin}.agg` for the union |
+| [Flow by strike](/api/v2/tape/flow-by-strike) | ✅ `?venues=...` | Cumulative aggressor map on open contracts |
+| [GEX](/api/v2/gex/levels) / strike profiles / heatmaps | ✅ `?exchanges=...` where supported | Multi-venue OI roll-up; Deribit-rooted pricing |
+| [IV](/api/v2/options/iv/surface) | Deribit-rooted | Single surface |
+| [Open interest](/api/v2/options/oi/by-expiry) | Multi-venue blended | **Coin-unit OI** summed across venues |
 
-When a metric is documented as "multi-venue blended," it means OI from every venue that lists the coin is rolled into one weighted view. Bid/ask depth is Deribit-only — the other venues don't make the chain pricing usable at retail latency.
+When a metric is “multi-venue blended,” OI from every venue that lists
+the coin is summed on normalized instrument names. Bid/ask depth for
+IV remains Deribit-primary.
 
-## Why Binance isn't on the live WS
+Strike-profile payloads advertise `available_exchanges` with the full
+chain set (including Thalex / Derive / both Delta IDs) even on thin
+books, so UI filters stay stable.
 
-The public Binance options WebSocket host (`nbstream.binance.com/eoptions/...`) is not reachable from our infrastructure, despite the REST chain on `eapi.binance.com` working normally.
+## Delta Exchange units
 
-We therefore poll Binance's REST trade endpoint every 30 seconds for the most-actively-traded BTC and ETH contracts (hot list refreshed every 5 minutes by 24-hour volume). In practice this captures ~95 % of Binance options premium because volume concentrates in the top 20-30 strikes. Tail strikes that print rarely will be missed.
+Delta lists **mini** options. The public API always exposes **coin**
+size and USD premium already normalized. You do not need to re-apply
+`contract_value` on the public fields.
 
-We're tracking the issue and will move Binance to the live WS as soon as the upstream path becomes usable.
+| What you see on the API | Meaning |
+|---|---|
+| Chain OI (`oi` / totals) | **Coin** of BTC or ETH |
+| Tape `amount` | **Coin** |
+| Tape `premium_usd` | USD premium for that print |
+| Upstream `contract_value` | BTC `0.001` / ETH `0.01` coin per contract (ingest only) |
+
+Ingest mapping (for transparency):
+
+```text
+amount      = size × contract_value
+premium_usd = price × amount
+```
+
+where upstream `size` is contracts and upstream `price` is USD per coin.
+Use the API’s `amount` and `premium_usd` as-is.
+
+Thalex is USD-settled: `premium_usd = price × amount` with `amount`
+already coin-equivalent.
+
+## Settlement and expiry labels
+
+| Venue class | Settle time (UTC) |
+|---|---|
+| Deribit-style CEX dailies (Deribit, Bybit, OKX, Binance, Thalex, …) | **08:00** |
+| Delta India / Delta Global | **12:00** same calendar day |
+
+Public expiry tokens (e.g. `18AUG26`) follow the **Deribit-session**
+calendar used across GEX, OPEX countdowns, and TRACE:
+
+- Countdowns and 0DTE / front-expiry selection use the **08:00 UTC** cliff.
+- After that session roll, remaining Delta inventory for that calendar
+  day is **rolled into the next session expiry** in the aggregated
+  chain so strike / GEX / OI surfaces stay on one expiry ladder.
+- Filter and response tokens stay Deribit-style; you do not get a
+  separate public “India 12:00” expiry id.
+
+## Why Binance isn't on the live options WS
+
+The public Binance options WebSocket host is not reachable from our
+infrastructure. We poll REST trades for the most-active BTC/ETH
+contracts (~30s). The hot list refreshes about every 5 minutes by 24h
+volume. Low-volume strikes may be missed.
 
 ## See also
 
 <CardGroup cols={2}>
   <Card title="Tape overview" href="/api/v2/tape/overview" icon="table-list" />
+  <Card title="Flow by strike" href="/api/v2/tape/flow-by-strike" icon="chart-column" />
+  <Card title="Positioning" href="/concepts/positioning" icon="scale-balanced" />
   <Card title="Data freshness" href="/concepts/data-freshness" icon="clock" />
-  <Card title="Multi-symbol bundle" href="/concepts/multi-symbol" icon="layer-group" />
 </CardGroup>

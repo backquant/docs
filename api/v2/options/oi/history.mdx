@@ -11,6 +11,9 @@ at page boundaries.
 The response carries `next_cursor` - pass it as `?before=` on the next
 call to fetch the previous page.
 
+OI series are in **coin units** of the underlying (same convention as
+[`/options/oi/by-expiry`](/api/v2/options/oi/by-expiry)).
+
 Useful for:
 
 - Detecting OI build-ups before major expirations
@@ -21,5 +24,6 @@ Useful for:
 
 <CardGroup cols={2}>
   <Card title="OI by expiry" icon="bookmark" href="/api/v2/options/oi/by-expiry" />
+  <Card title="Venue coverage" icon="building" href="/concepts/venues" />
   <Card title="OPEX calendar" icon="bookmark" href="/concepts/opex" />
 </CardGroup>

@@ -1,6 +1,6 @@
 ---
 title: "What is GEX?"
-description: "Gamma exposure, dealer positioning, walls and support levels — explained"
+description: "Gamma exposure, dealer positioning, walls and support levels - explained"
 ---
 
 **Gamma exposure (GEX)** measures how much underlying delta dealers are
@@ -14,7 +14,7 @@ likely to happen.
 When you buy an option, somebody else (a dealer / market maker) is the
 counterparty. To stay delta-neutral, the dealer hedges in the underlying.
 **Gamma** is the rate of change of delta with respect to the underlying
-price — so as price moves, the dealer's delta hedge has to be adjusted.
+price - so as price moves, the dealer's delta hedge has to be adjusted.
 **Net dealer gamma** at a given strike tells you how much hedging
 *pressure* exists at that level. Positive net gamma = dealers buy on
 dips and sell on rallies (stabilizing). Negative net gamma = dealers
@@ -22,7 +22,9 @@ sell on dips and buy on rallies (amplifying).
 
 ## What we compute for you
 
-For every active option contract across Deribit, Bybit, OKX, and Binance,
+For every active option contract across the multi-venue chain (Deribit, Bybit,
+OKX, Binance, plus Derive / Thalex / Delta when live - see
+[Venue coverage](/concepts/venues)),
 we compute the dollar gamma exposure (USD impact per 1% spot move) and
 aggregate it per strike, per expiry, and per venue. You get the
 aggregated values directly; no reconstruction needed on your side.
@@ -44,7 +46,7 @@ trader-actionable levels distilled from the full strike profile:
 
 | Field | What it means | How traders use it |
 | --- | --- | --- |
-| **HVL** (Hedging Volume Level) | The strike where cumulative net gamma crosses zero closest to spot | The "gamma flip" — above HVL dealers stabilize, below HVL they amplify. Treat as a regime line. |
+| **HVL** (Hedging Volume Level) | The strike where cumulative net gamma crosses zero closest to spot | The "gamma flip" - above HVL dealers stabilize, below HVL they amplify. Treat as a regime line. |
 | **call_resistance** | The strike with the largest *positive* gamma above spot | The wall dealers will defend by selling into rallies. Common reversal zone. |
 | **call_wall_2 / call_wall_3** | Second / third strongest call walls above spot | Where price *might* pin if it breaks call_resistance. |
 | **put_support** | The strike with the largest positive gamma below spot | Dealers buy on dips into this level. Common bounce zone. |
@@ -53,18 +55,18 @@ trader-actionable levels distilled from the full strike profile:
 
 ## How to read them in practice
 
-**Spot above HVL with strong call_resistance overhead** — expect
+**Spot above HVL with strong call_resistance overhead** - expect
 mean-reverting price action, dampened vol, dealers selling into rallies
 toward the call wall. Good environment for premium selling.
 
-**Spot below HVL with strong put_support below** — expect amplified
+**Spot below HVL with strong put_support below** - expect amplified
 moves on the way down, but a snap-back if price reaches put_support.
 Dealers will start buying.
 
-**Spot crossing HVL** — regime change. The stabilizing/destabilizing
+**Spot crossing HVL** - regime change. The stabilizing/destabilizing
 balance flips. Watch for vol expansion right at the cross.
 
-**0DTE levels different from all-expiry levels** — common in the last
+**0DTE levels different from all-expiry levels** - common in the last
 hour before close. The 0DTE levels usually win for the close itself;
 the all-expiry levels matter more for the next session.
 
@@ -93,14 +95,14 @@ Out of the box, you get all-expiry walls + 0DTE walls:
 
 Add `?include=ranked,max_pain,expected_move,zones` to also get:
 
-- `ranked` — top 10 strikes by absolute GEX (where the action concentrates)
-- `max_pain` — see the [max pain page](/concepts/max-pain)
-- `expected_move` — 1σ / 2σ implied range from ATM straddle
-- `gamma_flip_zones` — multiple-zero-crossing detail when the chain has more than one regime line
+- `ranked` - top 10 strikes by absolute GEX (where the action concentrates)
+- `max_pain` - see the [max pain page](/concepts/max-pain)
+- `expected_move` - 1σ / 2σ implied range from ATM straddle
+- `gamma_flip_zones` - multiple-zero-crossing detail when the chain has more than one regime line
 
 ## Filtering by venue
 
-Aggregating across all four venues smooths noise but can also hide
+Aggregating across venues smooths noise but can also hide
 venue-specific positioning (e.g. Deribit dealers vs retail-heavy
 Binance options). Use `?exchanges=deribit` (or any subset) to recompute
 levels from a specific venue's chain only.

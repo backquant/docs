@@ -3,10 +3,27 @@ title: "OI by expiry"
 openapi: "GET /options/oi/by-expiry"
 ---
 
-Open interest aggregated by expiration with calls and puts split. `?weekly_only=true` excludes monthly + quarterly anchors.
+Open interest aggregated by expiration with calls and puts split.
+`?weekly_only=true` excludes monthly + quarterly anchors.
+
+## Units
+
+| Field | Unit |
+|---|---|
+| Call / put / total OI | **Coin** of the underlying (BTC, ETH, …) |
+| Multi-venue totals | Sum of coin OI across venues on the same normalized instrument |
+
+USD notional ≈ `total_oi × spot`. When present on
+[`/v2/options/expiry-summary`](/api/v2/options/expiry-summary),
+`notional_oi_usd` is that product.
+
+Filter with `?exchanges=` where supported. Venue list:
+[Venue coverage](/concepts/venues).
 
 ## See also
 
 <CardGroup cols={2}>
   <Card title="OPEX calendar" href="/concepts/opex" icon="bookmark" />
+  <Card title="Expiry summary" href="/api/v2/options/expiry-summary" icon="table" />
+  <Card title="Venue coverage" href="/concepts/venues" icon="building" />
 </CardGroup>

@@ -66,8 +66,8 @@ the API before signing up:
 | Endpoint | Purpose |
 | --- | --- |
 | `/v2/openapi.json` | Full machine-readable OpenAPI 3 spec |
-| `/v2/docs` | Swagger UI — interactive playground |
-| `/v2/redoc` | ReDoc — alternative reference renderer |
+| `/v2/docs` | Swagger UI - interactive playground |
+| `/v2/redoc` | ReDoc - alternative reference renderer |
 | `/v2/health` | Liveness/readiness probe for monitors |
 
 Every other route requires `X-API-Key`.
@@ -100,7 +100,7 @@ Common causes:
 - Your subscription lapsed (`FORBIDDEN` rather than `UNAUTHORIZED` in this case).
 
 The `request_id` field in the `meta` block is the value of the
-`X-Request-ID` header — include it when reporting auth issues so we can
+`X-Request-ID` header - include it when reporting auth issues so we can
 trace the specific call in our logs.
 
 ## Next steps

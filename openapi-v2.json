@@ -1,13 +1,8 @@
 {
   "openapi": "3.1.0",
-  "x-mint": {
-    "metadata": {
-      "mode": "wide"
-    }
-  },
   "info": {
     "title": "BackQuant API v2",
-    "description": "\n# BackQuant API v2\n\nOptions + gamma-exposure focused public API. Built on the same data the\nBackQuant Pro Terminal renders \u2014 pre-computed every 30s, served from cache.\n\n## What's in v2\n\n* **Discovery**: `/v2/symbols` (universe + per-symbol freshness + supported\n  endpoint list), `/v2/expiries` (active expiry tokens with DTE), `/v2/status`\n  (per-symbol-per-category health with thresholds + overall classification).\n* **GEX**: composable levels (HVL / call wall / put support / max-pain /\n  expected move / gamma-flip zones), strike profile with typed expiry\n  filter, expiry profile, strike \u00d7 expiry heatmap with downsampling,\n  greek time-heatmap with DTE/OI/IV filters, history (cursor-paginated),\n  Postgres-backed stress history, **per-expiry max-pain with pain curve**.\n* **Options**: filtered options chain with two-layer projection (top-level\n  `?fields=` and per-contract `?include=oi,iv,greeks,bid_ask,volume,gex`)\n  plus moneyness filter (`?moneyness_min=0.9&moneyness_max=1.1`), expiry\n  summary table, full IV suite (surface / term structure / 25\u0394-10\u0394 skew /\n  curves / **single-expiry smile** / IV-RV history / VRP), expected move,\n  **Breeden-Litzenberger probability density and surface**, typed greek\n  profiles (delta / theta / vanna / charm / vega), strike \u00d7 time charm/vega\n  surfaces, strike \u00d7 expiry 3D greek surface, OI by expiry + history,\n  put/call ratio (intraday or daily), 0DTE & weekly premium tide,\n  dated-futures term structure.\n* **Liquidation**: heatmap + leverage-tiered distribution.\n* **Multi**: `/v2/multi/gex/levels` \u2014 bundled multi-symbol read across the\n  universe in one round-trip, with the same `?include=` model as the\n  single-symbol endpoint.\n\n## Authentication\n\nEvery v2 route (except `/v2/openapi.json`, `/v2/docs`, `/v2/redoc`, and\n`/v2/health`) requires the `X-API-Key` header.\n\n```\nX-API-Key: bq_live_your_api_key_here\n```\n\n**Get your API key at [backquant.com/api-access](https://backquant.com/api-access).**\n\nThe same key works across v1 and v2 \u2014 if you already have a v1 key, no\nre-issuance is needed.\n\n## Rate limits\n\nPer-key, derived from your subscription tier:\n\n| Tier        | Limit                |\n|-------------|----------------------|\n| Monthly     | 60 requests/min      |\n| Yearly      | 120 requests/min     |\n| Enterprise  | No limit             |\n\nHeaders `X-RateLimit-Limit / -Remaining / -Reset` are included in every\nresponse, and the same triple is echoed inside `meta.rate_limit` when\npopulated by middleware.\n\n## Response envelope\n\n```json\n{\n  \"success\": true,\n  \"data\": { ... },\n  \"meta\": {\n    \"version\": \"2.0\",\n    \"timestamp\": \"2026-04-29T12:00:00.000Z\",\n    \"request_id\": \"req_\u2026\",\n    \"symbol\": \"BTCUSDT\",\n    \"spot_price\": 67213.5,\n    \"computed_at\": \"2026-04-29T11:59:48.000Z\",\n    \"freshness_seconds\": 12.0,\n    \"source\": [\"deribit\",\"bybit\",\"okx\",\"binance\"],\n    \"exchanges_filtered\": [\"deribit\",\"bybit\"]\n  }\n}\n```\n\n## Errors\n\n```json\n{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"No data for BTCUSDT\"\n  },\n  \"meta\": { \"version\": \"2.0\", \"timestamp\": \"...\" }\n}\n```\n\n| Code                  | When |\n|-----------------------|------|\n| `UNAUTHORIZED`        | Missing or invalid API key |\n| `FORBIDDEN`           | Subscription doesn't allow API access |\n| `NOT_FOUND`           | Symbol/expiry/etc. not present in cache |\n| `VALIDATION_ERROR`    | Bad query parameters |\n| `RATE_LIMIT_EXCEEDED` | Per-tier limit hit |\n| `UPSTREAM_ERROR`      | Cache or DB temporarily unreachable |\n| `INTERNAL_ERROR`      | Anything else |\n    ",
+    "description": "\n# BackQuant API v2\n\nOptions + gamma-exposure focused public API. Built on the same data the\nBackQuant Pro Terminal renders - pre-computed every 30s, served from cache.\n\n## What's in v2\n\n* **Discovery**: `/v2/symbols` (universe + per-symbol freshness + supported\n  endpoint list), `/v2/expiries` (active expiry tokens with DTE), `/v2/status`\n  (per-symbol-per-category health with thresholds + overall classification).\n* **GEX**: composable levels (HVL / call wall / put support / max-pain /\n  expected move / gamma-flip zones), strike profile with typed expiry\n  filter, expiry profile, strike × expiry heatmap with downsampling,\n  greek time-heatmap with DTE/OI/IV filters, history (cursor-paginated),\n  Postgres-backed stress history, **per-expiry max-pain with pain curve**.\n* **Options**: filtered options chain with two-layer projection (top-level\n  `?fields=` and per-contract `?include=oi,iv,greeks,bid_ask,volume,gex`)\n  plus moneyness filter (`?moneyness_min=0.9&moneyness_max=1.1`), expiry\n  summary table, full IV suite (surface / term structure / 25Δ-10Δ skew /\n  curves / **single-expiry smile** / IV-RV history / VRP), expected move,\n  **Breeden-Litzenberger probability density and surface**, typed greek\n  profiles (delta / theta / vanna / charm / vega), strike × time charm/vega\n  surfaces, strike × expiry 3D greek surface, OI by expiry + history,\n  put/call ratio (intraday or daily), 0DTE & weekly premium tide,\n  dated-futures term structure.\n* **Liquidation**: heatmap + leverage-tiered distribution.\n* **Multi**: `/v2/multi/gex/levels` - bundled multi-symbol read across the\n  universe in one round-trip, with the same `?include=` model as the\n  single-symbol endpoint.\n\n## Authentication\n\nEvery v2 route (except `/v2/openapi.json`, `/v2/docs`, `/v2/redoc`, and\n`/v2/health`) requires the `X-API-Key` header.\n\n```\nX-API-Key: bq_live_your_api_key_here\n```\n\n**Get your API key at [backquant.com/api-access](https://backquant.com/api-access).**\n\nThe same key works across v1 and v2 - if you already have a v1 key, no\nre-issuance is needed.\n\n## Rate limits\n\nTwo budgets, both derived from your subscription tier: a **monthly request\nallowance** per account, and a **per-minute burst** per key. Size your\nintegration against the monthly figure - sustained polling at the burst rate\nexhausts the month early.\n\n| Plan                      | Monthly allowance | Burst    | Sustained   |\n|---------------------------|-------------------|----------|-------------|\n| Starter (Terminal Yearly) | 10,000 req/month  | 10/min   | ~333/day    |\n| Standard (Crypto API)     | 250,000 req/month | 60/min   | ~8,300/day  |\n| Pro (Terminal + API)      | 1,000,000/month   | 120/min  | ~33,000/day |\n| Enterprise                | custom            | 600/min  | custom      |\n\nHeaders `X-RateLimit-Limit / -Remaining / -Reset` (burst) and\n`X-Quota-Limit / -Used / -Remaining / -Period` (monthly) are included in\nevery response; the rate-limit triple is echoed inside `meta.rate_limit`\nwhen populated by middleware. Exceeding either budget returns `429`.\n\nThe live ladder is served at `GET /v2/meta` under `rate_limits`.\n\n## Response envelope\n\n```json\n{\n  \"success\": true,\n  \"data\": { ... },\n  \"meta\": {\n    \"version\": \"2.0\",\n    \"timestamp\": \"2026-04-29T12:00:00.000Z\",\n    \"request_id\": \"req_…\",\n    \"symbol\": \"BTCUSDT\",\n    \"spot_price\": 67213.5,\n    \"computed_at\": \"2026-04-29T11:59:48.000Z\",\n    \"freshness_seconds\": 12.0,\n    \"source\": [\"deribit\",\"bybit\",\"okx\",\"binance\",\"derive\",\"thalex\",\"delta_india\",\"delta\"],\n    \"exchanges_filtered\": [\"deribit\",\"bybit\"]\n  }\n}\n```\n\n## Errors\n\n```json\n{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"No data for BTCUSDT\"\n  },\n  \"meta\": { \"version\": \"2.0\", \"timestamp\": \"...\" }\n}\n```\n\n| Code                  | When |\n|-----------------------|------|\n| `UNAUTHORIZED`        | Missing or invalid API key |\n| `FORBIDDEN`           | Subscription doesn't allow API access |\n| `NOT_FOUND`           | Symbol/expiry/etc. not present in cache |\n| `VALIDATION_ERROR`    | Bad query parameters |\n| `RATE_LIMIT_EXCEEDED` | Per-tier limit hit |\n| `UPSTREAM_ERROR`      | Cache or DB temporarily unreachable |\n| `INTERNAL_ERROR`      | Anything else |\n    ",
     "version": "2.0.0"
   },
   "paths": {
@@ -17,7 +12,7 @@
           "Meta"
         ],
         "summary": "v2 health check (no auth)",
-        "description": "Lightweight liveness/readiness probe for external monitors. Reports overall status plus per-subsystem (redis, db) flags. Auth-free \u2014 uses the same `check_connection_health()` Fly.io's load balancer hits at `/health`. Rate limit: **60/minute per IP**.\n\nStatus values: `ok` (all subsystems healthy), `degraded` (one subsystem failing), `unhealthy` (cache + DB both unreachable).",
+        "description": "Lightweight liveness/readiness probe for external monitors. Reports overall status plus per-subsystem (redis, db) flags. Auth-free - uses the same `check_connection_health()` Fly.io's load balancer hits at `/health`. Rate limit: **60/minute per IP**.\n\nStatus values: `ok` (all subsystems healthy), `degraded` (one subsystem failing), `unhealthy` (cache + DB both unreachable).",
         "operationId": "get_health_health_get",
         "responses": {
           "200": {
@@ -42,7 +37,7 @@
           "Meta"
         ],
         "summary": "API-level metadata",
-        "description": "Static metadata about the v2 API. Supported symbol and exchange catalogs, the full error code list with HTTP status mapping, the auth scheme, the rate-limit ladder, the response envelope shape, and links to the OpenAPI spec / Swagger UI / ReDoc / endpoint catalog. Cheap (in-memory, no I/O).\n\nRequires `X-API-Key` like every other v2 route \u2014 anonymous discovery is via `/v2/openapi.json` (FastAPI standard, no auth).",
+        "description": "Static metadata about the v2 API. Supported symbol and exchange catalogs, the full error code list with HTTP status mapping, the auth scheme, the rate-limit ladder, the response envelope shape, and links to the OpenAPI spec / Swagger UI / ReDoc / endpoint catalog. Cheap (in-memory, no I/O).\n\nRequires `X-API-Key` like every other v2 route - anonymous discovery is via `/v2/openapi.json` (FastAPI standard, no auth).",
         "operationId": "get_meta_meta_get",
         "parameters": [
           {
@@ -160,7 +155,7 @@
           "Meta"
         ],
         "summary": "Live catalog of every v2 route",
-        "description": "Introspects the running FastAPI sub-app and returns one entry per route with path, HTTP methods, tag, summary, description, and the parameter list. Each parameter carries its name, location (`query` / `path` / `header`), required flag, type, default, numeric bounds (if any), and `enum` array when the parameter is Literal-typed.\n\nDerived from in-memory route metadata \u2014 no Redis or DB I/O. Requires `X-API-Key`. For totally anonymous discovery use `/v2/openapi.json` (FastAPI built-in).",
+        "description": "Introspects the running FastAPI sub-app and returns one entry per route with path, HTTP methods, tag, summary, description, and the parameter list. Each parameter carries its name, location (`query` / `path` / `header`), required flag, type, default, numeric bounds (if any), and `enum` array when the parameter is Literal-typed.\n\nDerived from in-memory route metadata - no Redis or DB I/O. Requires `X-API-Key`. For totally anonymous discovery use `/v2/openapi.json` (FastAPI built-in).",
         "operationId": "get_endpoints_endpoints_get",
         "parameters": [
           {
@@ -278,7 +273,7 @@
           "Meta"
         ],
         "summary": "API version history with breaking-change flags",
-        "description": "Returns the v2 release log plus the lifecycle status of v1. Customers integrating against either version use this to decide when to schedule re-integration work \u2014 `breaking: true` on any release is the signal to test, and `v1_status` flips to `deprecated` / `sunset` long before v1 is ever turned off.\n\nResponse is static \u2014 no I/O, sub-millisecond \u2014 so polling it from a CI job daily is free.",
+        "description": "Returns the v2 release log plus the lifecycle status of v1. Customers integrating against either version use this to decide when to schedule re-integration work - `breaking: true` on any release is the signal to test, and `v1_status` flips to `deprecated` / `sunset` long before v1 is ever turned off.\n\nResponse is static - no I/O, sub-millisecond - so polling it from a CI job daily is free.",
         "operationId": "get_changelog_changelog_get",
         "parameters": [
           {
@@ -643,8 +638,8 @@
         "tags": [
           "Discovery"
         ],
-        "summary": "v2 service status \u2014 per symbol, per category freshness",
-        "description": "Operational status. Each (symbol \u00d7 category) cell is classified as `healthy`, `degraded`, `unhealthy`, or `unavailable` based on cache age. The `overall_status` is the worst case across the grid. Thresholds in the response reflect the underlying compute cadence.",
+        "summary": "v2 service status - per symbol, per category freshness",
+        "description": "Operational status. Each (symbol × category) cell is classified as `healthy`, `degraded`, `unhealthy`, or `unavailable` based on cache age. The `overall_status` is the worst case across the grid. Thresholds in the response reflect the underlying compute cadence.\n\n**`venues`** reports each of the eight venues as `chain` (options chain aggregation) and `tape` (live trade tape), each `on` / `off` / `unknown`. `chain_symbols` lists the symbols the venue is live on and `chain_contracts` how many instruments it contributed on the last cycle - a venue that is `on` but delivering `0` contracts is visible rather than reading as healthy. `unknown` means no fresh status was published (a writer is down), never `off`.",
         "operationId": "get_status_status_get",
         "parameters": [
           {
@@ -762,7 +757,7 @@
           "GEX"
         ],
         "summary": "Composable GEX key levels",
-        "description": "All-expiry HVL/walls plus 0DTE-specific levels in a single call. Use `?include=` to opt in to optional sections \u2014 `spot,candles,zones,max_pain,expected_move,ranked`. Filter by exchange with `?exchanges=deribit,bybit,okx,binance`.",
+        "description": "All-expiry HVL/walls plus 0DTE-specific levels in a single call. Use `?include=` to opt in to optional sections - `spot,candles,zones,max_pain,expected_move,ranked`. Filter by exchange with `?exchanges=deribit,bybit,okx,binance`.\n\n**Positioning (DOCS REQUIRED - default is flow):** `positioning=flow` (default) rebuilds HVL/walls/ranked from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the legacy Redis textbook-signed levels. On flow fallback, `meta.extra.positioning_fallback_reason` explains why. Secondary walls (call_wall_2/3) are only present on the std cache path.\n\nThe WebSocket channel `gex.levels.{SYMBOL}` publishes the SAME flow-signed levels from the same builder - REST and WS agree.",
         "operationId": "get_levels_gex_levels_get",
         "parameters": [
           {
@@ -818,6 +813,18 @@
               "title": "Include"
             },
             "description": "Comma-separated optional sections: candles,expected_move,max_pain,ranked,spot,zones"
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
           },
           {
             "name": "X-API-Key",
@@ -928,7 +935,7 @@
           "GEX"
         ],
         "summary": "GEX by strike",
-        "description": "Gamma exposure aggregated by strike. `?expiry=all` (default) covers every expiry, `?expiry=0dte` filters to today's expiry only, and an explicit expiry token (e.g. `28MAR25`) returns just that expiration.\n\nStrike-axis filters (intersected when more than one is set):\n* `strike_min` / `strike_max` \u2014 absolute bounds.\n* `moneyness_min` / `moneyness_max` \u2014 strike/spot ratio bounds,   e.g. `0.9..1.1` keeps the ATM \u00b110% slab.\n* `spot_window_pct` \u2014 symmetric window in percent (e.g. `5` for   \u00b15% of spot). Combined by intersection with the others.\n\nWhen any strike filter narrows the set, `ranked_top_10` is rebuilt from the surviving strikes \u2014 the cached pre-filter ranking is not reused.",
+        "description": "Gamma exposure aggregated by strike. `?expiry=all` (default) covers every expiry, `?expiry=0dte` filters to today's expiry only, and an explicit expiry token (e.g. `28MAR25`) returns just that expiration.\n\n**Positioning (DOCS REQUIRED - default is flow):** `positioning=flow` rebuilds the profile from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the Redis textbook-signed cache. See `meta.extra.positioning`.\n\nStrike-axis filters (intersected when more than one is set):\n* `strike_min` / `strike_max` - absolute bounds.\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps the ATM ±10% slab.\n* `spot_window_pct` - symmetric window in percent (e.g. `5` for   ±5% of spot). Combined by intersection with the others.\n\nWhen any strike filter narrows the set, `ranked_top_10` is rebuilt from the surviving strikes - the cached pre-filter ranking is not reused.\n\n**Per-venue open interest (`by_venue`):** `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}` rolled up over the strikes actually returned. OI is coin-native on every venue and attribution is positioning-independent, so the block is identical under `flow` and `std`. All eight venues are always present (zero-filled); use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` is non-null only when some OI could not be attributed to a venue. `expiry=<token>` returns `by_venue: null` with `by_venue_note` - a single-expiry venue split is not published.",
         "operationId": "get_strike_profile_gex_strike_profile_get",
         "parameters": [
           {
@@ -1072,10 +1079,22 @@
                   "type": "null"
                 }
               ],
-              "description": "Symmetric strike window in % around spot (e.g. `5` for \u00b15%)",
+              "description": "Symmetric strike window in % around spot (e.g. `5` for ±5%)",
               "title": "Spot Window Pct"
             },
-            "description": "Symmetric strike window in % around spot (e.g. `5` for \u00b15%)"
+            "description": "Symmetric strike window in % around spot (e.g. `5` for ±5%)"
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
           },
           {
             "name": "X-API-Key",
@@ -1186,7 +1205,7 @@
           "GEX"
         ],
         "summary": "GEX by expiry",
-        "description": "Net / call / put gamma per expiration date with days-to-expiry. Useful for spotting where dealer exposure rolls off.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` \u2014 bound the DTE window.\n* `weekly_only=true` \u2014 exclude monthly + quarterly anchors   (defined as the last Friday of the month). Tokens we cannot   parse are kept rather than silently dropped.",
+        "description": "Net / call / put gamma per expiration date with days-to-expiry. Useful for spotting where dealer exposure rolls off.\n\n**Positioning (DOCS REQUIRED - default flow):** multi-venue chain + aggressor tape aggregation. See `meta.extra.aggregation`.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` - bound the DTE window.\n* `weekly_only=true` - exclude monthly + quarterly anchors   (defined as the last Friday of the month). Tokens we cannot   parse are kept rather than silently dropped.",
         "operationId": "get_expiry_profile_gex_expiry_profile_get",
         "parameters": [
           {
@@ -1276,6 +1295,18 @@
               "title": "Weekly Only"
             },
             "description": "Exclude monthly + quarterly anchors (last-Friday-of-month)."
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
           },
           {
             "name": "X-API-Key",
@@ -1391,8 +1422,8 @@
         "tags": [
           "GEX"
         ],
-        "summary": "2D strike \u00d7 expiry GEX matrix",
-        "description": "Rows are strikes, columns are expiries (sorted ascending DTE).\n\nFilters apply BEFORE downsampling so the cap parameters operate on the already-narrowed grid:\n* `dte_min` / `dte_max` \u2014 drop expiries outside the DTE window.\n* `moneyness_min` / `moneyness_max` \u2014 drop strikes outside the   moneyness window (e.g. `0.8..1.2` keeps ATM \u00b120%).\n* `max_strikes` \u2014 cap on strikes returned (kept closest to spot).\n* `max_expiries` \u2014 cap on expiries (kept nearest by DTE).",
+        "summary": "2D strike × expiry GEX matrix",
+        "description": "Rows are strikes, columns are expiries (sorted ascending DTE).\n\n**Positioning (DOCS REQUIRED - default flow):** rebuilt from the multi-venue chain + aggressor tape when `positioning=flow`.\n\nFilters apply BEFORE downsampling so the cap parameters operate on the already-narrowed grid:\n* `dte_min` / `dte_max` - drop expiries outside the DTE window.\n* `moneyness_min` / `moneyness_max` - drop strikes outside the   moneyness window (e.g. `0.8..1.2` keeps ATM ±20%).\n* `max_strikes` - cap on strikes returned (kept closest to spot).\n* `max_expiries` - cap on expiries (kept nearest by DTE).",
         "operationId": "get_strike_expiry_heatmap_gex_strike_expiry_heatmap_get",
         "parameters": [
           {
@@ -1540,6 +1571,18 @@
             "description": "Cap on number of expiries returned"
           },
           {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+          },
+          {
             "name": "X-API-Key",
             "in": "header",
             "required": false,
@@ -1653,8 +1696,8 @@
         "tags": [
           "GEX"
         ],
-        "summary": "Strike \u00d7 time greek heatmap",
-        "description": "Time-series of greek exposures by strike. Pick the greek (`gex|dex|vex|charm|vanna`) and bound by DTE / OI / IV. Without filters this serves the pre-computed cache (cheap); with filters it reconstructs from raw snapshots (more work, but still bounded to the last ~48 ticks).",
+        "summary": "Strike × time greek heatmap",
+        "description": "Time-series of greek exposures by strike. Pick the greek (`gex|dex|vex|charm|vanna`) and bound by DTE / OI / IV.\n\n**Positioning (DOCS REQUIRED - default flow):** each historical snapshot is re-signed with the current multi-venue aggressor tape (BTC/ETH) when `positioning=flow`. `std` uses textbook OI signs (or the legacy redis cache when unfiltered + std).\n\nUnfiltered std+gex still serves the pre-computed cache (cheap); flow and filters rebuild from the last ~48 raw snapshots.",
         "operationId": "get_time_heatmap_gex_time_heatmap_get",
         "parameters": [
           {
@@ -1762,6 +1805,18 @@
               "title": "Iv Max"
             },
             "description": "Inclusive upper bound on IV (in %)."
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
           },
           {
             "name": "X-API-Key",
@@ -1878,7 +1933,7 @@
           "GEX"
         ],
         "summary": "Total GEX history (cursor-paginated)",
-        "description": "Time-series of total GEX (and net-local-5pct, call/put walls when available). Use `?limit` (\u22641000) to cap the page size and `?before=<ISO ts>` to walk backwards into older history.",
+        "description": "Time-series of total GEX (and net-local-5pct, call/put walls when available). Use `?limit` (≤1000) to cap the page size and `?before=<ISO ts>` to walk backwards into older history.\n\n**Positioning:** historical series were stored under the **std** (textbook OI) model. Live surfaces default to flow; this endpoint remains std until dual-written FLOW history is available. DOCS REQUIRED: document residual std for history.",
         "operationId": "get_history_gex_history_get",
         "parameters": [
           {
@@ -1926,10 +1981,10 @@
                   "type": "null"
                 }
               ],
-              "description": "ISO timestamp cursor \u2014 exclusive upper bound",
+              "description": "ISO timestamp cursor - exclusive upper bound",
               "title": "Before"
             },
-            "description": "ISO timestamp cursor \u2014 exclusive upper bound"
+            "description": "ISO timestamp cursor - exclusive upper bound"
           },
           {
             "name": "X-API-Key",
@@ -2046,7 +2101,7 @@
           "GEX"
         ],
         "summary": "Long-window GEX levels from Postgres",
-        "description": "Persistent record of HVL / call wall / put wall / net GEX, suitable for backtests or regime analysis. Window is bounded to 30 days (720 hours) so a query never blows out the read pool.",
+        "description": "Persistent record of HVL / call wall / put wall / net GEX, suitable for backtests or regime analysis. Window is bounded to 30 days (720 hours) so a query never blows out the read pool.\n\n**Positioning:** stored under **std** (textbook OI). Live GEX defaults to flow; this endpoint remains std historical. DOCS REQUIRED: document residual std.",
         "operationId": "get_stress_history_gex_stress_history_get",
         "parameters": [
           {
@@ -2332,13 +2387,636 @@
         ]
       }
     },
+    "/gex/dealer-flow": {
+      "get": {
+        "tags": [
+          "GEX",
+          "Flow"
+        ],
+        "summary": "Dealer hedge flow time series (gamma + vanna + charm)",
+        "description": "Estimated dealer hedging flow across successive chain snapshots. Components: `gamma_flow` (ΔS% × net GEX), `charm_flow` (−Δt × charm), `vanna_flow` (reserved), plus `total_flow` and `cumulative_flow`.\n\nPositive ≈ dealers buying the underlying to re-hedge; negative ≈ selling. Default `positioning=flow` (multi-venue sold−bought). DOCS REQUIRED for formula + units.",
+        "operationId": "get_dealer_flow_gex_dealer_flow_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/gex/gamma-flow": {
+      "get": {
+        "tags": [
+          "GEX",
+          "Flow"
+        ],
+        "summary": "Total gamma flow time series",
+        "description": "Gamma component of dealer hedge flow only: each point is `ΔS% × net_GEX` under the selected positioning model, with session cumulative. HIRO-adjacent dealer gamma pressure.",
+        "operationId": "get_gamma_flow_gex_gamma_flow_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/gex/delta-flow": {
+      "get": {
+        "tags": [
+          "GEX",
+          "Flow"
+        ],
+        "summary": "Customer delta flow (HIRO-style) from options tape",
+        "description": "Time-bucketed **customer** signed Black-Scholes delta notional from the multi-venue options tape (primary BS inputs from Deribit-quality prints). This is the HIRO-style *delta* line: buy-side vs sell-side aggressor delta $, plus cumulative net.\n\nDistinct from /dealer-flow (which is hedge pressure from GEX×moves). DOCS REQUIRED: document customer vs dealer distinction.",
+        "operationId": "get_delta_flow_gex_delta_flow_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 720,
+              "minimum": 1,
+              "description": "Lookback hours",
+              "default": 24,
+              "title": "Hours"
+            },
+            "description": "Lookback hours"
+          },
+          {
+            "name": "bucket_minutes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1440,
+              "minimum": 1,
+              "default": 5,
+              "title": "Bucket Minutes"
+            }
+          },
+          {
+            "name": "min_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Min premium_usd filter",
+              "default": 0,
+              "title": "Min Size"
+            },
+            "description": "Min premium_usd filter"
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/gex/dealer-flow/by-level": {
+      "get": {
+        "tags": [
+          "GEX",
+          "Flow"
+        ],
+        "summary": "Expected dealer hedge $ if spot walks to each strike",
+        "description": "Pro DEALERFLOW-style level map: cumulative net GEX from spot out to each strike under FLOW/STD signing. Positive ≈ expected dealer buying pressure if spot reaches that level.",
+        "operationId": "get_dealer_flow_by_level_gex_dealer_flow_by_level_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/options/chain": {
       "get": {
         "tags": [
           "Options"
         ],
         "summary": "Filtered options chain",
-        "description": "Per-contract data (greeks, OI, IV, bid/ask) plus aggregate stats. Filters supported:\n\n* `expiries` \u2014 CSV of tokens (e.g. `28MAR25,25APR25`).\n* `dte_min` / `dte_max` \u2014 days-to-expiry bounds.\n* `oi_min` / `oi_max` \u2014 open interest bounds.\n* `delta_min` / `delta_max` \u2014 applied to |delta| (0..1).\n* `strike_min` / `strike_max` \u2014 absolute strike bounds.\n* `moneyness_min` / `moneyness_max` \u2014 strike / spot ratio bounds,   e.g. `0.9..1.1` keeps strikes within \u00b110% of spot. Useful for   cross-symbol screens since it normalises the strike grid.\n* `option_type` \u2014 `call`, `put`, or `both`.\n\nTwo layers of projection:\n\n* `fields` (top-level): comma-sep subset of `aggregates,available_expiries,contracts` \u2014 drops whole sections of the   response, e.g. `?fields=contracts` to skip aggregates.\n* `include` (per-contract): comma-sep subset of `bid_ask,gex,greeks,iv,oi,volume` \u2014 keeps only the   named sub-sections of each contract dict. Core identity fields (`strike,expiry,dte,type`) are always present. Default   is every section, matching v1 shape.\n\nPayload is capped at `?max_contracts=` (default 2000, hard ceiling 5000). On overflow the response is truncated to the closest-to-spot subset and `truncated=true` is set with `total_matching_count` so the client knows to narrow the filter.\n\nResponse is cached for 30s keyed by the exact filter combination, so repeated calls with identical filters are sub-millisecond.",
+        "description": "Per-contract data (greeks, OI, IV, bid/ask) plus aggregate stats. Filters supported:\n\n* `expiries` - CSV of tokens (e.g. `28MAR25,25APR25`).\n* `dte_min` / `dte_max` - days-to-expiry bounds.\n* `oi_min` / `oi_max` - open interest bounds.\n* `delta_min` / `delta_max` - applied to |delta| (0..1).\n* `strike_min` / `strike_max` - absolute strike bounds.\n* `moneyness_min` / `moneyness_max` - strike / spot ratio bounds,   e.g. `0.9..1.1` keeps strikes within ±10% of spot. Useful for   cross-symbol screens since it normalises the strike grid.\n* `option_type` - `call`, `put`, or `both`.\n\nTwo layers of projection:\n\n* `fields` (top-level): comma-sep subset of `aggregates,available_expiries,contracts` - drops whole sections of the   response, e.g. `?fields=contracts` to skip aggregates.\n* `include` (per-contract): comma-sep subset of `bid_ask,gex,greeks,iv,oi,volume` - keeps only the   named sub-sections of each contract dict. Core identity fields (`strike,expiry,dte,type`) are always present. Default   is every section, matching v1 shape.\n\nPayload is capped at `?max_contracts=` (default 2000, hard ceiling 5000). On overflow the response is truncated to the closest-to-spot subset and `truncated=true` is set with `total_matching_count` so the client knows to narrow the filter.\n\nResponse is cached for 30s keyed by the exact filter combination, so repeated calls with identical filters are sub-millisecond.",
         "operationId": "get_chain_options_chain_get",
         "parameters": [
           {
@@ -2749,7 +3427,7 @@
           "Options"
         ],
         "summary": "Per-expiry IV / skew / PCR / OI / GEX (with OPEX enrichment)",
-        "description": "One row per active expiry with the metrics most useful for chain-wide screening:\n\n**Pre-computed every 30s** \u2014 ATM IV, 25\u0394 skew, put/call 25\u0394 IVs, PCR, call/put/total OI, net GEX.\n\n**Added by v2 (OPEX enrichment, on-the-fly):**\n* `type` \u2014 `daily | weekly | monthly | quarterly` (Deribit token   parsed; quarterlies are last Fridays of Mar/Jun/Sep/Dec).\n* `is_anchor` \u2014 true for monthly + quarterly anchors.\n* `expiry_date` \u2014 ISO date when the token parses cleanly.\n* `notional_oi_usd` \u2014 `total_oi \u00d7 spot_price` (each contract is   1 unit of underlying on Deribit-style chains).\n* `max_pain` \u2014 `{strike, value}` from a per-expiry max-pain pass   over the latest chain snapshot. Cached 30s, shared with   `/v2/gex/max-pain` and `/v2/options/opex`.",
+        "description": "One row per active expiry with the metrics most useful for chain-wide screening:\n\n**Pre-computed every 30s** - ATM IV, 25Δ skew, put/call 25Δ IVs, PCR, call/put/total OI, net GEX.\n\n**Added by v2 (OPEX enrichment, on-the-fly):**\n* `type` - `daily | weekly | monthly | quarterly` (Deribit token   parsed; quarterlies are last Fridays of Mar/Jun/Sep/Dec).\n* `is_anchor` - true for monthly + quarterly anchors.\n* `expiry_date` - ISO date when the token parses cleanly.\n* `notional_oi_usd` - `total_oi × spot_price` (each contract is   1 unit of underlying on Deribit-style chains).\n* `max_pain` - `{strike, value}` from a per-expiry max-pain pass   over the latest chain snapshot. Cached 30s, shared with   `/v2/gex/max-pain` and `/v2/options/opex`.\n* `by_venue` - `{venue: {call_oi, put_oi, total_oi,   notional_oi_usd}}` for that expiry. OI is coin-native on every   venue; `notional_oi_usd = total_oi x spot`, using the same spot as   the response. All eight venues are always present (zero-filled) -   `GET /v2/status` distinguishes a zero-OI venue from a disabled   one. Delta India and Delta Global are independent books and are   summed, never deduped.\n* `by_venue_unattributed` - residual open interest the aggregator   could not attribute to a venue; `null` when the split reconciles   with `call_oi` / `put_oi` (the normal case).",
         "operationId": "get_expiry_summary_options_expiry_summary_get",
         "parameters": [
           {
@@ -2878,7 +3556,7 @@
         "tags": [
           "Options"
         ],
-        "summary": "IV surface (strike \u00d7 expiry)",
+        "summary": "IV surface (strike × expiry)",
         "description": "2D implied-volatility grid: rows are strikes, columns are expiries (sorted by ascending DTE). Useful for vol-surface visualisations and identifying skew/term-structure shape at a glance.",
         "operationId": "get_iv_surface_options_iv_surface_get",
         "parameters": [
@@ -3015,7 +3693,7 @@
           "Options"
         ],
         "summary": "ATM IV by tenor",
-        "description": "At-the-money implied volatility for each active expiration.\n\nFilters:\n* `exchanges` \u2014 comma-separated venue filter.\n* `dte_max` \u2014 drop tenors with DTE > dte_max (focus on the front   of the curve).\n* `historical_compare_days=N` \u2014 also include the constant-maturity   ATM IV from N days ago, sourced from the `iv_history` Postgres   table. Returned as a separate `historical` block under   `compare`. Different shape from the live curve \u2014 historical is   by DTE-bucket (7/14/30/60/90/180/365) since that's how the   worker stores it; the client can interpolate onto the live   tenor grid for visualisation.",
+        "description": "At-the-money implied volatility for each active expiration.\n\nFilters:\n* `exchanges` - comma-separated venue filter.\n* `dte_max` - drop tenors with DTE > dte_max (focus on the front   of the curve).\n* `historical_compare_days=N` - also include the constant-maturity   ATM IV from N days ago, sourced from the `iv_history` Postgres   table. Returned as a separate `historical` block under   `compare`. Different shape from the live curve - historical is   by DTE-bucket (7/14/30/60/90/180/365) since that's how the   worker stores it; the client can interpolate onto the live   tenor grid for visualisation.",
         "operationId": "get_iv_term_options_iv_term_structure_get",
         "parameters": [
           {
@@ -3089,10 +3767,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Days back for historical CMT IV comparison (1\u2013365).",
+              "description": "Days back for historical CMT IV comparison (1-365).",
               "title": "Historical Compare Days"
             },
-            "description": "Days back for historical CMT IV comparison (1\u2013365)."
+            "description": "Days back for historical CMT IV comparison (1-365)."
           },
           {
             "name": "X-API-Key",
@@ -3202,8 +3880,8 @@
         "tags": [
           "Options"
         ],
-        "summary": "25\u0394 / 10\u0394 skew + 25\u0394 butterfly per expiry",
-        "description": "Delta-interpolated risk-reversal and butterfly per active expiry. `skew_25d` = 25\u0394 put IV \u2212 25\u0394 call IV (positive = put premium, fear bid); `butterfly_25d` = (25\u0394 put IV + 25\u0394 call IV) / 2 \u2212 ATM IV (smile curvature / wing pricing). Computed from real delta-bracketed options, not strike proxies.",
+        "summary": "25Δ / 10Δ skew + 25Δ butterfly per expiry",
+        "description": "Delta-interpolated risk-reversal and butterfly per active expiry. `skew_25d` = 25Δ put IV − 25Δ call IV (positive = put premium, fear bid); `butterfly_25d` = (25Δ put IV + 25Δ call IV) / 2 − ATM IV (smile curvature / wing pricing). Computed from real delta-bracketed options, not strike proxies.",
         "operationId": "get_iv_skew_options_iv_skew_get",
         "parameters": [
           {
@@ -3469,7 +4147,7 @@
           "Options"
         ],
         "summary": "Single-expiry IV smile",
-        "description": "Implied volatility by strike for one expiry \u2014 the cheap path when you only need a single tenor. Pass `?expiry=` as a Deribit-style token (e.g. `28MAR25`); omit it to receive the default front-month smile from `iv:smile:{symbol}:default`. The lookup is case-insensitive on the token; if neither cased form exists, this returns 404 with the available tokens hinted in the error.",
+        "description": "Implied volatility by strike for one expiry - the cheap path when you only need a single tenor. Pass `?expiry=` as a Deribit-style token (e.g. `28MAR25`); omit it to receive the default front-month smile from `iv:smile:{symbol}:default`. The lookup is case-insensitive on the token; if neither cased form exists, this returns 404 with the available tokens hinted in the error.",
         "operationId": "get_iv_smile_options_iv_smile_get",
         "parameters": [
           {
@@ -3652,11 +4330,11 @@
               "type": "integer",
               "maximum": 365,
               "minimum": 7,
-              "description": "Trailing window in days (7\u2013365).",
+              "description": "Trailing window in days (7-365).",
               "default": 90,
               "title": "Days"
             },
-            "description": "Trailing window in days (7\u2013365)."
+            "description": "Trailing window in days (7-365)."
           },
           {
             "name": "X-API-Key",
@@ -3802,11 +4480,11 @@
               "type": "integer",
               "maximum": 365,
               "minimum": 7,
-              "description": "Trailing window in days (7\u2013365).",
+              "description": "Trailing window in days (7-365).",
               "default": 90,
               "title": "Days"
             },
-            "description": "Trailing window in days (7\u2013365)."
+            "description": "Trailing window in days (7-365)."
           },
           {
             "name": "X-API-Key",
@@ -3922,7 +4600,7 @@
         "tags": [
           "Options"
         ],
-        "summary": "Implied 1\u03c3 move",
+        "summary": "Implied 1σ move",
         "description": "ATM-straddle-derived 1- and 2-sigma expected move (1d horizon).",
         "operationId": "get_expected_move_options_expected_move_get",
         "parameters": [
@@ -4077,7 +4755,7 @@
           "Options"
         ],
         "summary": "Risk-neutral PDF/CDF (per expiry)",
-        "description": "Breeden-Litzenberger probability density derived from option prices. Returns PDF, normalized PDF, CDF (above and below spot), and distribution stats (mean, std, mode, skew, kurtosis, 25/50/75 percentile prices) per expiry.\n\nFilters:\n* `expiry` \u2014 slice to a single expiry token (case-insensitive).\n* `dte_max` \u2014 drop expiries with DTE > dte_max so near-term clients   can avoid carrying the long tail.\n* `confidence_band` \u2014 when set to `0.68` or `0.95` (the most   common choices), each expiry payload gets a `confidence_band`   object with `lower` / `upper` price levels containing that much   implied probability mass, computed by interpolating the CDF.",
+        "description": "Breeden-Litzenberger probability density derived from option prices. Returns PDF, normalized PDF, CDF (above and below spot), and distribution stats (mean, std, mode, skew, kurtosis, 25/50/75 percentile prices) per expiry.\n\nFilters:\n* `expiry` - slice to a single expiry token (case-insensitive).\n* `dte_max` - drop expiries with DTE > dte_max so near-term clients   can avoid carrying the long tail.\n* `confidence_band` - when set to `0.68` or `0.95` (the most   common choices), each expiry payload gets a `confidence_band`   object with `lower` / `upper` price levels containing that much   implied probability mass, computed by interpolating the CDF.",
         "operationId": "get_probability_density_options_probability_density_get",
         "parameters": [
           {
@@ -4151,10 +4829,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Confidence level for the implied price band, e.g. `0.68` for \u22481\u03c3 or `0.95` for \u22482\u03c3. Adds `confidence_band` per expiry.",
+              "description": "Confidence level for the implied price band, e.g. `0.68` for ≈1σ or `0.95` for ≈2σ. Adds `confidence_band` per expiry.",
               "title": "Confidence Band"
             },
-            "description": "Confidence level for the implied price band, e.g. `0.68` for \u22481\u03c3 or `0.95` for \u22482\u03c3. Adds `confidence_band` per expiry."
+            "description": "Confidence level for the implied price band, e.g. `0.68` for ≈1σ or `0.95` for ≈2σ. Adds `confidence_band` per expiry."
           },
           {
             "name": "X-API-Key",
@@ -4264,8 +4942,8 @@
         "tags": [
           "Options"
         ],
-        "summary": "3D probability surface (PDF over strike \u00d7 expiry)",
-        "description": "Risk-neutral probability density across the full strike \u00d7 expiry grid as a single matrix, suitable for 3D visualisations or surface-fit applications. Built from the same Breeden-Litzenberger extraction as /options/probability/density but pre-aligned onto a unified strike axis so cross-expiry comparisons are direct.",
+        "summary": "3D probability surface (PDF over strike × expiry)",
+        "description": "Risk-neutral probability density across the full strike × expiry grid as a single matrix, suitable for 3D visualisations or surface-fit applications. Built from the same Breeden-Litzenberger extraction as /options/probability/density but pre-aligned onto a unified strike axis so cross-expiry comparisons are direct.",
         "operationId": "get_probability_surface_options_probability_surface_get",
         "parameters": [
           {
@@ -4401,7 +5079,7 @@
           "Options"
         ],
         "summary": "Greek exposure profile by strike",
-        "description": "Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`.\n\nFilters:\n* `exchanges` \u2014 comma-separated venue filter.\n* `moneyness_min` / `moneyness_max` \u2014 strike/spot ratio bounds,   e.g. `0.9..1.1` keeps ATM \u00b110% exposure only.\n* `dte_max` \u2014 re-aggregates from the raw chain to limit   contributing contracts to `DTE \u2264 dte_max`. The default cached   greeks profile spans every active expiry; this lets you isolate   near-term exposure. Cached 30s per `(symbol, greek, dte_max,   exchanges)` so repeated requests stay cheap.",
+        "description": "Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`.\n\n**Positioning (DOCS REQUIRED - default flow):** weights by multi-venue aggressor sold−bought (BTC/ETH) or textbook ±OI.\n\nFilters:\n* `exchanges` - comma-separated venue filter (std redis path).\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps ATM ±10% exposure only.\n* `dte_max` - re-aggregates from the raw chain to limit   contributing contracts to `DTE ≤ dte_max`.\n* `positioning` - `flow` (default) or `std`.",
         "operationId": "get_greek_profile_options_greeks__greek__get",
         "parameters": [
           {
@@ -4513,10 +5191,22 @@
                   "type": "null"
                 }
               ],
-              "description": "Limit aggregation to contracts with `DTE \u2264 dte_max`. Triggers a recomputation from the raw chain.",
+              "description": "Limit aggregation to contracts with `DTE ≤ dte_max`. Triggers a recomputation from the raw chain.",
               "title": "Dte Max"
             },
-            "description": "Limit aggregation to contracts with `DTE \u2264 dte_max`. Triggers a recomputation from the raw chain."
+            "description": "Limit aggregation to contracts with `DTE ≤ dte_max`. Triggers a recomputation from the raw chain."
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
           },
           {
             "name": "X-API-Key",
@@ -4632,8 +5322,8 @@
         "tags": [
           "Options"
         ],
-        "summary": "Strike \u00d7 time greek surface",
-        "description": "Time-evolving surface for `charm` or `vega` \u2014 strike on one axis, time on the other. Already pre-computed for the pro terminal; exposed here for quant tooling that wants the same view.",
+        "summary": "Strike × time greek surface",
+        "description": "Time-evolving surface for `charm` or `vega` - strike on one axis, time on the other. Already pre-computed for the pro terminal; exposed here for quant tooling that wants the same view.",
         "operationId": "get_greek_surface_options_greeks_surfaces__greek__get",
         "parameters": [
           {
@@ -4783,8 +5473,8 @@
         "tags": [
           "Options"
         ],
-        "summary": "Strike \u00d7 expiry surface for any greek",
-        "description": "Z = sum(greek \u00d7 OI) per (strike, expiry) cell. Useful for 3D visualizations or for spotting where a particular greek is concentrated across the term structure.",
+        "summary": "Strike × expiry surface for any greek",
+        "description": "Z = sum(greek × OI) per (strike, expiry) cell. Useful for 3D visualizations or for spotting where a particular greek is concentrated across the term structure.",
         "operationId": "get_greek_3d_surface_options_greeks_3d_surface_get",
         "parameters": [
           {
@@ -4940,7 +5630,7 @@
           "Options"
         ],
         "summary": "Call/put OI per expiry",
-        "description": "Open interest aggregated by expiration with calls and puts split.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` \u2014 bound the DTE window.\n* `weekly_only=true` \u2014 exclude monthly + quarterly anchors   (last-Friday-of-month). Useful when monthly OI dominates the   picture and you want to see the weekly distribution alone.",
+        "description": "Open interest aggregated by expiration with calls and puts split.\n\n**Per-venue split (`by_venue`)** - one entry per expiry, parallel to `expiries`: `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}`. OI is coin-native on every venue, so a cross-venue sum needs no conversion; `notional_oi_usd = total_oi x spot`. All eight venues are always present (zero-filled) - use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` (also parallel to `expiries`) is non-null only when some open interest could not be attributed to a venue. With `?exchanges=` set, both blocks cover only the requested venues, matching the filtered totals.\n\n**Deprecated:** `exchange_breakdown` (the raw cache shape) is superseded by `by_venue` and will be removed in a future release. Note it was previously mis-attributed - every venue's open interest was reported under `deribit`; both blocks now carry the real split.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` - bound the DTE window.\n* `weekly_only=true` - exclude monthly + quarterly anchors   (last-Friday-of-month). Useful when monthly OI dominates the   picture and you want to see the weekly distribution alone.",
         "operationId": "get_oi_by_expiry_options_oi_by_expiry_get",
         "parameters": [
           {
@@ -5175,11 +5865,11 @@
               "type": "integer",
               "maximum": 2000,
               "minimum": 1,
-              "description": "Maximum points returned (1\u20132000).",
+              "description": "Maximum points returned (1-2000).",
               "default": 200,
               "title": "Limit"
             },
-            "description": "Maximum points returned (1\u20132000)."
+            "description": "Maximum points returned (1-2000)."
           },
           {
             "name": "before",
@@ -5194,10 +5884,10 @@
                   "type": "null"
                 }
               ],
-              "description": "ISO timestamp cursor \u2014 exclusive upper bound for paging older.",
+              "description": "ISO timestamp cursor - exclusive upper bound for paging older.",
               "title": "Before"
             },
-            "description": "ISO timestamp cursor \u2014 exclusive upper bound for paging older."
+            "description": "ISO timestamp cursor - exclusive upper bound for paging older."
           },
           {
             "name": "X-API-Key",
@@ -5768,7 +6458,7 @@
           "Options"
         ],
         "summary": "OPEX calendar with per-expiry context",
-        "description": "Curated calendar of upcoming options expirations with everything needed for OPEX-day workflows in one call:\n\n* Token + ISO date + DTE + classification (daily / weekly /   monthly / quarterly) + `is_anchor` flag.\n* OI block: `call_oi`, `put_oi`, `total_oi`, `pcr`,   `notional_oi_usd` (= total_oi \u00d7 spot, since each crypto   options contract is 1 unit of underlying).\n* IV block: `atm_iv`, `skew_25d`, `put_25d_iv`, `call_25d_iv`.\n* Gamma block: `net_gex`, `call_resistance`, `put_support`   (computed per expiry from the strike \u00d7 expiry heatmap), and   `max_pain` (`{strike, value}` from the shared per-expiry   cache used by `/v2/gex/max-pain` and `/v2/options/expiry-  summary`).\n\n`next_anchor` points at the closest monthly/quarterly. Filter with `?types=monthly,quarterly` for the institutional-roll view or `?horizon=` to bound the look-ahead window.",
+        "description": "Curated calendar of upcoming options expirations with everything needed for OPEX-day workflows in one call:\n\n* Token + ISO date + DTE + classification (daily / weekly /   monthly / quarterly) + `is_anchor` flag.\n* OI block: `call_oi`, `put_oi`, `total_oi`, `pcr`,   `notional_oi_usd` (= total_oi × spot, since each crypto   options contract is 1 unit of underlying).\n* IV block: `atm_iv`, `skew_25d`, `put_25d_iv`, `call_25d_iv`.\n* Gamma block: `net_gex`, `call_resistance`, `put_support`   (computed per expiry from the strike × expiry heatmap), and   `max_pain` (`{strike, value}` from the shared per-expiry   cache used by `/v2/gex/max-pain` and `/v2/options/expiry-  summary`).\n\n`next_anchor` points at the closest monthly/quarterly. Filter with `?types=monthly,quarterly` for the institutional-roll view or `?horizon=` to bound the look-ahead window.",
         "operationId": "get_opex_options_opex_get",
         "parameters": [
           {
@@ -5797,11 +6487,11 @@
               "type": "integer",
               "maximum": 365,
               "minimum": 1,
-              "description": "Look-ahead window in days (1\u2013365). Drops expiries beyond this.",
+              "description": "Look-ahead window in days (1-365). Drops expiries beyond this.",
               "default": 30,
               "title": "Horizon"
             },
-            "description": "Look-ahead window in days (1\u2013365). Drops expiries beyond this."
+            "description": "Look-ahead window in days (1-365). Drops expiries beyond this."
           },
           {
             "name": "types",
@@ -5929,8 +6619,8 @@
         "tags": [
           "Options"
         ],
-        "summary": "Forward (time \u00d7 price) greek projection \u2014 gamma / charm / vanna",
-        "description": "Black-Scholes forward projection of dealer **gamma**, **charm**, or **vanna** across a (time \u00d7 price) grid, holding today's chain constant and decaying \u03c4 toward each contract's expiry.\n\nReturns a 2D `field` of cell values, the `time_axis_ms` and `price_axis` it's keyed on, and the contracts it consumed. Intended for desk-grade dealer-positioning visualisations (the BackQuant Pro Terminal's TRACE panel runs the same math client-side).\n\n**Sign convention:** +1 for calls, \u22121 for puts \u2014 positive cell = call book dominates the put book at that (time, price).\n\n**Units:**\n* `gamma` \u2192 `$ per 1% spot move` (\u03b3 \u00d7 S\u00b2 \u00d7 OI \u00d7 0.01).\n* `charm` \u2192 1/year (\u2202\u0394/\u2202\u03c4 \u00d7 OI).\n* `vanna` \u2192 per IV unit (\u2202\u0394/\u2202\u03c3 \u00d7 OI).\n\n**Performance:** the field is computed on cache miss in ~50\u2013100 ms for typical grids. Cached for 30 s per `(symbol, full-param-hash)` so identical repeated calls are essentially free.\n\n**What-if vol shifts:** `vol_shift_pct` multiplies every contract's \u03c3 by `1 + vol_shift_pct/100` before evaluation. Lets you build vol-up / vol-down surfaces without re-fetching.",
+        "summary": "Forward (time × price) greek projection - gamma / charm / vanna",
+        "description": "Black-Scholes forward projection of dealer **gamma**, **charm**, or **vanna** across a (time × price) grid, holding today's chain constant and decaying τ toward each contract's expiry.\n\nReturns a 2D `field` of cell values, the `time_axis_ms` and `price_axis` it's keyed on, and the contracts it consumed. Intended for desk-grade dealer-positioning visualisations (the BackQuant Pro Terminal's TRACE panel runs the same math client-side).\n\n**Positioning (DOCS REQUIRED - default is flow):**\n* `positioning=flow` (**default**) - dealer qty = aggressor **sold − bought** per side (BTC/ETH tape). Falls back to `std` when tape is empty or the symbol has no tape (SOL/HYPE).\n* `positioning=std` - textbook call:+OI / put:−OI.\nResponse `meta.extra.positioning` is the model that actually ran; `positioning_fallback_reason` is set on fallback.\n\n**Units:**\n* `gamma` → `$ per 1% spot move` (γ × S² × qty × 0.01).\n* `charm` → 1/year (∂Δ/∂τ × qty).\n* `vanna` → per IV unit (∂Δ/∂σ × qty).\n* `delta_change` → dealer Δ at (price,time) minus Δ at (spot,now).\n\nAlso see `/v2/options/greeks/trace/{greek}/summary` for pin/accel reads.\n\n**Performance:** the field is computed on cache miss in ~50-100 ms for typical grids. Cached for 30 s per `(symbol, full-param-hash)` so identical repeated calls are essentially free.\n\n**What-if vol shifts:** `vol_shift_pct` multiplies every contract's σ by `1 + vol_shift_pct/100` before evaluation. Lets you build vol-up / vol-down surfaces without re-fetching.",
         "operationId": "get_greek_trace_options_greeks_trace__greek__get",
         "parameters": [
           {
@@ -5941,13 +6631,14 @@
               "enum": [
                 "gamma",
                 "charm",
-                "vanna"
+                "vanna",
+                "delta_change"
               ],
               "type": "string",
-              "description": "Which greek to project.",
+              "description": "Which field to project: gamma | charm | vanna | delta_change (dealer delta at cell minus dealer delta at spot/now - path of hedge pressure).",
               "title": "Greek"
             },
-            "description": "Which greek to project."
+            "description": "Which field to project: gamma | charm | vanna | delta_change (dealer delta at cell minus dealer delta at spot/now - path of hedge pressure)."
           },
           {
             "name": "symbol",
@@ -5973,11 +6664,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Expiry filter. `0dte` = today's UTC expiries only (the standard intraday read), `all` = every active expiry, or a specific Deribit token (e.g. `28MAR25`).",
+              "description": "Expiry filter. `0dte` = front 0-DTE book (same-day UTC token if listed, else any expiry settling within 24h / dte < 1 - matches GEX 0dte), `all` = every active expiry, or a specific Deribit token (e.g. `28MAR25`).",
               "default": "0dte",
               "title": "Expiry"
             },
-            "description": "Expiry filter. `0dte` = today's UTC expiries only (the standard intraday read), `all` = every active expiry, or a specific Deribit token (e.g. `28MAR25`)."
+            "description": "Expiry filter. `0dte` = front 0-DTE book (same-day UTC token if listed, else any expiry settling within 24h / dte < 1 - matches GEX 0dte), `all` = every active expiry, or a specific Deribit token (e.g. `28MAR25`)."
           },
           {
             "name": "time_steps",
@@ -6015,11 +6706,11 @@
               "type": "number",
               "maximum": 50,
               "exclusiveMinimum": 0,
-              "description": "Price half-width as a percent of spot. Default 8 = \u00b18% around spot. Capped at \u00b150% \u2014 wider than that and BS gamma at the wings is essentially zero anyway.",
+              "description": "Price half-width as a percent of spot. Default 8 = ±8% around spot. Capped at ±50% - wider than that and BS gamma at the wings is essentially zero anyway.",
               "default": 8.0,
               "title": "Price Range Pct"
             },
-            "description": "Price half-width as a percent of spot. Default 8 = \u00b18% around spot. Capped at \u00b150% \u2014 wider than that and BS gamma at the wings is essentially zero anyway."
+            "description": "Price half-width as a percent of spot. Default 8 = ±8% around spot. Capped at ±50% - wider than that and BS gamma at the wings is essentially zero anyway."
           },
           {
             "name": "horizon_hours",
@@ -6029,11 +6720,11 @@
               "type": "number",
               "maximum": 720,
               "exclusiveMinimum": 0,
-              "description": "Time horizon in hours from now. Default 24 = one trading day. Use longer horizons for multi-week trace overlays \u2014 capped at 720 h (30 days).",
+              "description": "Time horizon in hours from now. Default 24 = one trading day. Use longer horizons for multi-week trace overlays - capped at 720 h (30 days).",
               "default": 24.0,
               "title": "Horizon Hours"
             },
-            "description": "Time horizon in hours from now. Default 24 = one trading day. Use longer horizons for multi-week trace overlays \u2014 capped at 720 h (30 days)."
+            "description": "Time horizon in hours from now. Default 24 = one trading day. Use longer horizons for multi-week trace overlays - capped at 720 h (30 days)."
           },
           {
             "name": "vol_shift_pct",
@@ -6043,11 +6734,11 @@
               "type": "number",
               "maximum": 50,
               "minimum": -50,
-              "description": "What-if shift applied to every contract's IV (additive percent of \u03c3 \u2014 `+5` \u21d2 multiply \u03c3 by 1.05). Use to build vol-up / vol-down surfaces without re-fetching.",
+              "description": "What-if shift applied to every contract's IV (additive percent of σ - `+5` ⇒ multiply σ by 1.05). Use to build vol-up / vol-down surfaces without re-fetching.",
               "default": 0.0,
               "title": "Vol Shift Pct"
             },
-            "description": "What-if shift applied to every contract's IV (additive percent of \u03c3 \u2014 `+5` \u21d2 multiply \u03c3 by 1.05). Use to build vol-up / vol-down surfaces without re-fetching."
+            "description": "What-if shift applied to every contract's IV (additive percent of σ - `+5` ⇒ multiply σ by 1.05). Use to build vol-up / vol-down surfaces without re-fetching."
           },
           {
             "name": "min_oi",
@@ -6061,6 +6752,18 @@
               "title": "Min Oi"
             },
             "description": "Drop contracts with OI below this threshold before summing. Useful for de-noising the wings."
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
           },
           {
             "name": "X-API-Key",
@@ -6162,13 +6865,257 @@
         ]
       }
     },
+    "/options/greeks/trace/{greek}/summary": {
+      "get": {
+        "tags": [
+          "Options"
+        ],
+        "summary": "TRACE field summary - pin zones, accel pockets, lean",
+        "description": "Same projection as `/greeks/trace/{greek}` but returns an interpretability summary instead of the full 2D field: pin zones (high |field|), near-spot acceleration pockets, late-vs-early lean along spot, and zero-contour samples at the horizon.\n\nSupports `gamma`, `charm`, `vanna`, `delta_change`. Default `positioning=flow`. DOCS REQUIRED.",
+        "operationId": "get_greek_trace_summary_options_greeks_trace__greek__summary_get",
+        "parameters": [
+          {
+            "name": "greek",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "gamma",
+                "charm",
+                "vanna",
+                "delta_change"
+              ],
+              "type": "string",
+              "title": "Greek"
+            }
+          },
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "expiry",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "0dte",
+              "title": "Expiry"
+            }
+          },
+          {
+            "name": "time_steps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 2,
+              "default": 40,
+              "title": "Time Steps"
+            }
+          },
+          {
+            "name": "price_steps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 2,
+              "default": 60,
+              "title": "Price Steps"
+            }
+          },
+          {
+            "name": "price_range_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 50,
+              "exclusiveMinimum": 0,
+              "default": 8.0,
+              "title": "Price Range Pct"
+            }
+          },
+          {
+            "name": "horizon_hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 720,
+              "exclusiveMinimum": 0,
+              "default": 24.0,
+              "title": "Horizon Hours"
+            }
+          },
+          {
+            "name": "vol_shift_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 50,
+              "minimum": -50,
+              "default": 0.0,
+              "title": "Vol Shift Pct"
+            }
+          },
+          {
+            "name": "min_oi",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0.0,
+              "title": "Min Oi"
+            }
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/liquidation/heatmap": {
       "get": {
         "tags": [
           "Liquidation"
         ],
-        "summary": "Liquidation intensity heatmap (price \u00d7 time)",
-        "description": "Estimated liquidation levels normalized to a 0\u2013100 scale, gridded by price bin and time bucket. Includes the OHLC candles plotted alongside so the heatmap can be rendered standalone.",
+        "summary": "Liquidation intensity heatmap (price × time)",
+        "description": "Estimated liquidation levels normalized to a 0-100 scale, gridded by price bin and time bucket. Includes the OHLC candles plotted alongside so the heatmap can be rendered standalone.",
         "operationId": "get_liquidation_heatmap_liquidation_heatmap_get",
         "parameters": [
           {
@@ -6440,7 +7387,7 @@
           "Multi"
         ],
         "summary": "GEX levels across multiple symbols (bundled)",
-        "description": "Multi-symbol GEX levels in one round-trip. Returns a `results` map keyed by symbol with the same shape per-entry as /v2/gex/levels. Symbols with no current data return null in `results` and appear in `missing` rather than failing the whole request. Up to 8 symbols per request. Includes: `ranked` (top-10 strikes by |GEX|), `max_pain` (0DTE only), `expected_move` (1\u03c3 / 2\u03c3 implied range), `zones` (gamma flip zones).",
+        "description": "Multi-symbol GEX levels in one round-trip. Returns a `results` map keyed by symbol with the same shape per-entry as /v2/gex/levels. Symbols with no current data return null in `results` and appear in `missing` rather than failing the whole request. Up to 8 symbols per request.\n\n**Positioning (DOCS REQUIRED - default flow):** each symbol is rebuilt from the multi-venue chain + aggressor tape when `positioning=flow` (BTC/ETH). SOL/HYPE fall back to std. See per-symbol `positioning` and top-level `meta.extra.aggregation`.\n\nIncludes: `ranked` (top-10 strikes by |GEX|), `max_pain` (0DTE only), `expected_move` (1σ / 2σ implied range), `zones` (gamma flip zones).",
         "operationId": "get_multi_gex_levels_multi_gex_levels_get",
         "parameters": [
           {
@@ -6494,6 +7441,18 @@
               "title": "Include"
             },
             "description": "Optional sections: expected_move,max_pain,ranked,zones"
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
           },
           {
             "name": "X-API-Key",
@@ -6607,6 +7566,1485 @@
               }
             },
             "description": "Bad Request"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/tape": {
+      "get": {
+        "tags": [
+          "Tape"
+        ],
+        "summary": "Multi-venue options tape - paginated trade history",
+        "description": "Returns options trades from Deribit + Bybit + OKX + Binance (BTC + ETH today). Cursor-paginated; pass the response's `next_cursor` as `?before=` to walk older.\n\nAll filters compose with AND. Empty values are no-ops. The default page is the latest 200 trades for the requested coin across all venues.",
+        "operationId": "get_tape_tape_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "venues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex.",
+              "examples": [
+                "deribit,bybit"
+              ],
+              "title": "Venues"
+            },
+            "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex."
+          },
+          {
+            "name": "instrument",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact instrument match (e.g. BTC-30JUN26-100000-C). Case-sensitive.",
+              "title": "Instrument"
+            },
+            "description": "Exact instrument match (e.g. BTC-30JUN26-100000-C). Case-sensitive."
+          },
+          {
+            "name": "option_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "call",
+                    "put"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter to calls or puts.",
+              "title": "Option Type"
+            },
+            "description": "Filter to calls or puts."
+          },
+          {
+            "name": "strike_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Lower bound on strike (inclusive).",
+              "title": "Strike Min"
+            },
+            "description": "Lower bound on strike (inclusive)."
+          },
+          {
+            "name": "strike_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Upper bound on strike (inclusive).",
+              "title": "Strike Max"
+            },
+            "description": "Upper bound on strike (inclusive)."
+          },
+          {
+            "name": "premium_min_usd",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Minimum trade size in USD (premium_usd column).",
+              "title": "Premium Min Usd"
+            },
+            "description": "Minimum trade size in USD (premium_usd column)."
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "CSV of tags. 0dte → expiry_date = today (UTC). whale → premium_usd ≥ $250k (configurable via premium_min_usd). atm → strike within ±2% of the trade's index_price.",
+              "examples": [
+                "0dte,whale"
+              ],
+              "title": "Tags"
+            },
+            "description": "CSV of tags. 0dte → expiry_date = today (UTC). whale → premium_usd ≥ $250k (configurable via premium_min_usd). atm → strike within ±2% of the trade's index_price."
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO timestamp - return trades strictly BEFORE this. Walking-backward cursor.",
+              "examples": [
+                "2026-05-29T01:00:00Z"
+              ],
+              "title": "Before"
+            },
+            "description": "ISO timestamp - return trades strictly BEFORE this. Walking-backward cursor."
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ISO timestamp - return trades strictly AFTER this. Walking-forward cursor.",
+              "examples": [
+                "2026-05-29T00:00:00Z"
+              ],
+              "title": "After"
+            },
+            "description": "ISO timestamp - return trades strictly AFTER this. Walking-forward cursor."
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "desc",
+                "asc"
+              ],
+              "type": "string",
+              "description": "Sort by time descending (default, newest first) or ascending.",
+              "default": "desc",
+              "title": "Order"
+            },
+            "description": "Sort by time descending (default, newest first) or ascending."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 1,
+              "description": "Max trades per page (1-5000).",
+              "default": 200,
+              "title": "Limit"
+            },
+            "description": "Max trades per page (1-5000)."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/tape/recent": {
+      "get": {
+        "tags": [
+          "Tape"
+        ],
+        "summary": "Latest N trades (shorthand for /tape?limit=N&order=desc)",
+        "description": "Convenience endpoint for clients who just want the newest N trades across all venues without setting up cursor pagination. Equivalent to `/v2/tape?limit=N&order=desc`.",
+        "operationId": "get_tape_recent_tape_recent_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "venues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Venues"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/tape/stats": {
+      "get": {
+        "tags": [
+          "Tape"
+        ],
+        "summary": "Tape statistics for a window",
+        "description": "Aggregate stats over a time window - useful for Methix-style scorers that don't need raw trades, just the summary numbers. Computes count, total premium, buy/sell split, call/put split, per-venue breakdown, all in a single query.",
+        "operationId": "get_tape_stats_tape_stats_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "venues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Venues"
+            }
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 168,
+              "minimum": 1,
+              "description": "Window in hours (max 7d).",
+              "default": 24,
+              "title": "Hours"
+            },
+            "description": "Window in hours (max 7d)."
+          },
+          {
+            "name": "premium_min_usd",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Premium Min Usd"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/tape/imbalance": {
+      "get": {
+        "tags": [
+          "Tape"
+        ],
+        "summary": "Time-bucketed aggressor imbalance (premium or HIRO-style delta)",
+        "description": "Server-side rollup of the options tape into time buckets. `weight=flow` (default) returns multi-venue premium quadrants (call/put × buy/sell) + passive. `weight=delta` returns customer BS delta-notional (HIRO-style; Deribit-quality prints). Client can running-sum `net` for a cumulative line.",
+        "operationId": "get_tape_imbalance_tape_imbalance_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 720,
+              "minimum": 1,
+              "default": 24,
+              "title": "Hours"
+            }
+          },
+          {
+            "name": "bucket_minutes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1440,
+              "minimum": 1,
+              "default": 5,
+              "title": "Bucket Minutes"
+            }
+          },
+          {
+            "name": "min_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Min premium_usd",
+              "default": 0,
+              "title": "Min Size"
+            },
+            "description": "Min premium_usd"
+          },
+          {
+            "name": "weight",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "flow",
+                "delta",
+                "prem"
+              ],
+              "type": "string",
+              "description": "flow/prem = premium quadrants; delta = BS delta notional",
+              "default": "flow",
+              "title": "Weight"
+            },
+            "description": "flow/prem = premium quadrants; delta = BS delta notional"
+          },
+          {
+            "name": "venues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "CSV venues (flow only)",
+              "title": "Venues"
+            },
+            "description": "CSV venues (flow only)"
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/tape/strike-heat": {
+      "get": {
+        "tags": [
+          "Tape"
+        ],
+        "summary": "Aggressor premium heat by strike",
+        "description": "Net / absolute premium by strike over a lookback window from the multi-venue options tape. Useful for heatmaps of where aggressive money is concentrating.",
+        "operationId": "get_tape_strike_heat_tape_strike_heat_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 168,
+              "minimum": 1,
+              "default": 24,
+              "title": "Hours"
+            }
+          },
+          {
+            "name": "venues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Venues"
+            }
+          },
+          {
+            "name": "min_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0,
+              "title": "Min Size"
+            }
+          },
+          {
+            "name": "top",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 5,
+              "default": 40,
+              "title": "Top"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/tape/whale": {
+      "get": {
+        "tags": [
+          "Tape"
+        ],
+        "summary": "Largest options prints in the window",
+        "description": "Top trades by premium_usd across venues. Default min premium $100k. Includes instrument, direction, strike, expiry, venue, IV.",
+        "operationId": "get_tape_whale_tape_whale_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 168,
+              "minimum": 1,
+              "default": 24,
+              "title": "Hours"
+            }
+          },
+          {
+            "name": "venues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Venues"
+            }
+          },
+          {
+            "name": "premium_min_usd",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "default": 100000,
+              "title": "Premium Min Usd"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/tape/flow-by-strike": {
+      "get": {
+        "tags": [
+          "Tape"
+        ],
+        "summary": "Aggressor flow by strike (bought vs sold calls/puts)",
+        "description": "REAL multi-venue taker flow on still-open contracts (`expiry_date >= today UTC`) - cumulative sold/bought pressure behind live open interest, not a rolling lookback.\n\nFour quadrants per strike: `call_buy`, `call_sell`, `put_buy`, `put_sell` - each with `premium` (USD), `size` (contracts/coin-eq), and `trades` count. Every venue stamps native taker `direction` at ingest (Deribit/Bybit/OKX/Binance/Derive/Thalex), so this is exact aggressor side, not quote-rule inference.\n\nUse `expiry` or `expiries` (YYYY-MM-DD) to restrict to one or more live expiries. Omit both for all open contracts. Optional `venues` CSV and `min_premium_usd` whale filter.\n\nResponse shape matches the terminal / internal crypto flow endpoint so integrators can rebuild TRACE-style dealer maps.",
+        "operationId": "get_tape_flow_by_strike_tape_flow_by_strike_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "expiry",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Single live expiry YYYY-MM-DD. Omit for all open contracts.",
+              "title": "Expiry"
+            },
+            "description": "Single live expiry YYYY-MM-DD. Omit for all open contracts."
+          },
+          {
+            "name": "expiries",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated live expiries YYYY-MM-DD to COMBINE; takes precedence over `expiry`.",
+              "title": "Expiries"
+            },
+            "description": "Comma-separated live expiries YYYY-MM-DD to COMBINE; takes precedence over `expiry`."
+          },
+          {
+            "name": "min_premium_usd",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Minimum premium_usd per trade (whale filter).",
+              "default": 0,
+              "title": "Min Premium Usd"
+            },
+            "description": "Minimum premium_usd per trade (whale filter)."
+          },
+          {
+            "name": "venues",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "CSV venue filter. Default: all. Allowed: binance, bybit, delta, delta_india, deribit, derive, okx, thalex",
+              "title": "Venues"
+            },
+            "description": "CSV venue filter. Default: all. Allowed: binance, bybit, delta, delta_india, deribit, derive, okx, thalex"
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -7088,6 +9526,32 @@
                 "type": "null"
               }
             ]
+          },
+          "by_venue": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/VenueOI"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By Venue",
+            "description": "Per-venue open interest for this expiry (all eight venues, zero-filled). Null only when no venue split is available."
+          },
+          "by_venue_unattributed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VenueOI"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Open interest not attributable to a venue; null when the split reconciles with call_oi / put_oi."
           }
         },
         "type": "object",
@@ -7313,6 +9777,22 @@
           },
           "odte": {
             "$ref": "#/components/schemas/GexOdteLevels"
+          },
+          "positioning": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "flow",
+                  "std"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positioning",
+            "description": "Dealer positioning model that produced these levels. `flow` (default) is measured from the aggressor tape; `std` is the textbook call:+OI / put:-OI fallback."
           },
           "ranked": {
             "anyOf": [
@@ -7728,6 +10208,59 @@
               }
             ],
             "description": "Echo of the resolved strike window when any strike-axis filter was applied."
+          },
+          "positioning": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "flow",
+                  "std"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positioning"
+          },
+          "by_venue": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/VenueOI"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By Venue",
+            "description": "Per-venue open interest rolled up over the strikes returned. All eight venues are present (zero-filled); null for a single-expiry request, where no venue split is published (see by_venue_note). Attribution is positioning-independent."
+          },
+          "by_venue_unattributed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VenueOI"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Open interest that could not be attributed to a venue. Null when the split reconciles with the totals - the normal case."
+          },
+          "by_venue_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By Venue Note",
+            "description": "Why by_venue is null, when it is."
           }
         },
         "type": "object",
@@ -8188,7 +10721,7 @@
         "additionalProperties": true,
         "type": "object",
         "title": "IvTermStructureData",
-        "description": "The shape varies slightly by collector version \u2014 we document the\nfields we know about and leave room for additional ones via extra=allow."
+        "description": "The shape varies slightly by collector version - we document the\nfields we know about and leave room for additional ones via extra=allow."
       },
       "IvTermStructureResponse": {
         "properties": {
@@ -9442,7 +11975,8 @@
             "enum": [
               "gamma",
               "charm",
-              "vanna"
+              "vanna",
+              "delta_change"
             ],
             "title": "Greek",
             "description": "Which greek the field encodes."
@@ -9450,7 +11984,7 @@
           "expiry": {
             "type": "string",
             "title": "Expiry",
-            "description": "Expiry filter applied \u2014 `all`, `0dte`, or a Deribit token."
+            "description": "Expiry filter applied - `all`, `0dte`, or a Deribit token."
           },
           "spot_price": {
             "type": "number",
@@ -9460,12 +11994,24 @@
           "vol_shift_pct": {
             "type": "number",
             "title": "Vol Shift Pct",
-            "description": "What-if IV shift applied to every contract (percent, additive in \u03c3 multiplier)."
+            "description": "What-if IV shift applied to every contract (percent, additive in σ multiplier)."
           },
           "field_units": {
             "type": "string",
             "title": "Field Units",
-            "description": "Units of each cell \u2014 `dealer_gamma_dollars_per_pct_spot` for gamma (\u03b3 \u00d7 S\u00b2 \u00d7 OI \u00d7 1%), `dealer_charm_per_year` for charm (\u2202\u0394/\u2202\u03c4 \u00d7 OI), `dealer_vanna_per_iv_unit` for vanna (\u2202\u0394/\u2202\u03c3 \u00d7 OI). Sign convention: +1 for calls, \u22121 for puts."
+            "description": "Units of each cell - `dealer_gamma_dollars_per_pct_spot` for gamma (γ × S² × qty × 0.01), `dealer_charm_per_year` for charm, `dealer_vanna_per_iv_unit` for vanna, `dealer_delta_change_from_spot_now` for delta_change. qty is FLOW sold−bought or STD signed OI (see positioning)."
+          },
+          "positioning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positioning",
+            "description": "Effective positioning model for this field: flow | std."
           },
           "time_axis_ms": {
             "items": {
@@ -9523,7 +12069,7 @@
           "tau_floor_seconds": {
             "type": "number",
             "title": "Tau Floor Seconds",
-            "description": "Floor on \u03c4 used near expiry to prevent the BS-gamma cliff. Cells right at expiry are computed with \u03c4 = `tau_floor_seconds`."
+            "description": "Floor on τ used near expiry to prevent the BS-gamma cliff. Cells right at expiry are computed with τ = `tau_floor_seconds`."
           }
         },
         "type": "object",
@@ -9591,7 +12137,7 @@
               }
             ],
             "title": "Details",
-            "description": "Optional structured payload \u2014 e.g. validation_error returns the failing field list."
+            "description": "Optional structured payload - e.g. validation_error returns the failing field list."
           }
         },
         "type": "object",
@@ -9760,7 +12306,46 @@
           "timestamp"
         ],
         "title": "V2Meta",
-        "description": "The meta block returned alongside every v2 response.\n\nEvery field after `version`/`timestamp` is optional because endpoints\nattach different combinations \u2014 e.g. `/v2/status` skips `symbol`, the\nchain endpoint sets `extra.filter_hash`, etc. Listing them here means\nSDKs get a typed accessor for each instead of a generic `meta: dict`."
+        "description": "The meta block returned alongside every v2 response.\n\nEvery field after `version`/`timestamp` is optional because endpoints\nattach different combinations - e.g. `/v2/status` skips `symbol`, the\nchain endpoint sets `extra.filter_hash`, etc. Listing them here means\nSDKs get a typed accessor for each instead of a generic `meta: dict`."
+      },
+      "VenueOI": {
+        "properties": {
+          "call_oi": {
+            "type": "number",
+            "title": "Call Oi",
+            "description": "Call open interest, coin units."
+          },
+          "put_oi": {
+            "type": "number",
+            "title": "Put Oi",
+            "description": "Put open interest, coin units."
+          },
+          "total_oi": {
+            "type": "number",
+            "title": "Total Oi",
+            "description": "call_oi + put_oi, coin units."
+          },
+          "notional_oi_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notional Oi Usd",
+            "description": "total_oi x spot, using the same spot the response reports."
+          }
+        },
+        "type": "object",
+        "required": [
+          "call_oi",
+          "put_oi",
+          "total_oi"
+        ],
+        "title": "VenueOI",
+        "description": "One venue's open interest on a surface. OI is coin-native on every\nvenue, so cross-venue sums need no conversion."
       }
     },
     "securitySchemes": {

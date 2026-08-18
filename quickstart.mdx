@@ -85,7 +85,7 @@ integration" in five steps.
     ```
 
     Always check `success` before reading `data`. On failure you get
-    `success: false` and an `error` object instead — see
+    `success: false` and an `error` object instead - see
     [Errors](/concepts/errors) for the full code list.
 
     The `meta` block tells you how stale the data is (`freshness_seconds`),
@@ -107,12 +107,12 @@ integration" in five steps.
 
     Now the response includes the top-10 ranked strikes by |GEX|, the
     0DTE max-pain strike, the 1σ/2σ expected move from ATM straddles,
-    and the gamma flip zones — in one call.
+    and the gamma flip zones - in one call.
 
     Common filters you'll use across the API:
 
     - `?symbol=BTCUSDT|ETHUSDT|SOLUSDT|HYPEUSDT` - supported symbols
-    - `?exchanges=deribit,bybit,okx,binance` - venue filter
+    - `?exchanges=deribit,bybit,okx,binance,derive,thalex,delta_india,delta` - venue filter (omit for all)
     - `?expiry=all|0dte|<token>` - single expiry slice
     - `?dte_min` / `?dte_max` / `?weekly_only=true` - DTE-axis filter
     - `?moneyness_min` / `?moneyness_max` - strike/spot ratio bounds

@@ -32,16 +32,16 @@ error envelope with a machine-readable `code` field, a human-readable
 
 | Code | HTTP status | When it fires |
 | --- | --- | --- |
-| `UNAUTHORIZED` | 401 | Missing, invalid, or revoked `X-API-Key` header. |
-| `FORBIDDEN` | 403 | Key is valid but the subscription tier doesn't allow this resource. |
+| `UNAUTHORIZED` | 401 | Missing, malformed, revoked, or expired `X-API-Key`. **Not** “plan too low.” |
+| `FORBIDDEN` | 403 | Key is valid but the **plan does not permit** this resource (v2.5.0+). Do not treat as a bad key. |
 | `NOT_FOUND` | 404 | Symbol, expiry, or other resource not present in cache or DB. |
-| `VALIDATION_ERROR` | 400 / 422 | Bad query parameter — out of range, wrong type, or unknown enum value. |
-| `RATE_LIMIT_EXCEEDED` | 429 | Per-tier rate limit hit. Retry after `meta.rate_limit.reset` or the `Retry-After` header. |
+| `VALIDATION_ERROR` | 400 / 422 | Bad query parameter - out of range, wrong type, or unknown enum value. |
+| `RATE_LIMIT_EXCEEDED` | 429 | Per-minute burst **or** monthly quota exceeded. Retry after `Retry-After` / wait for the window. |
 | `UPSTREAM_ERROR` | 502 / 503 / 504 | Cache (Redis) or database (Postgres) temporarily unreachable. Retry with backoff. |
 | `INTERNAL_ERROR` | 500 | Unexpected server-side failure. Include `meta.request_id` when reporting. |
 
 The full list is also available programmatically at
-[`/v2/meta`](/api/v2/discovery/meta) — useful if you want to keep your
+[`/v2/meta`](/api/v2/discovery/meta) - useful if you want to keep your
 client's error map in sync with the API.
 
 ## Handling errors in code
@@ -79,10 +79,10 @@ def get_gex_levels(api_key, symbol="BTCUSDT", max_retries=3):
             time.sleep(retry_after)
             continue
         if code == "NOT_FOUND":
-            # 404 = no cache for this symbol/expiry. Don't retry — handle as no-data.
+            # 404 = no cache for this symbol/expiry. Don't retry - handle as no-data.
             return None
         if code == "UPSTREAM_ERROR":
-            # Redis/DB blip — exponential backoff
+            # Redis/DB blip - exponential backoff
             sleep = 2 ** attempt
             print(f"Upstream error; sleeping {sleep}s")
             time.sleep(sleep)
@@ -150,44 +150,44 @@ async function getGexLevels(
 
 ## Guidance per code
 
-**`UNAUTHORIZED`** — Check the `X-API-Key` header is present, the value
+**`UNAUTHORIZED`** - Check the `X-API-Key` header is present, the value
 has no leading/trailing space, and the key hasn't been revoked at
 [backquant.com/api-access](https://backquant.com/api-access).
 
-**`FORBIDDEN`** — Your subscription doesn't allow this resource.
+**`FORBIDDEN`** - Your subscription doesn't allow this resource.
 Usually a sign you've downgraded a paid tier or your subscription
 lapsed.
 
-**`NOT_FOUND`** — Don't retry. Either the symbol/expiry doesn't have
+**`NOT_FOUND`** - Don't retry. Either the symbol/expiry doesn't have
 cache yet (cold start, or unsupported symbol), or the path is wrong.
 
-**`VALIDATION_ERROR`** — Read `error.details.errors` for the failing
+**`VALIDATION_ERROR`** - Read `error.details.errors` for the failing
 parameter list. Common causes: passing `BTC` instead of `BTCUSDT`,
 unsupported `?greek=` value, out-of-range numeric param.
 
-**`RATE_LIMIT_EXCEEDED`** — Read `Retry-After` header (or
+**`RATE_LIMIT_EXCEEDED`** - Read `Retry-After` header (or
 `meta.rate_limit.reset`) and wait. The
 [`/v2/options/chain`](/api/v2/options/chain) is the most expensive
-single endpoint — if you're polling it aggressively, batch with
+single endpoint - if you're polling it aggressively, batch with
 [multi-symbol bundles](/concepts/multi-symbol) or pull only the
 contracts you need with `?max_contracts`.
 
-**`UPSTREAM_ERROR`** — Transient. Exponential backoff (2s, 4s, 8s)
+**`UPSTREAM_ERROR`** - Transient. Exponential backoff (2s, 4s, 8s)
 usually clears it within ~30s. If it persists past a minute, check
 [`/v2/health`](/api/v2/health).
 
-**`INTERNAL_ERROR`** — Always include `meta.request_id` when reporting
+**`INTERNAL_ERROR`** - Always include `meta.request_id` when reporting
 to dev@backquant.com. We trace by it.
 
 ## Always-present headers
 
 Even on errors, the response carries:
 
-- `X-RateLimit-Limit` — your tier's per-minute cap
-- `X-RateLimit-Remaining` — calls left in the current window
-- `X-RateLimit-Reset` — Unix timestamp when the window resets
-- `Retry-After` — seconds until safe to retry (on 429 only)
-- `X-Request-ID` — the same UUID as `meta.request_id`
+- `X-RateLimit-Limit` - your tier's per-minute cap
+- `X-RateLimit-Remaining` - calls left in the current window
+- `X-RateLimit-Reset` - Unix timestamp when the window resets
+- `Retry-After` - seconds until safe to retry (on 429 only)
+- `X-Request-ID` - the same UUID as `meta.request_id`
 
 ## See also
 

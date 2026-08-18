@@ -136,7 +136,7 @@ if (nextAnchor) {
   });
   const band = (pdf.data as any).expiries[nextAnchor.expiry].confidence_band;
   console.log(
-    `${nextAnchor.expiry} 1σ implied range: $${band.lower.toFixed(0)} – $${band.upper.toFixed(0)}`,
+    `${nextAnchor.expiry} 1σ implied range: $${band.lower.toFixed(0)} - $${band.upper.toFixed(0)}`,
   );
 }
 ```

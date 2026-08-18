@@ -3,4 +3,29 @@ title: "Changelog"
 openapi: "GET /changelog"
 ---
 
-Static release log with per-version `breaking` flags. Customers integrating against the API use this to decide when to schedule re-integration work - `breaking: true` on any release is the signal to test.
+Static release log with per-version `breaking` flags. Use
+`breaking: true` as the signal to schedule client re-integration tests.
+
+Poll authenticated `GET /v2/changelog` for the canonical list (newest
+first).
+
+## Recent versions
+
+| Version | Date | Summary |
+|---|---|---|
+| **2.5.2** | 2026-08-17 | Thalex + Delta India + Delta Global venues. [`GET /v2/tape/flow-by-strike`](/api/v2/tape/flow-by-strike). |
+| **2.5.1** | 2026-08-17 | Thalex chain and tape always-on. |
+| **2.5.0** | 2026-08-04 | **Breaking:** entitlement failures return **403**; monthly request quotas; plan ladder. See [Rate limits](/concepts/rate-limits) and [Errors](/concepts/errors). |
+| **2.4.0** | 2026-07-31 | Derive venue; SOL/HYPE flow coverage notes. |
+| **2.3.0** | 2026-07-30 | Dealer / gamma / delta flow endpoints; tape analytics; WS GEX levels. |
+| **2.2.0** | 2026-07-30 | **Breaking:** default `positioning=flow`. |
+
+Venue IDs and tape units: [Venue coverage](/concepts/venues).
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Venue coverage" href="/concepts/venues" icon="building" />
+  <Card title="Rate limits" href="/concepts/rate-limits" icon="gauge" />
+  <Card title="Flow by strike" href="/api/v2/tape/flow-by-strike" icon="chart-column" />
+</CardGroup>

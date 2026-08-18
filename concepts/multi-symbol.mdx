@@ -59,7 +59,7 @@ endpoint.
 ## Partial results
 
 If one of the requested symbols has no live data (cold cache), it
-appears in `missing` and its `results[symbol]` is `null` — but the
+appears in `missing` and its `results[symbol]` is `null` - but the
 other symbols still come back. **The whole call doesn't fail** because
 of one stale symbol.
 
@@ -79,14 +79,14 @@ of one stale symbol.
 ```
 
 `invalid` lists symbols that aren't in the supported set
-(BTCUSDT/ETHUSDT/SOLUSDT/HYPEUSDT) — your client got the symbol name
+(BTCUSDT/ETHUSDT/SOLUSDT/HYPEUSDT) - your client got the symbol name
 wrong.
 
 ## Filters
 
-- `?exchanges=deribit,bybit,okx,binance` — same venue filter as
+- `?exchanges=deribit,bybit,okx,binance,derive,thalex,delta_india,delta` - same venue filter as
   single-symbol; applies to every symbol in the bundle.
-- `?include=ranked,max_pain,expected_move,zones` — same composable
+- `?include=ranked,max_pain,expected_move,zones` - same composable
   includes. The single-symbol `spot` and `candles` includes are
   intentionally absent here to keep the bundled payload bounded
   (candles arrays would multiply payload by ~10×).

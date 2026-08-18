@@ -5,242 +5,242 @@ description: "Quick-reference for every term used across the docs"
 
 Alphabetical. If you're new to options analytics, start with
 [What is GEX?](/concepts/gex) and the [IV suite](/concepts/iv-suite)
-overviews instead — those build the mental model. Use this page as a
+overviews instead - those build the mental model. Use this page as a
 lookup once concepts land.
 
 ## A
 
-**Anchor expiry** — A monthly or quarterly options expiration. Heavier
+**Anchor expiry** - A monthly or quarterly options expiration. Heavier
 OI than weeklies; institutional positioning concentrates here. See
 [OPEX calendar](/concepts/opex).
 
-**ATM IV** — At-the-money implied volatility. The IV of options whose
+**ATM IV** - At-the-money implied volatility. The IV of options whose
 strike equals current spot. Used as the "headline" vol for an expiry.
 
 ## B
 
-**Backwardation (vol)** — Term structure where front-month IV is
+**Backwardation (vol)** - Term structure where front-month IV is
 higher than back-month IV. Common during stress. See
 [IV suite](/concepts/iv-suite).
 
-**Breeden-Litzenberger** — The technique that extracts a probability
+**Breeden-Litzenberger** - The technique that extracts a probability
 distribution from option prices. The basis of
 [`/v2/options/probability/density`](/api/v2/options/probability/density).
 
-**Butterfly** — `(25Δ put IV + 25Δ call IV) / 2 − ATM IV`. Measures
+**Butterfly** - `(25Δ put IV + 25Δ call IV) / 2 − ATM IV`. Measures
 the curvature of the smile / how richly priced the wings are.
 
 ## C
 
-**Call resistance** — The strike with the largest positive net gamma
-above spot. Often a reversal level — dealers sell into rallies toward
+**Call resistance** - The strike with the largest positive net gamma
+above spot. Often a reversal level - dealers sell into rallies toward
 this strike. See [What is GEX?](/concepts/gex).
 
-**Call wall** — Synonym for call resistance. `call_wall_2` and
+**Call wall** - Synonym for call resistance. `call_wall_2` and
 `call_wall_3` are the second and third strongest above spot.
 
-**Cardle (candle)** — OHLCV bar. The terminal renders 30m candles by
+**Cardle (candle)** - OHLCV bar. The terminal renders 30m candles by
 default; the API ships them alongside GEX levels when
 `?include=candles` is set.
 
-**Charm** — `∂Delta/∂Time`. Drives end-of-day and pre-OPEX delta
+**Charm** - `∂Delta/∂Time`. Drives end-of-day and pre-OPEX delta
 hedging flows. See [Greeks beyond delta](/concepts/greeks).
 
-**`computed_at`** — ISO timestamp in `meta` showing when the underlying
+**`computed_at`** - ISO timestamp in `meta` showing when the underlying
 cache was last written by our worker. Pair with `freshness_seconds`.
 
-**Confidence band** — A price range containing X% of implied
+**Confidence band** - A price range containing X% of implied
 probability mass for an expiry. Returned by
 [`/v2/options/probability/density?confidence_band=0.68|0.95`](/api/v2/options/probability/density).
 
-**Contango (vol)** — Term structure where back-month IV is higher than
+**Contango (vol)** - Term structure where back-month IV is higher than
 front-month IV. The "normal" regime in low-vol periods.
 
 ## D
 
-**Dealer flow** — Estimated dealer hedge pressure across successive
+**Dealer flow** - Estimated dealer hedge pressure across successive
 chain snapshots (gamma, charm, optional vanna components + cumulative).
 See [`/v2/gex/dealer-flow`](/api/v2/gex/dealer-flow). Distinct from
 customer **delta flow**.
 
-**Delta flow** — Customer signed Black-Scholes delta notional from the
+**Delta flow** - Customer signed Black-Scholes delta notional from the
 options tape (HIRO-style customer line). See
 [`/v2/gex/delta-flow`](/api/v2/gex/delta-flow).
 
-**DEX** — Dollar delta exposure. Net delta dealers carry per strike,
+**DEX** - Dollar delta exposure. Net delta dealers carry per strike,
 in USD terms. See [Greeks beyond delta](/concepts/greeks).
 
-**DTE** — Days to expiration. An integer count.
+**DTE** - Days to expiration. An integer count.
 
 ## E
 
-**Expected move** — The 1σ implied price range for the next 24 hours,
+**Expected move** - The 1σ implied price range for the next 24 hours,
 derived from ATM straddle pricing. Returned by
 [`/v2/options/expected-move`](/api/v2/options/expected-move) or as part
 of `/v2/gex/levels?include=expected_move`.
 
-**Expiry token** — Deribit-style date encoding, e.g. `28MAR25` =
+**Expiry token** - Deribit-style date encoding, e.g. `28MAR25` =
 March 28 2025. Every endpoint that returns one also returns
 `expiry_date` (ISO) when parseable.
 
 ## F
 
-**Flow positioning** — Dealer size signed from multi-venue aggressor
+**Flow positioning** - Dealer size signed from multi-venue aggressor
 tape (sold minus bought per call/put side). Default on live GEX and
 TRACE. See [Positioning](/concepts/positioning).
 
-**`freshness_seconds`** — `now − computed_at`. Useful for staleness
+**`freshness_seconds`** - `now − computed_at`. Useful for staleness
 alarms. See [Data freshness](/concepts/data-freshness).
 
 ## G
 
-**Gamma** — Rate of change of delta with respect to spot. The greek
+**Gamma** - Rate of change of delta with respect to spot. The greek
 that drives dealer hedging behaviour around walls.
 
-**Gamma flip** — The strike where cumulative net dealer gamma crosses
+**Gamma flip** - The strike where cumulative net dealer gamma crosses
 zero, closest to spot. Above the flip, dealers stabilise; below, they
 amplify. Reported as `hvl` in the levels response.
 
-**GEX** — Gamma exposure. The flagship analytic. See
+**GEX** - Gamma exposure. The flagship analytic. See
 [What is GEX?](/concepts/gex).
 
 ## H
 
-**HVL** — Hedging Volume Level. Same as the gamma flip — the regime
+**HVL** - Hedging Volume Level. Same as the gamma flip - the regime
 line for dealer behaviour.
 
-**HYPEUSDT** — Hyperliquid's HYPE token. One of the four supported
+**HYPEUSDT** - Hyperliquid's HYPE token. One of the four supported
 symbols (`BTCUSDT`, `ETHUSDT`, `SOLUSDT`, `HYPEUSDT`).
 
 ## I
 
-**IV** — Implied volatility. The volatility level the market is pricing
+**IV** - Implied volatility. The volatility level the market is pricing
 into options.
 
-**IV rank** — Where current IV sits between its 52-week low and
+**IV rank** - Where current IV sits between its 52-week low and
 high. Not currently exposed in v2 (planned).
 
-**IV-RV spread** — `IV − RV`. Positive = options expensive vs realised
+**IV-RV spread** - `IV − RV`. Positive = options expensive vs realised
 move; negative = cheap. Returned by
 [`/v2/options/iv/iv-rv`](/api/v2/options/iv/iv-rv).
 
 ## M
 
-**Max pain** — The strike where option *writers* profit most at expiry.
+**Max pain** - The strike where option *writers* profit most at expiry.
 See [Max pain](/concepts/max-pain).
 
-**Moneyness** — `strike / spot`. `0.9` = 10% OTM (for calls) /
+**Moneyness** - `strike / spot`. `0.9` = 10% OTM (for calls) /
 10% ITM (for puts). Used as a strike filter on most endpoints
 (`?moneyness_min=0.9&moneyness_max=1.1`).
 
 ## N
 
-**Net GEX** — Sum of call GEX and put GEX at a strike (or aggregated
+**Net GEX** - Sum of call GEX and put GEX at a strike (or aggregated
 across the chain). Positive net = stabilising; negative = amplifying.
 
-**Notional OI (USD)** — `total_oi × spot_price`. The dollar size of
+**Notional OI (USD)** - `total_oi × spot_price`. The dollar size of
 the position behind the OI count. Surfaced on every OPEX expiration.
 
 ## O
 
-**0DTE** — Zero days to expiration. Options expiring today. Many
+**0DTE** - Zero days to expiration. Options expiring today. Many
 endpoints have a 0DTE variant of their levels (`odte_hvl`,
 `odte_call_resistance`, etc.).
 
-**OI** — Open interest. The number of contracts outstanding.
+**OI** - Open interest. The number of contracts outstanding.
 
-**OPEX** — Options expiration. See
+**OPEX** - Options expiration. See
 [OPEX calendar](/concepts/opex).
 
 ## P
 
-**PCR** — Put / call ratio. OI-weighted ratio of put OI to call OI.
+**PCR** - Put / call ratio. OI-weighted ratio of put OI to call OI.
 PCR > 1 = defensive; PCR < 1 = call-heavy. See
 [`/v2/options/pcr`](/api/v2/options/pcr).
 
-**PDF (probability density function)** — The implied probability
+**PDF (probability density function)** - The implied probability
 distribution of the underlying at a future expiry. See
 [Probability density](/concepts/probability-density).
 
-**Pin risk** — The likelihood of price pinning to a strike on expiry
+**Pin risk** - The likelihood of price pinning to a strike on expiry
 day. Highest when max pain and gamma walls cluster near spot.
 
-**Positioning** — How live GEX/TRACE sign dealer size: `flow` (default)
+**Positioning** - How live GEX/TRACE sign dealer size: `flow` (default)
 or `std`. See [Positioning](/concepts/positioning).
 
-**Premium tide** — Net options premium and notional volume tilt. See
+**Premium tide** - Net options premium and notional volume tilt. See
 [`/v2/options/premium-tide`](/api/v2/options/premium-tide).
 
-**Put support** — The strike with the largest positive net gamma below
-spot. Often a bounce level — dealers buy on dips into this strike.
+**Put support** - The strike with the largest positive net gamma below
+spot. Often a bounce level - dealers buy on dips into this strike.
 
-**Put wall** — Synonym for put support. `put_wall_2` and `put_wall_3`
+**Put wall** - Synonym for put support. `put_wall_2` and `put_wall_3`
 are the second and third strongest below spot.
 
 ## Q
 
-**Quarterly expiry** — Last Friday of March, June, September, or
+**Quarterly expiry** - Last Friday of March, June, September, or
 December. The heaviest OI bucket of the year.
 
 ## R
 
-**Risk reversal** — `25Δ call IV − 25Δ put IV`. Positive = call
+**Risk reversal** - `25Δ call IV − 25Δ put IV`. Positive = call
 premium; negative (the more common case) = put premium / fear bid.
 Surfaced on [`/v2/options/iv/skew`](/api/v2/options/iv/skew).
 
-**RV** — Realised volatility. The vol that actually happened over a
+**RV** - Realised volatility. The vol that actually happened over a
 trailing window (typically 30 days).
 
 ## S
 
-**Skew** — The asymmetry between OTM put IV and OTM call IV. Crypto
+**Skew** - The asymmetry between OTM put IV and OTM call IV. Crypto
 typically prices puts richer (positive skew). See
 [IV suite](/concepts/iv-suite).
 
-**Smile** — The shape of IV when plotted by strike. ATM is the
+**Smile** - The shape of IV when plotted by strike. ATM is the
 trough; OTM puts and OTM calls are the wings.
 
-**Source** — `meta.source` lists the upstream venues each response
+**Source** - `meta.source` lists the upstream venues each response
 touched (`["deribit", "bybit", "okx", "binance"]`). Provenance.
 
-**`spot_price`** — Current spot price for the symbol, snapshotted at
+**`spot_price`** - Current spot price for the symbol, snapshotted at
 the time of computation. Returned in `meta` on every endpoint.
 
-**Stress history** — Long-window record of HVL and walls from the
+**Stress history** - Long-window record of HVL and walls from the
 persistent store. Used for backtests.
 [`/v2/gex/stress-history`](/api/v2/gex/stress-history).
 
 ## T
 
-**Term structure** — The curve of ATM IV plotted against expiry tenor.
+**Term structure** - The curve of ATM IV plotted against expiry tenor.
 Slope tells you the market's vol forecast across time.
 [`/v2/options/iv/term-structure`](/api/v2/options/iv/term-structure).
 
-**Theta** — Time decay. Premium that bleeds out of an option as time
+**Theta** - Time decay. Premium that bleeds out of an option as time
 passes. Useful as a rough estimate of dealer income from selling
 premium. See [Greeks beyond delta](/concepts/greeks).
 
-**TRACE** — Forward (time × price) projection of dealer greek exposure
+**TRACE** - Forward (time × price) projection of dealer greek exposure
 from today's chain. Greeks: `gamma`, `charm`, `vanna`, `delta_change`.
 See [`/v2/options/greeks/trace`](/api/v2/options/greeks/trace).
 
 ## V
 
-**Vanna** — `∂Delta/∂IV`. Drives "vol-rallies-the-tape" hedging
+**Vanna** - `∂Delta/∂IV`. Drives "vol-rallies-the-tape" hedging
 flows. See [Greeks beyond delta](/concepts/greeks).
 
-**Vega** — Sensitivity to IV moves. Where dealer P&L is concentrated
+**Vega** - Sensitivity to IV moves. Where dealer P&L is concentrated
 when vol shifts.
 
-**VRP** — Volatility risk premium. The persistent gap by which
+**VRP** - Volatility risk premium. The persistent gap by which
 implied vol exceeds realised vol. See
 [`/v2/options/vrp`](/api/v2/options/vrp).
 
 ## W
 
-**Whale print** — Large options trade by `premium_usd`. REST helper:
+**Whale print** - Large options trade by `premium_usd`. REST helper:
 [`/v2/tape/whale`](/api/v2/tape/whale).
 
-**Weekly expiry** — A Friday expiration that is *not* the last Friday
+**Weekly expiry** - A Friday expiration that is *not* the last Friday
 of the month. Lighter OI than monthlies, more responsive to short-term
 positioning.

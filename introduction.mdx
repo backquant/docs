@@ -14,7 +14,7 @@ research workflows, and dashboards.
   Sign up at **backquant.com/api-access**.
 </Card>
 
-This API is for personal-use plans. No redistribution is permitted —
+This API is for personal-use plans. No redistribution is permitted -
 see our [Terms of Service](https://www.backquant.com/terms) for details.
 Custom and Enterprise plans are available; contact dev@backquant.com.
 
@@ -47,8 +47,10 @@ https://api.backquant.com/v2/
 ## What's covered
 
 The API is focused on the data crypto options traders actually
-trade against. Everything is computed by us from raw exchange chains
-(Deribit + Bybit + OKX + Binance) and refreshed every 30 seconds.
+trade against. Chains and GEX refresh about every 30 seconds from a
+multi-venue aggregator (Deribit, Bybit, OKX, Binance, plus Derive /
+Thalex / Delta India / Delta Global when live - see
+[Venue coverage](/concepts/venues)).
 
 | Category | What's in it |
 | --- | --- |
@@ -56,9 +58,9 @@ trade against. Everything is computed by us from raw exchange chains
 | **Options chain** | Filtered chain with two-layer projection (`?fields` + `?include`), expiry summary table, OPEX calendar with daily/weekly/monthly/quarterly classification |
 | **IV analytics** | Surface, term structure, 25Δ/10Δ skew, butterfly, full smile per expiry, single-expiry smile, IV-RV history, VRP |
 | **Greeks** | DEX, theta, vanna, charm, vega: per-strike profiles, strike × time surfaces, 3D surface, TRACE field + summary |
-| **Tape** | Multi-venue REST + WebSocket, imbalance, strike heat, whale prints, optional live GEX levels channel |
+| **Tape** | Multi-venue REST + WebSocket, imbalance, strike heat, whale prints, **flow by strike**, optional live GEX levels channel |
 | **Probability** | Breeden-Litzenberger PDF/CDF + 3D probability surface + confidence-band interpolation |
-| **Open interest** | By expiry, time-series with cursor pagination, put/call ratio (intraday + daily) |
+| **Open interest** | By expiry (coin-unit multi-venue), time-series with cursor pagination, put/call ratio (intraday + daily) |
 | **Other** | Premium tide (0DTE + weekly), dated-futures basis, liquidation heatmap + distribution, multi-symbol GEX bundle |
 
 Live dealer exposure defaults to **flow** positioning
@@ -90,6 +92,6 @@ this data means in trader terms:
     Surface, term structure, skew, smile.
   </Card>
   <Card title="Greeks beyond delta" icon="function" href="/concepts/greeks">
-    DEX, vanna, charm, vega — what they measure.
+    DEX, vanna, charm, vega - what they measure.
   </Card>
 </CardGroup>

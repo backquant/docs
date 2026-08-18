@@ -1,17 +1,17 @@
 ---
 title: "OPEX calendar"
-description: "Daily, weekly, monthly, quarterly — and why anchor expirations matter"
+description: "Daily, weekly, monthly, quarterly - and why anchor expirations matter"
 ---
 
 **OPEX** (options expiration) is the day options contracts expire. In
 crypto, contracts expire on multiple cadences:
 
-- **Daily expirations** — BTC and ETH have daily 0DTE contracts on Deribit
-- **Weekly expirations** — every Friday, smaller OI
-- **Monthly expirations** — the **last Friday** of each month, much larger OI
-- **Quarterly expirations** — last Friday of March, June, September, December — the heaviest of all
+- **Daily expirations** - BTC and ETH have daily 0DTE contracts on Deribit
+- **Weekly expirations** - every Friday, smaller OI
+- **Monthly expirations** - the **last Friday** of each month, much larger OI
+- **Quarterly expirations** - last Friday of March, June, September, December - the heaviest of all
 
-The monthly and quarterly expirations are **anchor expiries** —
+The monthly and quarterly expirations are **anchor expiries** -
 institutional positioning concentrates in them, GEX clusters around
 their strikes, and they often dictate price action in the days leading
 up to expiry.
@@ -20,8 +20,8 @@ up to expiry.
 
 Monthly/quarterly expirations have:
 
-- **5–10× the OI** of weeklies in the same week
-- **Roll activity** in the 3–5 days before — rolling positions to the
+- **5-10× the OI** of weeklies in the same week
+- **Roll activity** in the 3-5 days before - rolling positions to the
   next expiry can move spot
 - **Pin risk** from large dealer hedges unwinding on expiry day
 - **Vol regime shifts** as the GEX picture redistributes after the
@@ -33,7 +33,7 @@ the institutional weight.
 ## The classification BackQuant returns
 
 Every expiration in our responses comes pre-classified with a `type`
-field — you don't have to parse Deribit-style tokens or detect
+field - you don't have to parse Deribit-style tokens or detect
 last-Friday-of-month rules client-side:
 
 | Type | Definition | Example |
@@ -43,7 +43,7 @@ last-Friday-of-month rules client-side:
 | `weekly` | Any other Friday | `07MAR25`, `14MAR25`, `21MAR25`, `04APR25`, `11APR25` |
 | `daily` | Any non-Friday weekday | `26MAR25` (Wednesday), `27MAR25` (Thursday) |
 
-`is_anchor: true` is shorthand for `monthly` or `quarterly` — the two
+`is_anchor: true` is shorthand for `monthly` or `quarterly` - the two
 that institutions watch.
 
 Tokens that don't parse cleanly are returned as `unknown` and never
@@ -109,7 +109,7 @@ expanded (high IV, high OI = vol expansion likely).
 
 <CardGroup cols={2}>
   <Card title="Max pain" icon="bullseye" href="/concepts/max-pain">
-    The pinning strike on each expiry — a key OPEX-day signal.
+    The pinning strike on each expiry - a key OPEX-day signal.
   </Card>
   <Card title="What is GEX?" icon="chart-line" href="/concepts/gex">
     The walls / HVL / support levels OPEX positioning concentrates in.

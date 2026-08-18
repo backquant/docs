@@ -1,5 +1,5 @@
 ---
-title: "Tape — full filterable history"
+title: "Tape - full filterable history"
 openapi: "GET /tape"
 ---
 
@@ -7,8 +7,8 @@ Multi-venue options trade tape with cursor pagination. All filters compose with 
 
 ## How pagination works
 
-- **`order=desc`** (default) — newest first. The returned `next_cursor` is the **oldest** trade's timestamp in the page. Pass it as `?before=<cursor>` on the next call to walk backward.
-- **`order=asc`** — oldest first. The `next_cursor` is the **newest** trade's timestamp in the page. Pass it as `?after=<cursor>` to walk forward.
+- **`order=desc`** (default) - newest first. The returned `next_cursor` is the **oldest** trade's timestamp in the page. Pass it as `?before=<cursor>` on the next call to walk backward.
+- **`order=asc`** - oldest first. The `next_cursor` is the **newest** trade's timestamp in the page. Pass it as `?after=<cursor>` to walk forward.
 - When `has_more` is `false`, you've reached the end.
 
 Cursors are emitted with a `Z` (UTC) suffix so they survive being copied straight back into a URL query string.
@@ -17,9 +17,9 @@ Cursors are emitted with a `Z` (UTC) suffix so they survive being copied straigh
 
 The `tags` parameter accepts a CSV of:
 
-- **`0dte`** — `expiry_date` equals today (UTC).
-- **`whale`** — trades with `premium_usd` ≥ $250 000 by default. Override with `premium_min_usd`; the larger of the two wins.
-- **`atm`** — strike within ±2 % of the trade's `index_price`. Trades without an index price are excluded.
+- **`0dte`** - `expiry_date` equals today (UTC).
+- **`whale`** - trades with `premium_usd` ≥ $250 000 by default. Override with `premium_min_usd`; the larger of the two wins.
+- **`atm`** - strike within ±2 % of the trade's `index_price`. Trades without an index price are excluded.
 
 ## Coverage
 
@@ -29,6 +29,8 @@ See [Tape overview → Venue coverage](/api/v2/tape/overview#venue-coverage) for
 
 <CardGroup cols={2}>
   <Card title="Recent (shorthand)" href="/api/v2/tape/recent" icon="table" />
+  <Card title="Flow by strike" href="/api/v2/tape/flow-by-strike" icon="chart-column" />
   <Card title="Aggregate stats" href="/api/v2/tape/stats" icon="chart-pie" />
   <Card title="Live WebSocket" href="/api/v2/tape/websocket" icon="bolt" />
+  <Card title="Venue coverage" href="/concepts/venues" icon="building" />
 </CardGroup>

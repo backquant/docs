@@ -12,7 +12,7 @@ TRACE surfaces.
 | Mode | Meaning | When to use |
 | --- | --- | --- |
 | **`flow`** (default) | Dealer size = aggressor **sold minus bought** per call/put side from the multi-venue options tape | Best match to how price behaves when tape exists (BTC, ETH) |
-| **`std`** | Textbook convention: call OI positive, put OI negative | Backtests, comparisons to public GEX, or symbols without tape |
+| **`std`** | Textbook convention: call OI positive, put OI negative | Backtests, comparisons to public GEX, or symbols without usable tape |
 
 Pass `?positioning=flow` or `?positioning=std`. Omit the param to get **flow**.
 
@@ -26,24 +26,38 @@ Every response that rebuilds live exposure reports the effective model in:
 
 Live signed surfaces use:
 
-1. **Chain** - multi-venue options chain (Deribit, Bybit, OKX, Binance) for greeks and OI.
-2. **Tape (flow only)** - multi-venue aggressor trades for the same coins. Size is coin-normalized so venues can be summed.
+1. **Chain** - multi-venue options chain for greeks and **coin-unit OI**:
+   Deribit, Bybit, OKX, Binance, Derive (when enabled), Thalex, Delta India,
+   Delta Global.
+2. **Tape (flow only)** - multi-venue aggressor trades for the same coins.
+   Size is **coin-normalized** so venues can be summed. See
+   [Venue coverage](/concepts/venues) for per-venue ingest.
 
 GEX dollar unit is unchanged: **γ × S² × qty × 0.01** (USD impact per 1%
-spot move), where `qty` is flow sold-bought or std signed OI.
+spot move), where `qty` is flow sold−bought or std signed OI.
 
 Details also appear under `meta.extra.aggregation` (`chain_venues`,
 `flow_venues`, `flow_method`, `gex_scale`, `note`).
+
+### Public flow map
+
+To rebuild strike-level sold/bought maps yourself (TRACE-style), use:
+
+[`GET /v2/tape/flow-by-strike`](/api/v2/tape/flow-by-strike)
+
+That endpoint is cumulative aggressor pressure on **still-open**
+contracts - the same primitive the terminal uses for flow positioning.
 
 ## Coin coverage
 
 | Symbol | Flow tape | Default behaviour |
 | --- | --- | --- |
-| BTCUSDT, ETHUSDT | Yes | Flow when tape is non-empty |
-| SOLUSDT, HYPEUSDT | No | Auto-fallback to **std** (`no_aggressor_tape_for_symbol`) |
+| BTCUSDT, ETHUSDT | Yes (multi-venue) | Flow when tape is non-empty |
+| SOLUSDT, HYPEUSDT | When Derive (or other) tape is live | Falls back to **std** if no aggressor tape (`no_aggressor_tape_for_symbol`) |
 
-If flow is empty for BTC/ETH, the API also falls back to std and sets a
-reason such as `flow_tape_empty` or `flow_qty_all_zero`.
+If flow is empty for BTC/ETH, the API falls back to std and sets
+`meta.extra.positioning_fallback_reason` (for example `flow_tape_empty`
+or `flow_qty_all_zero`).
 
 ## Live vs history
 
@@ -61,6 +75,7 @@ Do not mix these up:
 | Endpoint family | Side | Source |
 | --- | --- | --- |
 | `/v2/gex/delta-flow`, tape `weight=delta` | **Customer** signed delta from trades | Options tape |
+| `/v2/tape/flow-by-strike` | **Aggressor** sold/bought by strike | Options tape |
 | `/v2/gex/gamma-flow`, `/v2/gex/dealer-flow` | **Dealer** hedge estimate from chain × moves | GEX snapshots |
 
 Positive on dealer-flow ≈ estimated dealer **buying** the underlying to
@@ -70,7 +85,7 @@ re-hedge. Positive on delta-flow ≈ net **customer** buy-side delta notional.
 
 <CardGroup cols={2}>
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
-  <Card title="GEX levels" href="/api/v2/gex/levels" icon="chart-simple" />
+  <Card title="Venue coverage" href="/concepts/venues" icon="building" />
+  <Card title="Flow by strike" href="/api/v2/tape/flow-by-strike" icon="chart-column" />
   <Card title="Greek TRACE" href="/api/v2/options/greeks/trace" icon="chart-area" />
-  <Card title="Dealer flow" href="/api/v2/gex/dealer-flow" icon="chart-line" />
 </CardGroup>

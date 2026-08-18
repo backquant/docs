@@ -1,6 +1,6 @@
 ---
 title: "Max pain"
-description: "The strike where option writers profit most — and how to read it"
+description: "The strike where option writers profit most - and how to read it"
 ---
 
 **Max pain** is the strike at which the largest dollar amount of
@@ -12,7 +12,7 @@ expiry?"
 
 For each candidate strike, calculate the total dollar payout option
 *buyers* would receive if the underlying settled there at expiry.
-**Max pain is the strike that minimises that total payout** — the price
+**Max pain is the strike that minimises that total payout** - the price
 where the most contracts expire worthless and writers keep the most
 premium.
 
@@ -26,7 +26,7 @@ but the level itself is a meaningful magnet.
 
 ### Quick: 0DTE max-pain
 
-[`/v2/gex/max-pain?symbol=BTCUSDT&expiry=0dte`](/api/v2/gex/max-pain) —
+[`/v2/gex/max-pain?symbol=BTCUSDT&expiry=0dte`](/api/v2/gex/max-pain) -
 returns the max-pain strike for today's expiry from the pre-computed
 0DTE cache. Sub-millisecond response.
 
@@ -44,7 +44,7 @@ returns the max-pain strike for today's expiry from the pre-computed
 
 ### Per-expiry table
 
-[`/v2/gex/max-pain?symbol=BTCUSDT&expiry=all`](/api/v2/gex/max-pain) —
+[`/v2/gex/max-pain?symbol=BTCUSDT&expiry=all`](/api/v2/gex/max-pain) -
 the per-expiry max-pain table for every active expiration. Sorted by
 DTE.
 
@@ -60,11 +60,11 @@ DTE.
 }
 ```
 
-Cached for 30s — repeated calls are sub-millisecond.
+Cached for 30s - repeated calls are sub-millisecond.
 
 ### Specific expiry with the full pain curve
 
-[`/v2/gex/max-pain?symbol=BTCUSDT&expiry=30MAY26`](/api/v2/gex/max-pain) —
+[`/v2/gex/max-pain?symbol=BTCUSDT&expiry=30MAY26`](/api/v2/gex/max-pain) -
 returns the max-pain strike for that expiry **plus** the full
 `pain_curve` (one entry per strike), so you can plot the pain function
 as a U-shape and visually see how steep the magnet is.
@@ -86,17 +86,17 @@ as a U-shape and visually see how steep the magnet is.
 ```
 
 A flat curve (similar pain values across many strikes) means weak
-magnet — dealers have no strong preference. A sharp U (one strike with
-much lower pain than its neighbours) means a strong magnet — that's the
+magnet - dealers have no strong preference. A sharp U (one strike with
+much lower pain than its neighbours) means a strong magnet - that's the
 strike to watch into expiry.
 
 ## Where else max-pain shows up in v2
 
-- **`/v2/options/opex`** — every expiration in the horizon comes with
+- **`/v2/options/opex`** - every expiration in the horizon comes with
   its `max_pain` block under `gamma`.
-- **`/v2/options/expiry-summary`** — every row carries `max_pain` for
+- **`/v2/options/expiry-summary`** - every row carries `max_pain` for
   that expiry.
-- **`/v2/gex/levels?include=max_pain`** — the 0DTE max-pain alongside
+- **`/v2/gex/levels?include=max_pain`** - the 0DTE max-pain alongside
   the gamma walls.
 
 All three share the same per-expiry max-pain cache (30s TTL) so the
@@ -119,7 +119,7 @@ is bullish/bearish positioning. The market is signalling where it
 expects to be at the next anchor.
 
 **Avoid**: treating max-pain as a forecast on illiquid expiries.
-Distant or thinly-traded expirations have noisy max-pain — the curve
+Distant or thinly-traded expirations have noisy max-pain - the curve
 is flat, no real magnet exists.
 
 ## Related concepts
