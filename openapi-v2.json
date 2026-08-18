@@ -791,10 +791,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter"
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "include",
@@ -969,10 +969,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter"
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "expiry",
@@ -1239,10 +1239,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter"
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "dte_min",
@@ -1457,10 +1457,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter"
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "dte_min",
@@ -3727,10 +3727,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter"
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "dte_max",
@@ -4635,10 +4635,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter"
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "X-API-Key",
@@ -5131,10 +5131,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter"
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "moneyness_min",
@@ -5664,10 +5664,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter"
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "dte_min",
@@ -7419,10 +7419,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter"
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "include",

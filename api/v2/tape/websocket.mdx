@@ -44,6 +44,11 @@ to the worker's std snapshot and says so: `positioning: "std"` plus a
 `fallback_reason`. Always read `positioning` before overlaying the numbers
 on anything else. See [Positioning](/concepts/positioning).
 
+On subscribing to `gex.levels.*` the server sends the **current levels
+immediately**, flagged `"snapshot": true`, then pushes again only when the
+levels move. Without that first frame you could not tell an idle book from a
+subscription that never took.
+
 Max **48 channels per connection**.
 
 ## Protocol

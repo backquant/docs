@@ -36,8 +36,8 @@ into one canonical surface. Filterable venue IDs on public v2 are:
 | [Tape WebSocket](/api/v2/tape/websocket) | ✅ `tape.{coin}.{venue}` or `.agg` | Subscribe `tape.{coin}.agg` for the union |
 | [Flow by strike](/api/v2/tape/flow-by-strike) | ✅ `?venues=...` | Cumulative aggressor map on open contracts |
 | [GEX](/api/v2/gex/levels) / strike profiles / heatmaps | ✅ `?exchanges=...` where supported | Multi-venue OI roll-up; Deribit-rooted pricing |
-| [IV](/api/v2/options/iv/surface) | Deribit-rooted | Single surface |
-| [Open interest](/api/v2/options/oi/by-expiry) | Multi-venue blended | **Coin-unit OI** summed across venues |
+| [IV](/api/v2/options/iv/surface) | Per-venue quotes where a venue quotes the contract | Blended OI-weighted across quoting venues |
+| [Open interest](/api/v2/options/oi/by-expiry) | Multi-venue, with an explicit `by_venue` split | **Coin-unit OI** summed across venues |
 
 When a metric is “multi-venue blended,” OI from every venue that lists
 the coin is summed on normalized instrument names. Bid/ask depth for
@@ -46,6 +46,70 @@ IV remains Deribit-primary.
 Strike-profile payloads advertise `available_exchanges` with the full
 chain set (including Thalex / Derive / both Delta IDs) even on thin
 books, so UI filters stay stable.
+
+## What `?exchanges=` actually does
+
+The filter **re-aggregates the surface from the per-venue breakdown**. It is
+not a scaling of the blended number, so `?exchanges=deribit,bybit` returns
+exactly what those two books contribute, and the parts add back up to the
+unfiltered response.
+
+Two quantities behave differently, and the distinction matters when you
+compare a filtered result against the total:
+
+- **Exposures** (GEX, DEX, charm, vega) are `greek x open interest`, so they
+  are linear in OI. A venue's share of the open interest is exactly its share
+  of the exposure, and the per-venue parts sum back to the total.
+- **Implied volatility does not split.** IV is a quote, not a quantity. A
+  venue-filtered IV surface or expected move reports **that venue's own mark
+  IV**, never a share of the cross-venue blend. Unfiltered, the blend is
+  OI-weighted across the venues quoting that contract. A venue that does not
+  quote a contract is left out of that contract's IV rather than counted as
+  zero.
+
+Unknown venue names are ignored, and a filter naming only unknown venues
+returns every venue instead of an empty response.
+
+<Note>
+A venue returning **zero** is not the same as a venue being **off**. Zero
+means it lists no contracts on that surface right now; off means the feed is
+disabled. `GET /v2/status` reports `chain` and `tape` per venue as
+`on` / `off` / `unknown` so you can tell which you are looking at.
+</Note>
+
+## Per-venue open interest: `by_venue`
+
+Open-interest surfaces carry an explicit split so you never have to infer one
+from repeated filtered calls:
+
+```json
+"by_venue": {
+  "deribit": { "call_oi": 100.0, "put_oi": 70.0, "total_oi": 170.0,
+               "notional_oi_usd": 10914460.0 },
+  "bybit":   { "call_oi": 20.0,  "put_oi": 15.0, "total_oi": 35.0,
+               "notional_oi_usd": 2247330.0 }
+}
+```
+
+- Open interest is **coin-native** on every venue, so the cross-venue sum is
+  meaningful without conversion. `notional_oi_usd` is `total_oi x spot` using
+  the same spot the response reports.
+- **All eight venues are always present**, zero-filled, so your parsing never
+  has to handle a missing key.
+- Delta India and Delta Global are **independent books** and are summed, never
+  deduplicated.
+- `by_venue_unattributed` is `null` when the split reconciles with the
+  response totals, which is the normal case. A non-null value means some open
+  interest could not be attributed to a venue, and is shown rather than
+  quietly dropped.
+
+Available on [OI by expiry](/api/v2/options/oi/by-expiry),
+[expiry summary](/api/v2/options/expiry-summary) and
+[GEX strike profile](/api/v2/gex/strike-profile). On the strike profile the
+split covers the strikes actually returned, so it tracks any strike or
+moneyness filter you applied. Requesting a single `expiry=` token returns
+whole-expiry venue OI with a `by_venue_note` saying so, because no finer
+per-(strike, expiry) split is published.
 
 ## Delta Exchange units
 
