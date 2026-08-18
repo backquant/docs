@@ -1,0 +1,122 @@
+---
+title: "Flow by strike"
+description: "Cumulative multi-venue aggressor sold/bought calls and puts by strike on still-open contracts - the public flow map for dealer positioning and TRACE-style rebuilds."
+---
+
+`GET /v2/tape/flow-by-strike`
+
+Real taker flow on **still-open** contracts (`expiry_date >= today UTC`),
+aggregated by strike into four quadrants: call buy, call sell, put buy,
+put sell. This is **cumulative inventory of aggressor prints behind live
+OI**, not a rolling lookback window.
+
+Use it to rebuild TRACE-style dealer maps and strike-level sold−bought
+positioning without pulling the full trade history.
+
+## Who it's for
+
+| You need… | Use |
+|---|---|
+| Per-strike sold vs bought (calls and puts) | **This endpoint** |
+| Time-bucket buy/sell imbalance | [`/v2/tape/imbalance`](/api/v2/tape/imbalance) |
+| Ranked net premium by strike over a lookback | [`/v2/tape/strike-heat`](/api/v2/tape/strike-heat) |
+| Raw trades | [`/v2/tape`](/api/v2/tape/tape) / [`/v2/tape/recent`](/api/v2/tape/recent) |
+
+## Coins
+
+`BTCUSDT` and `ETHUSDT` only. `SOLUSDT` / `HYPEUSDT` return `404` - they
+do not yet have a multi-venue aggressor tape of this shape.
+
+## Query parameters
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `symbol` | string | required | `BTCUSDT` or `ETHUSDT` |
+| `expiry` | `YYYY-MM-DD` | all open | Restrict to one live expiry |
+| `expiries` | CSV of `YYYY-MM-DD` | - | Combine several live expiries; **takes precedence** over `expiry` |
+| `venues` | CSV | all | Filter: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta` |
+| `min_premium_usd` | number ≥ 0 | `0` | Drop prints below this USD premium (whale floor) |
+
+Omit both `expiry` and `expiries` to include every still-open contract.
+
+## Response shape
+
+```json
+{
+  "success": true,
+  "data": {
+    "coin": "BTC",
+    "expiry": null,
+    "expiries": null,
+    "available_expiries": ["2026-08-18", "2026-08-19", "2026-08-21"],
+    "available_venues": [
+      "binance", "bybit", "delta", "delta_india",
+      "deribit", "derive", "okx", "thalex"
+    ],
+    "spot_price": 63426.5,
+    "strikes": [
+      {
+        "strike": 63000,
+        "call_buy":  { "premium": 120450.2, "size": 12.4, "trades": 38 },
+        "call_sell": { "premium": 98010.0,  "size": 9.1,  "trades": 22 },
+        "put_buy":   { "premium": 210300.5, "size": 18.2, "trades": 55 },
+        "put_sell":  { "premium": 175200.0, "size": 15.0, "trades": 41 }
+      }
+    ],
+    "totals": {
+      "call_buy":  ...,
+      "call_sell": ...,
+      "put_buy":   ...,
+      "put_sell":  ...
+    },
+    "block_trades": 17,
+    "ts": "2026-08-18T02:15:00+00:00"
+  },
+  "meta": { "...": "..." }
+}
+```
+
+### Quadrant fields
+
+Each of `call_buy` / `call_sell` / `put_buy` / `put_sell`:
+
+| Field | Unit | Meaning |
+|---|---|---|
+| `premium` | USD | Sum of `premium_usd` on matching prints |
+| `size` | **Coin-equivalent** | Sum of tape `amount` (not raw venue contracts) |
+| `trades` | count | Number of prints |
+
+Dealer-style net size on a call strike is typically
+`call_sell.size − call_buy.size` (passive/maker inventory from aggressor
+tape). See [Positioning](/concepts/positioning).
+
+## Important properties
+
+- **Cumulative on open contracts** - not “last N hours.” Expired prints
+  drop when `expiry_date` rolls past UTC today.
+- **Native taker side** - every venue stamps `direction` at ingest
+  (Deribit, Bybit, OKX, Binance, Derive, Thalex, Delta India, Delta Global).
+  This is not quote-rule inference.
+- **Cached ~90s** - single-flight compute; safe to poll for dashboards.
+
+## Example
+
+```bash
+curl "https://api.backquant.com/v2/tape/flow-by-strike?symbol=BTCUSDT&expiry=2026-08-18" \
+  -H "X-API-Key: $BQ_API_KEY"
+```
+
+```bash
+# Whale floor + venue filter
+curl "https://api.backquant.com/v2/tape/flow-by-strike?symbol=BTCUSDT&min_premium_usd=25000&venues=deribit,bybit,delta_india" \
+  -H "X-API-Key: $BQ_API_KEY"
+```
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Positioning (flow vs std)" href="/concepts/positioning" icon="scale-balanced" />
+  <Card title="Venue coverage" href="/concepts/venues" icon="building" />
+  <Card title="Tape overview" href="/api/v2/tape/overview" icon="table-list" />
+  <Card title="Greek TRACE" href="/api/v2/options/greeks/trace" icon="chart-area" />
+</CardGroup>
