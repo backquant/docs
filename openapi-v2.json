@@ -757,7 +757,7 @@
           "GEX"
         ],
         "summary": "Composable GEX key levels",
-        "description": "All-expiry HVL/walls plus 0DTE-specific levels in a single call. Use `?include=` to opt in to optional sections - `spot,candles,zones,max_pain,expected_move,ranked`. Filter by exchange with `?exchanges=deribit,bybit,okx,binance`.\n\n**Positioning (DOCS REQUIRED - default is flow):** `positioning=flow` (default) rebuilds HVL/walls/ranked from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the legacy Redis textbook-signed levels. On flow fallback, `meta.extra.positioning_fallback_reason` explains why. Secondary walls (call_wall_2/3) are only present on the std cache path.\n\nThe WebSocket channel `gex.levels.{SYMBOL}` publishes the SAME flow-signed levels from the same builder - REST and WS agree.",
+        "description": "All-expiry HVL/walls plus 0DTE-specific levels in a single call. Use `?include=` to opt in to optional sections - `spot,candles,zones,max_pain,expected_move,ranked`. Filter by exchange with `?exchanges=deribit,bybit,okx,binance`.\n\n**Positioning (default: flow).** `positioning=flow` (default) rebuilds HVL/walls/ranked from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the legacy Redis textbook-signed levels. On flow fallback, `meta.extra.positioning_fallback_reason` explains why. Secondary walls (call_wall_2/3) are only present on the std cache path.\n\nThe WebSocket channel `gex.levels.{SYMBOL}` publishes the SAME flow-signed levels from the same builder - REST and WS agree.",
         "operationId": "get_levels_gex_levels_get",
         "parameters": [
           {
@@ -820,11 +820,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -935,7 +935,7 @@
           "GEX"
         ],
         "summary": "GEX by strike",
-        "description": "Gamma exposure aggregated by strike. `?expiry=all` (default) covers every expiry, `?expiry=0dte` filters to today's expiry only, and an explicit expiry token (e.g. `28MAR25`) returns just that expiration.\n\n**Positioning (DOCS REQUIRED - default is flow):** `positioning=flow` rebuilds the profile from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the Redis textbook-signed cache. See `meta.extra.positioning`.\n\nStrike-axis filters (intersected when more than one is set):\n* `strike_min` / `strike_max` - absolute bounds.\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps the ATM ±10% slab.\n* `spot_window_pct` - symmetric window in percent (e.g. `5` for   ±5% of spot). Combined by intersection with the others.\n\nWhen any strike filter narrows the set, `ranked_top_10` is rebuilt from the surviving strikes - the cached pre-filter ranking is not reused.\n\n**Per-venue open interest (`by_venue`):** `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}` rolled up over the strikes actually returned. OI is coin-native on every venue and attribution is positioning-independent, so the block is identical under `flow` and `std`. All eight venues are always present (zero-filled); use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` is non-null only when some OI could not be attributed to a venue. `expiry=<token>` returns `by_venue: null` with `by_venue_note` - a single-expiry venue split is not published.",
+        "description": "Gamma exposure aggregated by strike. `?expiry=all` (default) covers every expiry, `?expiry=0dte` filters to today's expiry only, and an explicit expiry token (e.g. `28MAR25`) returns just that expiration.\n\n**Positioning (default: flow).** `positioning=flow` rebuilds the profile from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the Redis textbook-signed cache. See `meta.extra.positioning`.\n\nStrike-axis filters (intersected when more than one is set):\n* `strike_min` / `strike_max` - absolute bounds.\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps the ATM ±10% slab.\n* `spot_window_pct` - symmetric window in percent (e.g. `5` for   ±5% of spot). Combined by intersection with the others.\n\nWhen any strike filter narrows the set, `ranked_top_10` is rebuilt from the surviving strikes - the cached pre-filter ranking is not reused.\n\n**Per-venue open interest (`by_venue`):** `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}` rolled up over the strikes actually returned. OI is coin-native on every venue and attribution is positioning-independent, so the block is identical under `flow` and `std`. All eight venues are always present (zero-filled); use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` is non-null only when some OI could not be attributed to a venue. `expiry=<token>` returns `by_venue: null` with `by_venue_note` - a single-expiry venue split is not published.",
         "operationId": "get_strike_profile_gex_strike_profile_get",
         "parameters": [
           {
@@ -1090,11 +1090,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -1205,7 +1205,7 @@
           "GEX"
         ],
         "summary": "GEX by expiry",
-        "description": "Net / call / put gamma per expiration date with days-to-expiry. Useful for spotting where dealer exposure rolls off.\n\n**Positioning (DOCS REQUIRED - default flow):** multi-venue chain + aggressor tape aggregation. See `meta.extra.aggregation`.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` - bound the DTE window.\n* `weekly_only=true` - exclude monthly + quarterly anchors   (defined as the last Friday of the month). Tokens we cannot   parse are kept rather than silently dropped.",
+        "description": "Net / call / put gamma per expiration date with days-to-expiry. Useful for spotting where dealer exposure rolls off.\n\n**Positioning (default: flow).** Multi-venue chain + aggressor tape aggregation. See `meta.extra.aggregation`.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` - bound the DTE window.\n* `weekly_only=true` - exclude monthly + quarterly anchors   (defined as the last Friday of the month). Tokens we cannot   parse are kept rather than silently dropped.",
         "operationId": "get_expiry_profile_gex_expiry_profile_get",
         "parameters": [
           {
@@ -1302,11 +1302,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -1423,7 +1423,7 @@
           "GEX"
         ],
         "summary": "2D strike × expiry GEX matrix",
-        "description": "Rows are strikes, columns are expiries (sorted ascending DTE).\n\n**Positioning (DOCS REQUIRED - default flow):** rebuilt from the multi-venue chain + aggressor tape when `positioning=flow`.\n\nFilters apply BEFORE downsampling so the cap parameters operate on the already-narrowed grid:\n* `dte_min` / `dte_max` - drop expiries outside the DTE window.\n* `moneyness_min` / `moneyness_max` - drop strikes outside the   moneyness window (e.g. `0.8..1.2` keeps ATM ±20%).\n* `max_strikes` - cap on strikes returned (kept closest to spot).\n* `max_expiries` - cap on expiries (kept nearest by DTE).",
+        "description": "Rows are strikes, columns are expiries (sorted ascending DTE).\n\n**Positioning (default: flow).** Rebuilt from the multi-venue chain + aggressor tape when `positioning=flow`.\n\nFilters apply BEFORE downsampling so the cap parameters operate on the already-narrowed grid:\n* `dte_min` / `dte_max` - drop expiries outside the DTE window.\n* `moneyness_min` / `moneyness_max` - drop strikes outside the   moneyness window (e.g. `0.8..1.2` keeps ATM ±20%).\n* `max_strikes` - cap on strikes returned (kept closest to spot).\n* `max_expiries` - cap on expiries (kept nearest by DTE).",
         "operationId": "get_strike_expiry_heatmap_gex_strike_expiry_heatmap_get",
         "parameters": [
           {
@@ -1576,11 +1576,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -1697,7 +1697,7 @@
           "GEX"
         ],
         "summary": "Strike × time greek heatmap",
-        "description": "Time-series of greek exposures by strike. Pick the greek (`gex|dex|vex|charm|vanna`) and bound by DTE / OI / IV.\n\n**Positioning (DOCS REQUIRED - default flow):** each historical snapshot is re-signed with the current multi-venue aggressor tape (BTC/ETH) when `positioning=flow`. `std` uses textbook OI signs (or the legacy redis cache when unfiltered + std).\n\nUnfiltered std+gex still serves the pre-computed cache (cheap); flow and filters rebuild from the last ~48 raw snapshots.",
+        "description": "Time-series of greek exposures by strike. Pick the greek (`gex|dex|vex|charm|vanna`) and bound by DTE / OI / IV.\n\n**Positioning (default: flow).** Each historical snapshot is re-signed with the current multi-venue aggressor tape (BTC/ETH) when `positioning=flow`. `std` uses textbook OI signs (or the legacy redis cache when unfiltered + std).\n\nUnfiltered std+gex still serves the pre-computed cache (cheap); flow and filters rebuild from the last ~48 raw snapshots.",
         "operationId": "get_time_heatmap_gex_time_heatmap_get",
         "parameters": [
           {
@@ -1812,11 +1812,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -1933,7 +1933,7 @@
           "GEX"
         ],
         "summary": "Total GEX history (cursor-paginated)",
-        "description": "Time-series of total GEX (and net-local-5pct, call/put walls when available). Use `?limit` (≤1000) to cap the page size and `?before=<ISO ts>` to walk backwards into older history.\n\n**Positioning:** historical series were stored under the **std** (textbook OI) model. Live surfaces default to flow; this endpoint remains std until dual-written FLOW history is available. DOCS REQUIRED: document residual std for history.",
+        "description": "Time-series of total GEX (and net-local-5pct, call/put walls when available). Use `?limit` (≤1000) to cap the page size and `?before=<ISO ts>` to walk backwards into older history.\n\n**Positioning:** historical series were stored under the **std** (textbook OI) model. Live surfaces default to flow; this endpoint remains std until dual-written FLOW history is available. These stored series are std-signed; live surfaces default to flow.",
         "operationId": "get_history_gex_history_get",
         "parameters": [
           {
@@ -2100,8 +2100,8 @@
         "tags": [
           "GEX"
         ],
-        "summary": "Long-window GEX levels from Postgres",
-        "description": "Persistent record of HVL / call wall / put wall / net GEX, suitable for backtests or regime analysis. Window is bounded to 30 days (720 hours) so a query never blows out the read pool.\n\n**Positioning:** stored under **std** (textbook OI). Live GEX defaults to flow; this endpoint remains std historical. DOCS REQUIRED: document residual std.",
+        "summary": "Long-window GEX levels from Postgres (per symbol)",
+        "description": "Persistent record of HVL / call wall / put wall / net GEX, suitable for backtests or regime analysis. Window is bounded to 30 days (720 hours) so a query never blows out the read pool.\n\n**Per symbol.** Each symbol has its own stored series. BTC has the deepest history; the other symbols began accruing when multi-symbol storage shipped (migration 065) and can be shorter or empty for an older window. An empty response means no stored rows for that symbol and window, never another symbol's data.\n\n**Positioning:** stored under **std** (textbook OI). Live GEX defaults to flow; this endpoint remains std historical, so do not overlay it directly on live flow-signed levels.",
         "operationId": "get_stress_history_gex_stress_history_get",
         "parameters": [
           {
@@ -2394,7 +2394,7 @@
           "Flow"
         ],
         "summary": "Dealer hedge flow time series (gamma + vanna + charm)",
-        "description": "Estimated dealer hedging flow across successive chain snapshots. Components: `gamma_flow` (ΔS% × net GEX), `charm_flow` (−Δt × charm), `vanna_flow` (reserved), plus `total_flow` and `cumulative_flow`.\n\nPositive ≈ dealers buying the underlying to re-hedge; negative ≈ selling. Default `positioning=flow` (multi-venue sold−bought). DOCS REQUIRED for formula + units.",
+        "description": "Estimated dealer hedging flow across successive chain snapshots. Components: `gamma_flow` (ΔS% × net GEX), `charm_flow` (−Δt × charm), `vanna_flow` (reserved), plus `total_flow` and `cumulative_flow`.\n\nPositive ≈ dealers buying the underlying to re-hedge; negative ≈ selling. Default `positioning=flow` (multi-venue sold−bought). See `meta.extra.formula` for the exact calculation and units.",
         "operationId": "get_dealer_flow_gex_dealer_flow_get",
         "parameters": [
           {
@@ -2421,11 +2421,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -2570,11 +2570,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -2692,7 +2692,7 @@
           "Flow"
         ],
         "summary": "Customer delta flow (HIRO-style) from options tape",
-        "description": "Time-bucketed **customer** signed Black-Scholes delta notional from the multi-venue options tape (primary BS inputs from Deribit-quality prints). This is the HIRO-style *delta* line: buy-side vs sell-side aggressor delta $, plus cumulative net.\n\nDistinct from /dealer-flow (which is hedge pressure from GEX×moves). DOCS REQUIRED: document customer vs dealer distinction.",
+        "description": "Time-bucketed **customer** signed Black-Scholes delta notional from the multi-venue options tape (primary BS inputs from Deribit-quality prints). This is the HIRO-style *delta* line: buy-side vs sell-side aggressor delta $, plus cumulative net.\n\nDistinct from /dealer-flow (which is hedge pressure from GEX×moves). Customer flow, not dealer flow: see the note in `meta.extra`.",
         "operationId": "get_delta_flow_gex_delta_flow_get",
         "parameters": [
           {
@@ -2895,11 +2895,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -5079,7 +5079,7 @@
           "Options"
         ],
         "summary": "Greek exposure profile by strike",
-        "description": "Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`.\n\n**Positioning (DOCS REQUIRED - default flow):** weights by multi-venue aggressor sold−bought (BTC/ETH) or textbook ±OI.\n\nFilters:\n* `exchanges` - comma-separated venue filter (std redis path).\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps ATM ±10% exposure only.\n* `dte_max` - re-aggregates from the raw chain to limit   contributing contracts to `DTE ≤ dte_max`.\n* `positioning` - `flow` (default) or `std`.",
+        "description": "Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`.\n\n**Positioning (default: flow).** Weights by multi-venue aggressor sold−bought (BTC/ETH) or textbook ±OI.\n\nFilters:\n* `exchanges` - comma-separated venue filter (std redis path).\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps ATM ±10% exposure only.\n* `dte_max` - re-aggregates from the raw chain to limit   contributing contracts to `DTE ≤ dte_max`.\n* `positioning` - `flow` (default) or `std`.",
         "operationId": "get_greek_profile_options_greeks__greek__get",
         "parameters": [
           {
@@ -5202,11 +5202,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -5630,7 +5630,7 @@
           "Options"
         ],
         "summary": "Call/put OI per expiry",
-        "description": "Open interest aggregated by expiration with calls and puts split.\n\n**Per-venue split (`by_venue`)** - one entry per expiry, parallel to `expiries`: `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}`. OI is coin-native on every venue, so a cross-venue sum needs no conversion; `notional_oi_usd = total_oi x spot`. All eight venues are always present (zero-filled) - use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` (also parallel to `expiries`) is non-null only when some open interest could not be attributed to a venue. With `?exchanges=` set, both blocks cover only the requested venues, matching the filtered totals.\n\n**Deprecated:** `exchange_breakdown` (the raw cache shape) is superseded by `by_venue` and will be removed in a future release. Note it was previously mis-attributed - every venue's open interest was reported under `deribit`; both blocks now carry the real split.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` - bound the DTE window.\n* `weekly_only=true` - exclude monthly + quarterly anchors   (last-Friday-of-month). Useful when monthly OI dominates the   picture and you want to see the weekly distribution alone.",
+        "description": "Open interest aggregated by expiration with calls and puts split.\n\n**Per-venue split (`by_venue`)** - one entry per expiry, parallel to `expiries`: `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}`. OI is coin-native on every venue, so a cross-venue sum needs no conversion; `notional_oi_usd = total_oi x spot`. All eight venues are always present (zero-filled) - use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` (also parallel to `expiries`) is non-null only when some open interest could not be attributed to a venue. With `?exchanges=` set, both blocks cover only the requested venues, matching the filtered totals.\n\n`total_call_oi` / `total_put_oi` and the OI CDFs always describe the rows actually returned: apply a DTE filter and they are recomputed over the surviving expiries rather than left reporting the whole chain.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` - bound the DTE window.\n* `weekly_only=true` - exclude monthly + quarterly anchors   (last-Friday-of-month). Useful when monthly OI dominates the   picture and you want to see the weekly distribution alone.",
         "operationId": "get_oi_by_expiry_options_oi_by_expiry_get",
         "parameters": [
           {
@@ -6620,7 +6620,7 @@
           "Options"
         ],
         "summary": "Forward (time × price) greek projection - gamma / charm / vanna",
-        "description": "Black-Scholes forward projection of dealer **gamma**, **charm**, or **vanna** across a (time × price) grid, holding today's chain constant and decaying τ toward each contract's expiry.\n\nReturns a 2D `field` of cell values, the `time_axis_ms` and `price_axis` it's keyed on, and the contracts it consumed. Intended for desk-grade dealer-positioning visualisations (the BackQuant Pro Terminal's TRACE panel runs the same math client-side).\n\n**Positioning (DOCS REQUIRED - default is flow):**\n* `positioning=flow` (**default**) - dealer qty = aggressor **sold − bought** per side (BTC/ETH tape). Falls back to `std` when tape is empty or the symbol has no tape (SOL/HYPE).\n* `positioning=std` - textbook call:+OI / put:−OI.\nResponse `meta.extra.positioning` is the model that actually ran; `positioning_fallback_reason` is set on fallback.\n\n**Units:**\n* `gamma` → `$ per 1% spot move` (γ × S² × qty × 0.01).\n* `charm` → 1/year (∂Δ/∂τ × qty).\n* `vanna` → per IV unit (∂Δ/∂σ × qty).\n* `delta_change` → dealer Δ at (price,time) minus Δ at (spot,now).\n\nAlso see `/v2/options/greeks/trace/{greek}/summary` for pin/accel reads.\n\n**Performance:** the field is computed on cache miss in ~50-100 ms for typical grids. Cached for 30 s per `(symbol, full-param-hash)` so identical repeated calls are essentially free.\n\n**What-if vol shifts:** `vol_shift_pct` multiplies every contract's σ by `1 + vol_shift_pct/100` before evaluation. Lets you build vol-up / vol-down surfaces without re-fetching.",
+        "description": "Black-Scholes forward projection of dealer **gamma**, **charm**, or **vanna** across a (time × price) grid, holding today's chain constant and decaying τ toward each contract's expiry.\n\nReturns a 2D `field` of cell values, the `time_axis_ms` and `price_axis` it's keyed on, and the contracts it consumed. Intended for desk-grade dealer-positioning visualisations (the BackQuant Pro Terminal's TRACE panel runs the same math client-side).\n\n**Positioning (default: flow).**\n* `positioning=flow` (**default**) - dealer qty = aggressor **sold − bought** per side (BTC/ETH tape). Falls back to `std` when tape is empty or the symbol has no tape (SOL/HYPE).\n* `positioning=std` - textbook call:+OI / put:−OI.\nResponse `meta.extra.positioning` is the model that actually ran; `positioning_fallback_reason` is set on fallback.\n\n**Units:**\n* `gamma` → `$ per 1% spot move` (γ × S² × qty × 0.01).\n* `charm` → 1/year (∂Δ/∂τ × qty).\n* `vanna` → per IV unit (∂Δ/∂σ × qty).\n* `delta_change` → dealer Δ at (price,time) minus Δ at (spot,now).\n\nAlso see `/v2/options/greeks/trace/{greek}/summary` for pin/accel reads.\n\n**Performance:** the field is computed on cache miss in ~50-100 ms for typical grids. Cached for 30 s per `(symbol, full-param-hash)` so identical repeated calls are essentially free.\n\n**What-if vol shifts:** `vol_shift_pct` multiplies every contract's σ by `1 + vol_shift_pct/100` before evaluation. Lets you build vol-up / vol-down surfaces without re-fetching.",
         "operationId": "get_greek_trace_options_greeks_trace__greek__get",
         "parameters": [
           {
@@ -6759,11 +6759,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -6871,7 +6871,7 @@
           "Options"
         ],
         "summary": "TRACE field summary - pin zones, accel pockets, lean",
-        "description": "Same projection as `/greeks/trace/{greek}` but returns an interpretability summary instead of the full 2D field: pin zones (high |field|), near-spot acceleration pockets, late-vs-early lean along spot, and zero-contour samples at the horizon.\n\nSupports `gamma`, `charm`, `vanna`, `delta_change`. Default `positioning=flow`. DOCS REQUIRED.",
+        "description": "Same projection as `/greeks/trace/{greek}` but returns an interpretability summary instead of the full 2D field: pin zones (high |field|), near-spot acceleration pockets, late-vs-early lean along spot, and zero-contour samples at the horizon.\n\nSupports `gamma`, `charm`, `vanna`, `delta_change`. Default `positioning=flow`.",
         "operationId": "get_greek_trace_summary_options_greeks_trace__greek__summary_get",
         "parameters": [
           {
@@ -6994,11 +6994,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
@@ -7387,7 +7387,7 @@
           "Multi"
         ],
         "summary": "GEX levels across multiple symbols (bundled)",
-        "description": "Multi-symbol GEX levels in one round-trip. Returns a `results` map keyed by symbol with the same shape per-entry as /v2/gex/levels. Symbols with no current data return null in `results` and appear in `missing` rather than failing the whole request. Up to 8 symbols per request.\n\n**Positioning (DOCS REQUIRED - default flow):** each symbol is rebuilt from the multi-venue chain + aggressor tape when `positioning=flow` (BTC/ETH). SOL/HYPE fall back to std. See per-symbol `positioning` and top-level `meta.extra.aggregation`.\n\nIncludes: `ranked` (top-10 strikes by |GEX|), `max_pain` (0DTE only), `expected_move` (1σ / 2σ implied range), `zones` (gamma flip zones).",
+        "description": "Multi-symbol GEX levels in one round-trip. Returns a `results` map keyed by symbol with the same shape per-entry as /v2/gex/levels. Symbols with no current data return null in `results` and appear in `missing` rather than failing the whole request. Up to 8 symbols per request.\n\n**Positioning (default: flow).** Each symbol is rebuilt from the multi-venue chain + aggressor tape when `positioning=flow` (BTC/ETH). SOL/HYPE fall back to std. See per-symbol `positioning` and top-level `meta.extra.aggregation`.\n\nIncludes: `ranked` (top-10 strikes by |GEX|), `max_pain` (0DTE only), `expected_move` (1σ / 2σ implied range), `zones` (gamma flip zones).",
         "operationId": "get_multi_gex_levels_multi_gex_levels_get",
         "parameters": [
           {
@@ -7448,11 +7448,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change.",
+              "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow.",
               "default": "flow",
               "title": "Positioning"
             },
-            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. DOCS REQUIRED: default is flow - document any change."
+            "description": "Dealer positioning model. **`flow`** (default) = measured from the multi-venue aggressor tape (sold − bought across Deribit/Bybit/OKX/Binance) for BTC/ETH; falls back to `std` when tape is unavailable. **`std`** = textbook call:+OI / put:−OI. The default is flow."
           },
           {
             "name": "X-API-Key",
