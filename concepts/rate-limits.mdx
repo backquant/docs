@@ -21,10 +21,15 @@ They do **not** draw down the monthly REST quota.
 
 | Level | Monthly requests | Burst / min | API keys | WS connections |
 | --- | ---: | ---: | ---: | ---: |
-| **Starter** | 10,000 | 10 | 1 | 1 |
+| **Starter** | 10,000 | 30 | 1 | 1 |
 | **Standard** | 250,000 | 60 | 2 | 2 |
 | **Pro** | 1,000,000 (fair use) | 120 | 5 | 5 |
 | **Enterprise** | Uncapped monthly | 600 | custom | up to 25 |
+
+The starter burst is 30/min rather than a rate matched to its monthly
+allowance: a single question in an AI client fires several tool calls in
+quick succession, and a tight burst cap would fail mid-answer. The monthly
+allowance is the number that defines the plan.
 
 Plan mapping notes (2.5.0):
 

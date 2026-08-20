@@ -1,6 +1,7 @@
 ---
 title: "Max pain"
 openapi: "GET /gex/max-pain"
+description: "Max-pain strike (per-expiry). The strike at which option writers profit most at expiry."
 ---
 
 The strike where option writers profit most at expiry. Use `?expiry=0dte` for the cheapest path, `?expiry=all` for a per-expiry table, or pass a specific expiry token to also receive the full pain curve.

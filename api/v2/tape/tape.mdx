@@ -1,6 +1,7 @@
 ---
 title: "Tape - full filterable history"
 openapi: "GET /tape"
+description: "Multi-venue options tape - paginated trade history. Returns options trades from Deribit + Bybit + OKX + Binance (BTC + ETH today)."
 ---
 
 Multi-venue options trade tape with cursor pagination. All filters compose with AND. Returns up to 5000 trades per page; pass the response's `next_cursor` back as `?before=` to walk older history.

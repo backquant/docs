@@ -1,6 +1,7 @@
 ---
 title: "Tape - aggregate stats"
 openapi: "GET /tape/stats"
+description: "Tape statistics for a window. Aggregate stats over a time window - useful for Methix-style scorers that don't need raw trades, just the summary numbers."
 ---
 
 Aggregate roll-up over a configurable window (up to 7 days). Returns overall + per-venue totals: trade count, total premium in USD, contract volume, call/put split, and buy-side vs sell-side premium.

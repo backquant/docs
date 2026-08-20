@@ -1,6 +1,7 @@
 ---
 title: "Options chain"
 openapi: "GET /options/chain"
+description: "Filtered options chain. Per-contract data (greeks, OI, IV, bid/ask) plus aggregate stats."
 ---
 
 Filtered chain with two-layer projection (`?fields=` top-level, `?include=` per-contract) and a payload cap (`?max_contracts`). Cached 30s per filter combination.

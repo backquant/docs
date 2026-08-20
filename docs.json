@@ -66,7 +66,7 @@
             ]
           },
           {
-            "group": "API — Discovery & Meta",
+            "group": "API: Discovery & Meta",
             "pages": [
               "api/v2/health",
               "api/v2/discovery/symbols",
@@ -78,7 +78,7 @@
             ]
           },
           {
-            "group": "API — GEX",
+            "group": "API: GEX",
             "pages": [
               "api/v2/gex/levels",
               "api/v2/gex/strike-profile",
@@ -95,7 +95,7 @@
             ]
           },
           {
-            "group": "API — Options chain & OPEX",
+            "group": "API: Options chain & OPEX",
             "pages": [
               "api/v2/options/chain",
               "api/v2/options/expiry-summary",
@@ -103,7 +103,7 @@
             ]
           },
           {
-            "group": "API — IV analytics",
+            "group": "API: IV analytics",
             "pages": [
               "api/v2/options/iv/surface",
               "api/v2/options/iv/term-structure",
@@ -116,14 +116,14 @@
             ]
           },
           {
-            "group": "API — Probability density",
+            "group": "API: Probability density",
             "pages": [
               "api/v2/options/probability/density",
               "api/v2/options/probability/surface"
             ]
           },
           {
-            "group": "API — Greeks",
+            "group": "API: Greeks",
             "pages": [
               "api/v2/options/greeks/by-greek",
               "api/v2/options/greeks/surfaces",
@@ -133,7 +133,7 @@
             ]
           },
           {
-            "group": "API — Open interest & flow",
+            "group": "API: Open interest & flow",
             "pages": [
               "api/v2/options/oi/by-expiry",
               "api/v2/options/oi/history",
@@ -142,7 +142,7 @@
             ]
           },
           {
-            "group": "API — Futures & liquidation",
+            "group": "API: Futures & liquidation",
             "pages": [
               "api/v2/options/futures/term-structure",
               "api/v2/liquidation/heatmap",
@@ -150,13 +150,13 @@
             ]
           },
           {
-            "group": "API — Multi-symbol",
+            "group": "API: Multi-symbol",
             "pages": [
               "api/v2/multi/gex-levels"
             ]
           },
           {
-            "group": "API — Tape & WebSocket",
+            "group": "API: Tape & WebSocket",
             "pages": [
               "api/v2/tape/overview",
               "api/v2/tape/tape",
@@ -167,6 +167,17 @@
               "api/v2/tape/whale",
               "api/v2/tape/flow-by-strike",
               "api/v2/tape/websocket"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "MCP",
+        "groups": [
+          {
+            "group": "MCP server",
+            "pages": [
+              "mcp"
             ]
           }
         ]

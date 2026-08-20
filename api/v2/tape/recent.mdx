@@ -1,6 +1,7 @@
 ---
 title: "Tape - recent trades"
 openapi: "GET /tape/recent"
+description: "Latest N trades (shorthand for /tape?limit=N&order=desc). Convenience endpoint for clients who just want the newest N trades across all venues without..."
 ---
 
 Shorthand for the latest N trades across the requested venues, sorted newest-first. Equivalent to `GET /v2/tape?limit=N&order=desc`, with no cursor state to manage.

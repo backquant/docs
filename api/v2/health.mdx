@@ -1,6 +1,7 @@
 ---
 title: "Health check"
 openapi: "GET /health"
+description: "v2 health check (no auth). Lightweight liveness/readiness probe for external monitors."
 ---
 
 Auth-free liveness probe for monitors. Returns subsystem status (Redis + Postgres).

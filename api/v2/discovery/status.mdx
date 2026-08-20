@@ -1,9 +1,50 @@
 ---
 title: "Service status"
 openapi: "GET /status"
+description: "v2 service status - per symbol, per category freshness. Operational status."
 ---
 
 Operational status: per-symbol-per-category freshness with healthy/degraded/unhealthy classification + an overall aggregate.
+
+## Per-venue status
+
+Alongside the per-symbol grid, the response carries a `venues` block: one entry
+per venue with the state of each feed.
+
+```json
+"venues": {
+  "deribit": { "chain": "on",  "tape": "on",
+               "chain_symbols": ["BTCUSDT", "ETHUSDT"], "chain_contracts": 1910 },
+  "derive":  { "chain": "off", "tape": "on",
+               "chain_symbols": [], "chain_contracts": 0 }
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `chain` | Options chain aggregation for that venue: `on`, `off` or `unknown` |
+| `tape` | Live trade tape for that venue: `on`, `off` or `unknown` |
+| `chain_symbols` | Which symbols the venue is currently live on |
+| `chain_contracts` | Instruments it contributed on the last cycle |
+
+Three states, and the difference matters:
+
+- **`on`** - enabled on the worker that owns that feed.
+- **`off`** - registered but disabled, or no collector running.
+- **`unknown`** - no fresh status was published. This is not a synonym for
+  `off`: it means we cannot currently see the feed's state, and treating it as
+  disabled would be a guess.
+
+`chain_contracts` is what separates a healthy venue from a quiet one. A venue
+reporting `on` with `0` contracts is enabled but delivering nothing, which a
+bare `on` would hide.
+
+<Note>
+Use this to interpret a zero in a per-venue response. A venue contributing `0`
+open interest on [`by_venue`](/concepts/venues) is not necessarily switched off,
+it may simply list no contracts on that surface right now. This endpoint tells
+you which it is.
+</Note>
 
 ## See also
 

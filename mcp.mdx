@@ -1,0 +1,159 @@
+---
+title: "MCP server"
+description: "Use BackQuant's crypto options, GEX and flow data directly inside Claude, Cursor or any MCP client. OAuth sign-in, 19 tools, no code required."
+---
+
+BackQuant ships a remote **Model Context Protocol** server, so the same data
+behind the v2 API is available conversationally inside your own AI client.
+
+```
+https://mcp.backquant.com/mcp
+```
+
+You connect once with your BackQuant login. No API key to paste, no code to
+write. Your AI client calls the tools on your behalf and reads the answers back
+to you.
+
+<Note>
+The server carries **crypto only**. Equities are not exposed through the API or
+MCP for upstream licensing reasons.
+</Note>
+
+## What you need
+
+An active subscription that includes API access. That means any of:
+
+| Plan | Includes MCP |
+|---|---|
+| Crypto API (`api_only_monthly` / `api_only_yearly`) | Yes |
+| Terminal + API | Yes |
+| Terminal Yearly | Yes, at starter limits |
+| Terminal Monthly | No, this plan has no API access |
+
+Your subscription must be **active**. A trial does not grant API access, so it
+does not grant MCP either. If you connect without an eligible plan the server
+tells you that during sign-in rather than failing later with a confusing tool
+error.
+
+## Connect
+
+<Steps>
+<Step title="Add the server to your client">
+Point your MCP client at `https://mcp.backquant.com/mcp`.
+
+In **Claude** (Desktop or Web), add it under Settings, Connectors, Add custom
+connector. In **Cursor**, add it as a remote MCP server. Any client that speaks
+Streamable HTTP with OAuth will work the same way.
+</Step>
+
+<Step title="Sign in">
+Your client opens a BackQuant login page. Sign in with the account that holds
+your subscription and approve the connection.
+
+Clients that support **dynamic client registration** (RFC 7591) register
+themselves automatically, so there is nothing to configure by hand.
+</Step>
+
+<Step title="Ask something">
+Try *"What are the BTC gamma levels right now?"* or *"Where did aggressors buy
+calls on ETH today?"* The client picks the right tool and calls it.
+</Step>
+</Steps>
+
+## Tools
+
+Nineteen tools, grouped by what you would ask for. Each returns a shaped,
+compact answer rather than a raw dump, so a question costs a sensible number of
+tokens.
+
+**Positioning and levels**
+
+| Tool | Answers |
+|---|---|
+| `get_gex_levels` | Gamma flip (HVL), call wall, put support for a market |
+| `get_gex_strike_profile` | Dealer gamma broken down by strike |
+| `get_greek` | Dealer exposure for a single greek, in several cuts |
+| `get_max_pain` | The strike where the most option value expires worthless |
+| `compare_symbols` | Gamma levels for several assets side by side, in one call |
+
+**Flow and tape**
+
+| Tool | Answers |
+|---|---|
+| `get_tape` | Individual prints and aggregates over them |
+| `get_flow_by_strike` | Where aggressors actually bought and sold, strike by strike |
+| `get_dealer_flow` | Dealer hedging pressure over time, measured from the tape |
+
+**Volatility and pricing**
+
+| Tool | Answers |
+|---|---|
+| `get_iv` | Implied volatility in whichever cut you need |
+| `get_expected_move` | The move the market is pricing for an expiry |
+| `get_probability` | Market-implied odds of finishing above or below a price |
+| `get_basis` | The dated-futures curve, annualised basis by expiry |
+
+**Structure and history**
+
+| Tool | Answers |
+|---|---|
+| `get_oi` | Open interest by expiry or over time |
+| `get_expiry_summary` | Every listed expiry with DTE, ATM IV and open interest |
+| `get_opex` | Upcoming expiries and how much OI rolls off at each |
+| `get_history` | How a positioning metric has changed over time |
+| `get_liquidation` | Where leveraged perp positions get liquidated |
+
+**Discovery**
+
+| Tool | Answers |
+|---|---|
+| `list_symbols` | Which markets are covered and which have data right now |
+| `list_expiries` | Valid expiry tokens to pass to the other tools |
+
+## Limits
+
+MCP runs on the **same entitlements as the REST API**. There is no separate MCP
+quota: a tool call is a request, counted against your plan's monthly allowance
+and per-minute burst exactly like a REST call. See
+[Rate limits](/concepts/rate-limits).
+
+One question from a model often fires several tool calls in quick succession,
+which is why the starter burst allowance is set well above one call per
+question.
+
+## How it relates to the AI panel
+
+They are complements, not substitutes.
+
+| | AI panel in the terminal | MCP |
+|---|---|---|
+| Requires | A terminal plan | An API plan |
+| Runs | In the BackQuant terminal | In your own AI client |
+| Data | Everything the terminal shows | Crypto v2 data |
+| Sees your screen | Yes, it reads your panels | No |
+
+The panel gives depth inside our product. MCP puts our data inside your
+workflow.
+
+## Technical details
+
+For anyone implementing a client rather than using one:
+
+| | |
+|---|---|
+| Transport | Streamable HTTP |
+| Protocol revisions | `2025-06-18` (preferred), `2025-03-26` |
+| Authorization | OAuth 2.1, PKCE required (`S256`) |
+| Grants | `authorization_code`, `refresh_token` |
+| Discovery | `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource` |
+| Client registration | Dynamic, RFC 7591, at `/oauth/register` |
+| Issuer | `https://api.backquant.com` |
+
+Private-use redirect schemes (RFC 8252) are accepted, so desktop clients that
+use a custom scheme rather than a loopback URL connect without special-casing.
+
+<Note>
+Tokens are scoped to the BackQuant account that approved them. Revoking the
+connection in your AI client, or the subscription lapsing, stops access at the
+next call.
+</Note>
