@@ -1,0 +1,114 @@
+---
+title: "What to ask it"
+description: "Example questions for the BackQuant MCP server, and which tool each one reaches for."
+---
+
+The server is designed to be used in plain language. You do not name tools; your
+AI client picks them. These are questions that work well, grouped by what you
+are trying to find out.
+
+<Note>
+Everything here is **crypto**. BTC and ETH have the deepest coverage; SOL and
+HYPE are supported where data exists.
+</Note>
+
+## Start here
+
+Good opening questions when you want a read on the market:
+
+> **"What are the gamma levels on BTC right now?"**
+> Returns the gamma flip, call wall and put support, with spot for context.
+> *(`get_gex_levels`)*
+
+> **"Compare BTC and ETH dealer positioning."**
+> Both markets side by side in one call, rather than asking twice.
+> *(`compare_symbols`)*
+
+> **"Which strikes carry the most gamma on ETH?"**
+> The strike-by-strike breakdown behind the headline levels.
+> *(`get_gex_strike_profile`)*
+
+## What is actually trading
+
+> **"What has been trading on ETH today?"**
+> Recent prints and aggregates over them.
+> *(`get_tape`)*
+
+> **"Where did aggressors buy and sell calls on BTC this week?"**
+> Bought against sold, strike by strike, on still-open contracts.
+> *(`get_flow_by_strike`)*
+
+> **"Show me the biggest BTC options trades today."**
+> Whale prints, filtered by premium.
+> *(`get_tape`)*
+
+> **"Has dealer hedging pressure been building on BTC?"**
+> Hedging pressure over time rather than a single snapshot.
+> *(`get_dealer_flow`)*
+
+## Volatility and what the market is pricing
+
+> **"What move is the market pricing for the next BTC expiry?"**
+> The implied move from ATM volatility for that expiry.
+> *(`get_expected_move`)*
+
+> **"What are the odds BTC finishes above 70k this month?"**
+> Market-implied probability of finishing above or below a level.
+> *(`get_probability`)*
+
+> **"How does ETH implied vol look across expiries?"**
+> The term structure, plus smile and skew cuts if you ask for them.
+> *(`get_iv`)*
+
+## Structure and expiries
+
+> **"What expiries are listed for BTC?"**
+> Valid expiry tokens, useful before asking anything expiry-specific.
+> *(`list_expiries`)*
+
+> **"How much open interest rolls off at the next BTC expiry?"**
+> Upcoming expiries and the size expiring at each.
+> *(`get_opex`)*
+
+> **"Where is max pain for the front ETH expiry?"**
+> *(`get_max_pain`)*
+
+> **"Give me an overview of every BTC expiry."**
+> Dates, days to expiry, ATM vol and open interest in one table.
+> *(`get_expiry_summary`)*
+
+## Over time
+
+> **"How has BTC gamma changed over the last two weeks?"**
+> A metric's history rather than its current value.
+> *(`get_history`)*
+
+> **"Has open interest been rising on ETH?"**
+> *(`get_oi`)*
+
+## Getting better answers
+
+**Name the market.** "BTC" or "ETH" beats "bitcoin's options" for getting the
+right tool called first time.
+
+**Say the timeframe out loud.** "over the last two weeks" produces a history
+call; without it you get a snapshot of right now.
+
+**Ask for one thing at a time.** A question bundling levels, flow and vol
+becomes three tool calls, each drawing on your quota. Ask, read, follow up.
+
+**Use real expiry tokens.** If you want a specific expiry, ask for the list
+first, then reference one. The model can also do this itself in two steps.
+
+**Ask it to explain its answer.** The tools return numbers; the interpretation
+is your client's. "Why does that matter for spot?" usually produces a better
+read than asking for the interpretation up front.
+
+## What it will not do
+
+- **Equities.** The API is crypto-only, so no SPX, NDX or single stocks.
+- **Trade for you.** It is read-only market data. There are no order tools.
+- **See your screen.** Unlike the AI panel in the terminal, MCP has no view of
+  your workspace or panels. It only knows what it queries.
+- **Predict.** It reports positioning, flow and pricing. Any forecast is your
+  client reasoning over those numbers, not a BackQuant output.

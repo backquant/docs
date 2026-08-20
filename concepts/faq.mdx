@@ -68,9 +68,9 @@ hit [`/v2/health`](/api/v2/health) for the current subsystem status.
 
 ### Why did my GEX levels change without a big move in spot?
 
-Live GEX defaults to **`positioning=flow`**: dealer size is aggressor
-sold minus bought from the multi-venue options tape, not textbook OI
-sign. Walls and HVL can shift when flow rotates even if spot is quiet.
+Live GEX defaults to **`positioning=flow`**, which measures dealer size
+from observed trading rather than assuming it from open interest. Walls
+and HVL can shift when positioning rotates even if spot is quiet.
 Use `?positioning=std` for the older call-positive / put-negative model.
 See [Positioning](/concepts/positioning).
 

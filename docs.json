@@ -177,7 +177,9 @@
           {
             "group": "MCP server",
             "pages": [
-              "mcp"
+              "mcp-server",
+              "mcp-examples",
+              "mcp-limits"
             ]
           }
         ]

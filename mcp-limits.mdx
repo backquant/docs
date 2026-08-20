@@ -1,0 +1,96 @@
+---
+title: "Limits and errors"
+description: "How MCP tool calls consume your plan, what happens when a limit is hit mid-conversation, and how to read the errors your AI client shows."
+---
+
+MCP runs on the **same entitlements as the REST API**. There is no separate MCP
+allowance, and nothing here is charged differently: a tool call is a request.
+
+## How a conversation consumes your plan
+
+| | |
+|---|---|
+| One tool call | One request against your monthly allowance |
+| One question | Often **several** tool calls |
+| Per-minute burst | Shared with REST, same ceiling |
+| Inference | Not billed by us. Your AI client uses your own subscription |
+
+A single question routinely fires three to ten tool calls: the model may list
+expiries, fetch levels, then pull flow before answering. Budget by questions
+rather than by requests, and assume a handful of requests per question.
+
+See [Rate limits](/concepts/rate-limits) for the per-plan numbers.
+
+<Note>
+Because a burst of calls arrives inside one answer, the starter burst allowance
+is set well above one call per question. Hitting the ceiling mid-answer is the
+failure this protects against.
+</Note>
+
+## When something goes wrong
+
+Errors are returned to your AI client as readable text, so you generally see an
+explanation in the conversation rather than a status code.
+
+### You are not connected
+
+The client shows an authorization prompt, or reports that the server requires
+sign-in. Reconnect from your client's settings. Tokens are tied to the
+BackQuant account that approved them, so this also appears after you revoke a
+connection.
+
+### Your plan does not include API access
+
+You are told during sign-in, before the connection completes, rather than by a
+confusing tool failure later. Terminal Monthly has no API access; a trial does
+not grant it either. See [the plan table](/mcp-server) for what qualifies.
+
+### Your subscription is not active
+
+Same point in the flow as above. Access resumes when the subscription is active
+again; nothing needs reconnecting on our side.
+
+### Monthly quota exhausted
+
+The tool returns the API's own message, which names the cap, and your client
+relays it mid-conversation. Nothing is broken; the allowance is spent for the
+calendar month. Quotas run per user, not per key, and reset at the start of the
+next month in UTC.
+
+### Too many calls too quickly
+
+A burst above the per-minute ceiling is rejected until the window rolls. In
+practice this means waiting a few seconds and asking again.
+
+### The data is not available
+
+Some answers do not exist for some markets: a symbol with no aggressor tape, an
+expiry that is not listed, a history window longer than what is stored. The tool
+says so rather than returning an empty result that reads as zero.
+
+### A tool failed unexpectedly
+
+You will see the tool name and the error type. Nothing internal is exposed to
+the conversation. If it repeats, send us the tool name and roughly when it
+happened.
+
+## Response size
+
+Every tool has a token budget, and responses are shaped to stay inside it. A raw
+options chain would be correct and useless: it would fill your client's context
+window and leave no room for reasoning. So tools return ranked, trimmed answers
+rather than complete dumps.
+
+Practically, that means asking for "the top strikes by gamma" works well, and
+asking for "every strike and every expiry" gets you a sensible subset. If you
+need the complete surface, use the [REST API](/api/v2/gex/strike-profile),
+which has no such budget.
+
+## Coverage boundaries
+
+- **Crypto only.** Equities are not available through the API or MCP.
+- **BTC and ETH** have the fullest coverage, including multi-venue aggressor
+  tape. SOL and HYPE are supported where data exists.
+- **Historical depth varies by dataset** and is shorter than live coverage. If a
+  window comes back shorter than you asked for, that is the stored depth, not an
+  error.

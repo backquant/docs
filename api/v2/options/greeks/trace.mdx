@@ -40,13 +40,13 @@ For pin zones / acceleration pockets without the full grid, use
 ## Sign convention
 
 Under **std**, calls contribute positive size and puts negative (same
-as the rest of the stack). Under **flow**, size is aggressor sold
-minus bought per side. A positive cell means the signed book leans
+as the rest of the stack). Under **flow**, size comes from BackQuant's
+measured dealer model. A positive cell means the signed book leans
 supportive at that `(time, price)`; negative means the reverse.
 
 ## Units
 
-| `greek` | Unit | Formula per cell (std qty = OI; flow qty = sold−bought) |
+| `greek` | Unit | Formula per cell |
 | --- | --- | --- |
 | `gamma` | $ per 1% spot move | `Σ sign × γ × S² × qty × 0.01` |
 | `charm` | per year | `Σ sign × ∂Δ/∂τ × qty` |

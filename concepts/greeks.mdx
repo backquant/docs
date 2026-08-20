@@ -8,7 +8,7 @@ greek exposure per strike** for the four underlyings. Same idea as
 [GEX](/concepts/gex) but for the higher-order greeks that drive
 hedging flows the gamma profile alone misses.
 
-Profiles default to **`positioning=flow`** (tape sold−bought size).
+Profiles default to **`positioning=flow`**, BackQuant's measured dealer model.
 Pass `?positioning=std` for textbook call/put OI sign. Forward
 (time × price) maps live under
 [TRACE](/api/v2/options/greeks/trace).

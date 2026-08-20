@@ -1,7 +1,7 @@
 ---
 title: "Flow by strike"
 openapi: "GET /tape/flow-by-strike"
-description: "Cumulative multi-venue aggressor sold/bought calls and puts by strike on still-open contracts. The public flow map for dealer positioning."
+description: "Cumulative multi-venue aggressor buying and selling by strike on still-open contracts, split into call buy, call sell, put buy and put sell."
 ---
 
 `GET /v2/tape/flow-by-strike`
@@ -11,8 +11,8 @@ aggregated by strike into four quadrants: call buy, call sell, put buy,
 put sell. This is **cumulative inventory of aggressor prints behind live
 OI**, not a rolling lookback window.
 
-Use it to rebuild TRACE-style dealer maps and strike-level sold−bought
-positioning without pulling the full trade history.
+Use it to see where aggressors have been active by strike without pulling
+the full trade history.
 
 ## Who it's for
 

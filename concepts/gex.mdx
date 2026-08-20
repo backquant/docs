@@ -30,7 +30,7 @@ aggregate it per strike, per expiry, and per venue. You get the
 aggregated values directly; no reconstruction needed on your side.
 
 **Signing the book (positioning).** Live GEX defaults to **flow**:
-dealer size per contract is multi-venue aggressor **sold minus bought**
+dealer size per contract comes from BackQuant's measured model
 from the options tape. Pass `?positioning=std` for the textbook model
 (call OI positive, put OI negative). Full rules, fallbacks, and
 history caveats: [Dealer positioning: flow vs std](/concepts/positioning).

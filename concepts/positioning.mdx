@@ -11,7 +11,7 @@ TRACE surfaces.
 
 | Mode | Meaning | When to use |
 | --- | --- | --- |
-| **`flow`** (default) | Dealer size = aggressor **sold minus bought** per call/put side from the multi-venue options tape | Best match to how price behaves when tape exists (BTC, ETH) |
+| **`flow`** (default) | BackQuant's measured dealer model, derived from observed trading rather than an open-interest assumption | Best match to how price behaves where the model is available (BTC, ETH) |
 | **`std`** | Textbook convention: call OI positive, put OI negative | Backtests, comparisons to public GEX, or symbols without usable tape |
 
 Pass `?positioning=flow` or `?positioning=std`. Omit the param to get **flow**.
@@ -26,27 +26,15 @@ Every response that rebuilds live exposure reports the effective model in:
 
 Live signed surfaces use:
 
-1. **Chain** - multi-venue options chain for greeks and **coin-unit OI**:
-   Deribit, Bybit, OKX, Binance, Derive (when enabled), Thalex, Delta India,
-   Delta Global.
-2. **Tape (flow only)** - multi-venue aggressor trades for the same coins.
-   Size is **coin-normalized** so venues can be summed. See
-   [Venue coverage](/concepts/venues) for per-venue ingest.
+Both models read the same multi-venue options chain for greeks and
+**coin-unit OI**: Deribit, Bybit, OKX, Binance, Derive (when enabled), Thalex,
+Delta India and Delta Global. See [Venue coverage](/concepts/venues) for what
+each venue contributes.
 
-GEX dollar unit is unchanged: **γ × S² × qty × 0.01** (USD impact per 1%
-spot move), where `qty` is flow sold−bought or std signed OI.
+GEX is reported in **USD impact per 1% move in spot**, so magnitudes are
+comparable across symbols and across both models.
 
-Details also appear under `meta.extra.aggregation` (`chain_venues`,
-`flow_venues`, `flow_method`, `gex_scale`, `note`).
-
-### Public flow map
-
-To rebuild strike-level sold/bought maps yourself (TRACE-style), use:
-
-[`GET /v2/tape/flow-by-strike`](/api/v2/tape/flow-by-strike)
-
-That endpoint is cumulative aggressor pressure on **still-open**
-contracts - the same primitive the terminal uses for flow positioning.
+`meta.extra.aggregation` echoes which venues were combined for the response.
 
 ## Coin coverage
 
@@ -65,7 +53,7 @@ or `flow_qty_all_zero`).
 | --- | --- |
 | Levels, strike profile, expiry profile, heatmaps, TRACE, multi levels, greek profiles | **flow** default |
 | `/v2/gex/history`, `/v2/gex/stress-history` | **std** only (stored series) |
-| WebSocket `gex.levels.{SYMBOL}` | **std** snapshot (REST levels stay flow by default) |
+| WebSocket `gex.levels.{SYMBOL}` | **flow** default, same as REST levels |
 | Max pain, IV, PCR, OI, expected move, probability | Not a signed dealer model |
 
 ## Customer flow vs dealer hedge flow
@@ -75,7 +63,7 @@ Do not mix these up:
 | Endpoint family | Side | Source |
 | --- | --- | --- |
 | `/v2/gex/delta-flow`, tape `weight=delta` | **Customer** signed delta from trades | Options tape |
-| `/v2/tape/flow-by-strike` | **Aggressor** sold/bought by strike | Options tape |
+| `/v2/tape/flow-by-strike` | **Aggressor** activity by strike | Options tape |
 | `/v2/gex/gamma-flow`, `/v2/gex/dealer-flow` | **Dealer** hedge estimate from chain × moves | GEX snapshots |
 
 Positive on dealer-flow ≈ estimated dealer **buying** the underlying to
