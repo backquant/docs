@@ -1,6 +1,6 @@
 ---
 title: "MCP server"
-description: "Use BackQuant's crypto options, GEX and flow data directly inside Claude, Cursor or any MCP client. OAuth sign-in, 19 tools, no code required."
+description: "Use BackQuant's crypto options, GEX and flow data directly inside Claude, Cursor or any MCP client. OAuth sign-in or an API key, 19 tools, no code required."
 ---
 
 BackQuant ships a remote **Model Context Protocol** server, so the same data
@@ -13,9 +13,11 @@ https://mcp.backquant.com/mcp
 `https://api.backquant.com/mcp` is the same server if your client prefers the
 API hostname.
 
-You connect once with your BackQuant login. No API key to paste, no code to
-write. Your AI client calls the tools on your behalf and reads the answers back
-to you.
+There are two ways in. Clients that speak OAuth (Claude, Cursor, VS Code) need
+nothing but your BackQuant login: sign in once, approve, done. Clients that only
+send a static header (the OpenAI Responses API, LangChain, n8n, your own
+scripts) use your existing API key as a bearer token. Either way your AI client
+calls the tools on your behalf and reads the answers back to you.
 
 <Note>
 The server carries **crypto only**. Equities are not exposed through the API or
@@ -38,7 +40,11 @@ does not grant MCP either. If you connect without an eligible plan the server
 tells you that during sign-in rather than failing later with a confusing tool
 error.
 
-## Connect
+## Connect with your login
+
+For **Claude**, **Cursor**, **VS Code** and anything else that speaks OAuth.
+If your client only sends a static header, skip to
+[clients that do not do OAuth](#clients-that-do-not-do-oauth) instead.
 
 <Steps>
 <Step title="Add the server to your client">
@@ -62,6 +68,84 @@ Try *"What are the BTC gamma levels right now?"* or *"Where did aggressors buy
 calls on ETH today?"* The client picks the right tool and calls it.
 </Step>
 </Steps>
+
+## Clients that do not do OAuth
+
+Some clients never run the sign-in dance. They send one static header and
+expect that to be the whole story: the **OpenAI Responses API**, **LangChain**,
+**n8n**, and anything you write yourself.
+
+For those, pass your BackQuant API key as a bearer token. It is the same key
+you already create at [the API dashboard](https://backquant.com/api-dashboard),
+not a separate MCP credential, and it carries the same plan and quota.
+
+```bash
+curl https://mcp.backquant.com/mcp \
+  -H "Authorization: Bearer bq_live_your_key_here" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+With the OpenAI Responses API, give the tool your MCP URL and put the same key
+in `authorization`. OpenAI does not perform the OAuth exchange itself, so the
+bearer path is the supported route there:
+
+```json
+{
+  "type": "mcp",
+  "server_label": "backquant",
+  "server_url": "https://mcp.backquant.com/mcp",
+  "authorization": "bq_live_your_key_here"
+}
+```
+
+<Note>
+Treat the key like any other secret. A bearer token is sent on every call, so
+prefer an environment variable over pasting it into a shared workflow, and
+rotate it from the dashboard if it is ever exposed.
+</Note>
+
+## Local clients that only speak stdio
+
+Older MCP clients launch a local process and talk to it over stdin/stdout
+rather than calling a URL. Bridge them with `mcp-remote`, which runs locally and
+forwards to the server. It needs Node; there is nothing to install by hand,
+`npx` fetches it on first run.
+
+Add this to your client's MCP config (`claude_desktop_config.json` for Claude
+Desktop, `.cursor/mcp.json` for Cursor):
+
+```json
+{
+  "mcpServers": {
+    "backquant": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.backquant.com/mcp"]
+    }
+  }
+}
+```
+
+That opens a browser once to sign in, then caches the token. To skip the
+browser entirely, hand the bridge your API key instead:
+
+```json
+{
+  "mcpServers": {
+    "backquant": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote", "https://mcp.backquant.com/mcp",
+        "--header", "Authorization: Bearer bq_live_your_key_here"
+      ]
+    }
+  }
+}
+```
+
+Restart the client after editing its config. If you already connect over a URL,
+you do not need any of this.
 
 ## Tools
 
@@ -146,7 +230,7 @@ For anyone implementing a client rather than using one:
 |---|---|
 | Transport | Streamable HTTP |
 | Protocol revisions | `2025-06-18` (preferred), `2025-03-26` |
-| Authorization | OAuth 2.1, PKCE required (`S256`) |
+| Authorization | OAuth 2.1, PKCE required (`S256`), or an API key as a bearer token |
 | Grants | `authorization_code`, `refresh_token` |
 | Discovery | `/.well-known/oauth-authorization-server` and `/.well-known/oauth-protected-resource` |
 | Client registration | Dynamic, RFC 7591, at `/oauth/register` |
