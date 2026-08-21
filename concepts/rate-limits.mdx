@@ -53,9 +53,20 @@ Every authenticated REST response includes:
 | `X-Quota-Used` | Requests counted this UTC month |
 | `X-Quota-Remaining` | Monthly remaining |
 | `X-Quota-Period` | Period id `YYYYMM` (UTC) |
+| `X-RateLimit-Fallback` | `true` only while the limiter is in degraded mode (see below) |
 
 The per-minute triple is also echoed in `meta.rate_limit` when present.
 `GET /v2/meta` returns the full per-level ladder under `rate_limits`.
+
+<Note>
+`X-RateLimit-Fallback: true` means our rate-limit store was briefly
+unreachable and a stricter per-machine counter took over, so
+`X-RateLimit-Limit` will read lower than your plan's normal cap. It is rare
+and self-healing, and the header is absent the rest of the time. If you
+surface your remaining budget to users, read the limit from the header rather
+than hardcoding your plan's number, or it will look wrong during one of these
+windows.
+</Note>
 
 ```bash
 curl -I "https://api.backquant.com/v2/gex/levels?symbol=BTCUSDT" \
@@ -66,7 +77,10 @@ curl -I "https://api.backquant.com/v2/gex/levels?symbol=BTCUSDT" \
 
 1. Burst or monthly exhaustion returns HTTP **429** with
    `RATE_LIMIT_EXCEEDED`. Monthly messages name the monthly cap.
-2. Respect `Retry-After` (and/or wait for the minute window / next month).
+2. Respect `Retry-After`, but check `X-Quota-Remaining` first. On a burst
+   429 it is the seconds left in the minute. On a monthly 429
+   (`X-Quota-Remaining: 0`) it is the seconds until the month rolls over,
+   so stop retrying and surface the message rather than sleeping on it.
 3. Do not spin-retry without backoff.
 
 ## Auth vs entitlement

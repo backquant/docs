@@ -29,7 +29,7 @@ provenance and freshness of the data.
     }
   },
   "meta": {
-    "version": "2.0",
+    "version": "2.6",
     "timestamp": "2026-04-30T12:00:00.123Z",
     "request_id": "req_a1b2c3d4...",
     "symbol": "BTCUSDT",
@@ -59,7 +59,7 @@ have to special-case errors.
     }
   },
   "meta": {
-    "version": "2.0",
+    "version": "2.6",
     "timestamp": "2026-04-30T12:00:00.123Z",
     "request_id": "req_a1b2c3d4..."
   }
@@ -106,7 +106,13 @@ See [Errors](/concepts/errors) for the full list of error codes.
 
   <Expandable title="properties">
     <ResponseField name="meta.version" type="string" required>
-      API version that served the response. Always `"2.0"` for v2 routes.
+      The v2 contract version that served the response - currently `"2.6"`.
+
+      This is `major.minor`, and it **changes**: the minor bumps whenever a
+      public default or response contract changes (see the
+      [changelog](/api/v2/discovery/changelog)). Treat it as informational,
+      or compare the major. Do not assert equality on the full string, or a
+      routine release will break your client.
     </ResponseField>
     <ResponseField name="meta.timestamp" type="string" required>
       ISO 8601 wall-clock when the response was built.
@@ -154,17 +160,17 @@ See [Errors](/concepts/errors) for the full list of error codes.
 
 ## Pydantic schemas
 
-The 10 most-traffic v2 endpoints have full Pydantic response schemas in
-the OpenAPI spec. Use them with codegen tools (`openapi-python-client`,
+Twelve of the 52 v2 endpoints have full Pydantic response schemas in the
+OpenAPI spec. Use them with codegen tools (`openapi-python-client`,
 `openapi-typescript-codegen`, etc.) to get typed client SDKs:
 
 - `GexLevelsResponse`, `GexStrikeProfileResponse`, `MaxPainResponse`
 - `ChainResponse`, `ExpirySummaryResponse`, `OpexResponse`
 - `IvTermStructureResponse`, `IvSkewResponse`, `ProbabilityDensityResponse`
-- `MultiGexLevelsResponse`
+- `MultiGexLevelsResponse`, `TraceResponse`
 - Plus `ChangelogResponse`
 
-The other 28 endpoints are documented with examples and the same
+The other 40 endpoints are documented with examples and the same
 envelope shape.
 
 ## See also

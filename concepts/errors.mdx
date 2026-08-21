@@ -21,7 +21,7 @@ error envelope with a machine-readable `code` field, a human-readable
     }
   },
   "meta": {
-    "version": "2.0",
+    "version": "2.6",
     "timestamp": "2026-04-30T12:00:00Z",
     "request_id": "req_a1b2c3..."
   }
@@ -75,6 +75,11 @@ def get_gex_levels(api_key, symbol="BTCUSDT", max_retries=3):
             )
         if code == "RATE_LIMIT_EXCEEDED":
             retry_after = int(resp.headers.get("Retry-After", "60"))
+            # Two different 429s. A burst clears within the minute; a monthly
+            # quota 429 sends the seconds until the month rolls over, which
+            # you must never sleep off - surface it instead.
+            if resp.headers.get("X-Quota-Remaining") == "0":
+                raise RuntimeError(body["error"]["message"])
             print(f"Rate limited; sleeping {retry_after}s")
             time.sleep(retry_after)
             continue
@@ -121,6 +126,12 @@ async function getGexLevels(
     }
     if (code === "RATE_LIMIT_EXCEEDED") {
       const retryAfter = parseInt(resp.headers.get("Retry-After") ?? "60", 10);
+      // Two different 429s. A burst clears within the minute; a monthly quota
+      // 429 sends the seconds until the month rolls over, which you must
+      // never sleep off - surface it instead.
+      if (resp.headers.get("X-Quota-Remaining") === "0") {
+        throw new Error(body.error.message);
+      }
       console.log(`Rate limited; sleeping ${retryAfter}s`);
       await new Promise((r) => setTimeout(r, retryAfter * 1000));
       continue;
@@ -165,8 +176,17 @@ cache yet (cold start, or unsupported symbol), or the path is wrong.
 parameter list. Common causes: passing `BTC` instead of `BTCUSDT`,
 unsupported `?greek=` value, out-of-range numeric param.
 
-**`RATE_LIMIT_EXCEEDED`** - Read `Retry-After` header (or
-`meta.rate_limit.reset`) and wait. The
+**`RATE_LIMIT_EXCEEDED`** - Covers two different situations, and they
+need different handling. Tell them apart with `X-Quota-Remaining`:
+
+- **Per-minute burst** (`X-Quota-Remaining` above `0`). `Retry-After` is
+  the seconds left in the current minute window. Sleep it off and retry.
+- **Monthly quota exhausted** (`X-Quota-Remaining` is `0`). `Retry-After`
+  is the seconds until the quota resets at 00:00 UTC on the 1st, which can
+  be weeks. **Do not sleep on this one** - stop retrying and surface
+  `error.message`, which names your cap and where to upgrade.
+
+To hit either limit less often:
 [`/v2/options/chain`](/api/v2/options/chain) is the most expensive
 single endpoint - if you're polling it aggressively, batch with
 [multi-symbol bundles](/concepts/multi-symbol) or pull only the
@@ -186,8 +206,12 @@ Even on errors, the response carries:
 - `X-RateLimit-Limit` - your tier's per-minute cap
 - `X-RateLimit-Remaining` - calls left in the current window
 - `X-RateLimit-Reset` - Unix timestamp when the window resets
-- `Retry-After` - seconds until safe to retry (on 429 only)
+- `Retry-After` - seconds until safe to retry (**on 429 only**). Seconds
+  left in the minute window for a burst 429; seconds until the month rolls
+  over for a quota 429 - see the guidance above before sleeping on it
 - `X-Request-ID` - the same UUID as `meta.request_id`
+- `X-RateLimit-Fallback` - `true` only during degraded mode, otherwise
+  absent (see [Rate limits](/concepts/rate-limits))
 
 ## See also
 
