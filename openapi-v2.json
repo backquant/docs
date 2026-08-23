@@ -7109,6 +7109,226 @@
         ]
       }
     },
+    "/options/venue-book": {
+      "get": {
+        "tags": [
+          "Options"
+        ],
+        "summary": "Consolidated cross-venue book and quote dispersion",
+        "description": "Best bid and best offer for each contract **across every venue we collect**, with the venue named on each side, plus how far apart those venues are quoting the same contract.\n\nThis is not what `/options/chain` returns. The chain's `bid`/`ask` come from the aggregated row, which is based on a single venue; this endpoint is the genuine best-of, and by construction its spread is never wider than any individual venue's.\n\n**Scope.** Computed only for liquid contracts (0.85-1.15 moneyness, 2+ DTE). Outside that band implied vol stops carrying information: deep-ITM contracts have almost no vega, so a trivial price difference reads as tens of vol points. Contracts quoted by a single venue are omitted, since every field here is a comparison.\n\n**On `crossed`.** A crossed market (best bid vol above best ask vol) is reported as an observation, not an opportunity. Venue quote timestamps are collection times rather than exchange quote times, so a stale quote on the thinner venue cannot be ruled out, and measured crossings are small, short-dated and consistently one-directional - which points at structural causes (settlement, index, funding) rather than anything capturable.\n\n**On `mixed_settlement`.** Deribit's BTC/ETH options are inverse (coin-settled); the USDC venues are linear. Implied vol is comparable across the two to first order, but part of any gap flagged this way is numeraire rather than volatility.",
+        "operationId": "get_venue_book_options_venue_book_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "expiries",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated expiry tokens, e.g. `26DEC25,27MAR26`.",
+              "title": "Expiries"
+            },
+            "description": "Comma-separated expiry tokens, e.g. `26DEC25,27MAR26`."
+          },
+          {
+            "name": "option_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "call",
+                    "put"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to calls or puts.",
+              "title": "Option Type"
+            },
+            "description": "Restrict to calls or puts."
+          },
+          {
+            "name": "crossed_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Return only contracts where best bid vol exceeds best ask vol. Read the note on `crossed` above before acting on this.",
+              "default": false,
+              "title": "Crossed Only"
+            },
+            "description": "Return only contracts where best bid vol exceeds best ask vol. Read the note on `crossed` above before acting on this."
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "spread",
+                "spread_pct",
+                "dispersion",
+                "strike"
+              ],
+              "type": "string",
+              "description": "Ordering for the returned contracts.",
+              "default": "spread_pct",
+              "title": "Sort"
+            },
+            "description": "Ordering for the returned contracts."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "Max contracts returned.",
+              "default": 200,
+              "title": "Limit"
+            },
+            "description": "Max contracts returned."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/liquidation/heatmap": {
       "get": {
         "tags": [
@@ -10830,6 +11050,21 @@
               }
             ],
             "title": "Dte"
+          },
+          "expiry_tokens": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Tokens",
+            "description": "Which expiry tokens were treated as 0DTE for this calculation. Present only when `?expiry=0dte`, so a caller can see exactly which expirations the number covers."
           },
           "max_pain": {
             "anyOf": [

@@ -98,6 +98,7 @@
             "group": "API: Options chain & OPEX",
             "pages": [
               "api/v2/options/chain",
+              "api/v2/options/venue-book",
               "api/v2/options/expiry-summary",
               "api/v2/options/opex"
             ]

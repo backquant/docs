@@ -1,0 +1,115 @@
+---
+title: "Cross-venue book"
+openapi: "GET /options/venue-book"
+description: "Consolidated best bid and offer across every venue we collect, with the venue named on each side, plus how far apart venues are quoting the same contract."
+---
+
+Best bid and best offer for each contract across **every venue we collect**,
+with the venue named on each side, plus how far apart those venues are quoting
+the same contract.
+
+This is not what [`/options/chain`](/api/v2/options/chain) returns. The chain's
+`bid` and `ask` come from the aggregated row, which is based on a single venue.
+This endpoint is the genuine best-of, and by construction its spread is never
+wider than any individual venue's.
+
+<Note>
+Read this as **execution quality**, not as a dislocation scanner. Across the
+liquid band, cross-venue implied-vol dispersion sits *inside* the tightest
+single venue's own spread roughly 70% of the time, so for the typical contract
+there is nothing to capture. What the endpoint answers well is where to execute
+and what it costs.
+</Note>
+
+## Scope
+
+Computed only for contracts inside the liquid band: **0.85 to 1.15 moneyness,
+2 or more days to expiry**.
+
+Outside that band implied vol stops carrying information. Deep-ITM contracts
+have almost no vega, so a trivial price difference reads as tens of vol points.
+Before the band was applied, the widest apparent "dislocation" in a live run was
+52 vol points on a 60,000 strike with spot at 77,600, which is an artefact
+rather than a signal.
+
+Contracts quoted by a single venue are omitted, since every field here is a
+comparison. A symbol with no multi-venue coverage returns `404` rather than an
+empty list, because an empty list reads as "spreads are zero".
+
+## Units
+
+All prices are **coin-denominated**, and the response states this in
+`price_unit`.
+
+Most venues publish option premium in USD or USDT; those are converted at
+ingest. Deribit quotes its linear (USDC-settled) assets in USD and is converted
+the same way, while its BTC and ETH options are inverse and already coin-
+denominated. Do not infer the unit from magnitude: comparing an unconverted USD
+premium against a coin premium is exactly how a spread of -195% gets published.
+
+## Reading the fields
+
+<ResponseField name="consolidated" type="boolean">
+  `true` only when **two different venues** make the top of book. When `false`,
+  one venue is best on both sides, so the spread shown is that venue's own and
+  there is no consolidation benefit to report.
+</ResponseField>
+
+<ResponseField name="top_of_book_liquid" type="boolean">
+  `true` when both sides come from a deep venue (Deribit, Bybit, OKX, Binance).
+  When `false` the best price is coming from a thinner venue. Still worth
+  seeing, but not a number to lean on.
+</ResponseField>
+
+<ResponseField name="book_crossed" type="boolean">
+  A negative spread: one venue bidding above another's offer. Reported, never
+  hidden, but excluded from `median_spread_pct` so the headline is not dragged
+  below what trading actually costs.
+</ResponseField>
+
+<ResponseField name="crossed" type="boolean">
+  The same idea on the implied-vol axis: best bid vol above best ask vol,
+  evaluated only between deep venues.
+</ResponseField>
+
+<ResponseField name="mixed_settlement" type="boolean">
+  The comparison spans both settlement conventions. Deribit's BTC and ETH
+  options are inverse (coin-settled); the USDC venues are linear. Implied vol
+  is comparable across the two to first order, but part of any gap flagged this
+  way is numeraire rather than volatility.
+</ResponseField>
+
+<Warning>
+**A crossed market is an observation, not an opportunity.** Venue quote
+timestamps are collection times rather than exchange quote times, so a stale
+quote on the thinner venue cannot be ruled out. Measured crossings are small,
+short-dated and consistently one-directional, which points at structural causes
+(settlement, index, funding) rather than anything capturable. Treat `crossed`
+and `book_crossed` as venue-quality signals.
+</Warning>
+
+## Coverage
+
+Venue coverage is not uniform, and the response tells you which venues actually
+contributed via `venues` per contract and `coverage.venues` overall.
+
+| | |
+|---|---|
+| Deribit | Prices, no per-side implied vol |
+| OKX | Per-side implied vol, no prices |
+| Bybit, Binance | Both |
+| Thalex, Delta | Prices, single mark vol |
+
+A venue takes part in whichever comparison it actually supplied inputs for.
+Venues missing an input are omitted rather than zero-filled, since a zero would
+read as a dislocation.
+
+BTC and ETH have the deepest coverage. SOL is thinner. Single-venue markets
+return no rows at all.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Options chain" href="/api/v2/options/chain" icon="table" />
+  <Card title="Venues" href="/concepts/venues" icon="building-columns" />
+</CardGroup>
