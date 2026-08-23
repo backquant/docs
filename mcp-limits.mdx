@@ -12,6 +12,7 @@ allowance, and nothing here is charged differently: a tool call is a request.
 |---|---|
 | One tool call | One request against your monthly allowance |
 | One question | Often **several** tool calls |
+| A JSON-RPC batch | Charged **per `tools/call` inside it**, not once per request |
 | Per-minute burst | Shared with REST, same ceiling |
 | Inference | Not billed by us. Your AI client uses your own subscription |
 
@@ -26,6 +27,21 @@ Because a burst of calls arrives inside one answer, the starter burst allowance
 is set well above one call per question. Hitting the ceiling mid-answer is the
 failure this protects against.
 </Note>
+
+### Batching
+
+Most clients send one tool call per request and never think about this. If
+yours batches, two rules apply:
+
+- Each `tools/call` in the batch is charged separately, so a batch costs the
+  same as sending its calls one at a time.
+- **A single batch may carry at most 50 `tools/call` messages.** Beyond that
+  the whole batch is rejected with a JSON-RPC `Invalid Request` reading
+  `too many tools/call in one batch; the limit is 50 per request`, and nothing
+  in it runs. Split it and resend.
+
+Fifty is far above what a question needs (three to ten is typical), so this is
+a guard against runaway automation rather than a limit normal use meets.
 
 ## When something goes wrong
 
