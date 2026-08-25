@@ -1,0 +1,46 @@
+---
+title: "ETF flows"
+openapi: "GET /etf/flows"
+description: "Daily creations and redemptions for spot crypto ETFs, per fund and in total, with running cumulatives."
+---
+
+Daily creations and redemptions for spot crypto ETFs: per fund, in total, and
+as running cumulatives.
+
+`region=us` (default) covers the US spot ETFs. `region=hk` covers the Hong Kong
+listings and exists for BTC only.
+
+## Read the freshness field
+
+ETF flows publish on trading days, so the newest date is normally the previous
+business day, and three days old across a weekend is entirely normal.
+
+Every response reports `meta.extra.latest_date` and
+`meta.extra.days_since_latest`. **Alert on `days_since_latest`**, not on the
+absence of an error: this data is cached with a generous expiry so that a
+collection outage degrades to serving the last known values rather than
+failing, which means a stale response looks exactly like a fresh one unless you
+check.
+
+```json
+{
+  "meta": {
+    "extra": {
+      "region": "us",
+      "latest_date": "2026-08-21",
+      "days_since_latest": 1
+    }
+  }
+}
+```
+
+If no data is available at all the endpoint returns `404` rather than an empty
+series, because an empty series reads as "there were no flows", which is a
+different claim.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="ETF premium" href="/api/v2/etf/premium" icon="percent" />
+  <Card title="ETF AUM" href="/api/v2/etf/aum" icon="vault" />
+</CardGroup>

@@ -1,0 +1,23 @@
+---
+title: "Candles"
+openapi: "GET /market/candles"
+description: "OHLCV candles with buy/sell volume split, across the cross-venue aggregate."
+---
+
+Open, high, low, close and volume, with the buy/sell split where the venue
+publishes it. Served from the cross-venue aggregate, so you do not need to pick
+an exchange.
+
+Long windows are read from continuous aggregates rather than raw one-minute
+rows, which means a year at `1d` costs no more than a day at `1m`. The source
+actually used is reported in `meta.extra.sources`.
+
+Windows are capped at one year (matching retention) and at 30,000 points. Your
+plan's historical window applies on top: see `history_depth` in
+[`/v2/meta`](/api/v2/discovery/meta).
+
+<Tip>
+Fetching open interest or funding over the same window? Use
+[`/market/bundle`](/api/v2/market/bundle) instead: one round trip, and the
+series arrive already aligned.
+</Tip>

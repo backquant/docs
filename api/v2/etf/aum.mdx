@@ -1,0 +1,10 @@
+---
+title: "ETF AUM"
+openapi: "GET /etf/aum"
+description: "Assets under management per spot crypto ETF."
+---
+
+Assets under management per fund. Available for BTC and ETH.
+
+As with [flows](/api/v2/etf/flows), check `meta.extra.days_since_latest` before
+treating the last point as current.

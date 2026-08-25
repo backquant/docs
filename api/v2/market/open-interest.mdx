@@ -1,0 +1,17 @@
+---
+title: "Open interest"
+openapi: "GET /market/open-interest"
+description: "Aggregate perpetual open interest over time, on the same interval grid as candles."
+---
+
+Aggregate perpetual open interest, on the same interval grid as
+[`/market/candles`](/api/v2/market/candles) so the two align without
+client-side resampling.
+
+Same window rules as candles: capped at one year, long windows served from
+continuous aggregates, and your plan's historical window applies.
+
+<Tip>
+Need price and funding over the same window too? One call to
+[`/market/bundle`](/api/v2/market/bundle) returns all three.
+</Tip>

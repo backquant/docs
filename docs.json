@@ -169,6 +169,25 @@
               "api/v2/tape/flow-by-strike",
               "api/v2/tape/websocket"
             ]
+          },
+          {
+            "group": "API: Market data",
+            "pages": [
+              "api/v2/market/candles",
+              "api/v2/market/open-interest",
+              "api/v2/market/funding",
+              "api/v2/market/cvd",
+              "api/v2/market/bundle",
+              "api/v2/market/liquidations"
+            ]
+          },
+          {
+            "group": "API: ETF flows",
+            "pages": [
+              "api/v2/etf/flows",
+              "api/v2/etf/premium",
+              "api/v2/etf/aum"
+            ]
           }
         ]
       },

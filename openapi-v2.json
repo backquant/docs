@@ -3,7 +3,7 @@
   "info": {
     "title": "BackQuant API v2",
     "description": "\n# BackQuant API v2\n\nOptions + gamma-exposure focused public API. Built on the same data the\nBackQuant Pro Terminal renders - pre-computed every 30s, served from cache.\n\n## What's in v2\n\n* **Discovery**: `/v2/symbols` (universe + per-symbol freshness + supported\n  endpoint list), `/v2/expiries` (active expiry tokens with DTE), `/v2/status`\n  (per-symbol-per-category health with thresholds + overall classification).\n* **GEX**: composable levels (HVL / call wall / put support / max-pain /\n  expected move / gamma-flip zones), strike profile with typed expiry\n  filter, expiry profile, strike × expiry heatmap with downsampling,\n  greek time-heatmap with DTE/OI/IV filters, history (cursor-paginated),\n  Postgres-backed stress history, **per-expiry max-pain with pain curve**.\n* **Options**: filtered options chain with two-layer projection (top-level\n  `?fields=` and per-contract `?include=oi,iv,greeks,bid_ask,volume,gex`)\n  plus moneyness filter (`?moneyness_min=0.9&moneyness_max=1.1`), expiry\n  summary table, full IV suite (surface / term structure / 25Δ-10Δ skew /\n  curves / **single-expiry smile** / IV-RV history / VRP), expected move,\n  **Breeden-Litzenberger probability density and surface**, typed greek\n  profiles (delta / theta / vanna / charm / vega), strike × time charm/vega\n  surfaces, strike × expiry 3D greek surface, OI by expiry + history,\n  put/call ratio (intraday or daily), 0DTE & weekly premium tide,\n  dated-futures term structure.\n* **Liquidation**: heatmap + leverage-tiered distribution.\n* **Multi**: `/v2/multi/gex/levels` - bundled multi-symbol read across the\n  universe in one round-trip, with the same `?include=` model as the\n  single-symbol endpoint.\n\n## Authentication\n\nEvery v2 route (except `/v2/openapi.json`, `/v2/docs`, `/v2/redoc`, and\n`/v2/health`) requires the `X-API-Key` header.\n\n```\nX-API-Key: bq_live_your_api_key_here\n```\n\n**Get your API key at [backquant.com/api-access](https://backquant.com/api-access).**\n\nThe same key works across v1 and v2 - if you already have a v1 key, no\nre-issuance is needed.\n\n## Rate limits\n\nTwo budgets, both derived from your subscription tier: a **monthly request\nallowance** per account, and a **per-minute burst** per key. Size your\nintegration against the monthly figure - sustained polling at the burst rate\nexhausts the month early.\n\n| Plan                      | Monthly allowance | Burst    | Sustained   |\n|---------------------------|-------------------|----------|-------------|\n| Starter (Terminal Yearly) | 10,000 req/month  | 10/min   | ~333/day    |\n| Standard (Crypto API)     | 250,000 req/month | 60/min   | ~8,300/day  |\n| Pro (Terminal + API)      | 1,000,000/month   | 120/min  | ~33,000/day |\n| Enterprise                | custom            | 600/min  | custom      |\n\nHeaders `X-RateLimit-Limit / -Remaining / -Reset` (burst) and\n`X-Quota-Limit / -Used / -Remaining / -Period` (monthly) are included in\nevery response; the rate-limit triple is echoed inside `meta.rate_limit`\nwhen populated by middleware. Exceeding either budget returns `429`.\n\nThe live ladder is served at `GET /v2/meta` under `rate_limits`.\n\n## Response envelope\n\n```json\n{\n  \"success\": true,\n  \"data\": { ... },\n  \"meta\": {\n    \"version\": \"2.0\",\n    \"timestamp\": \"2026-04-29T12:00:00.000Z\",\n    \"request_id\": \"req_…\",\n    \"symbol\": \"BTCUSDT\",\n    \"spot_price\": 67213.5,\n    \"computed_at\": \"2026-04-29T11:59:48.000Z\",\n    \"freshness_seconds\": 12.0,\n    \"source\": [\"deribit\",\"bybit\",\"okx\",\"binance\",\"derive\",\"thalex\",\"delta_india\",\"delta\"],\n    \"exchanges_filtered\": [\"deribit\",\"bybit\"]\n  }\n}\n```\n\n## Errors\n\n```json\n{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"No data for BTCUSDT\"\n  },\n  \"meta\": { \"version\": \"2.0\", \"timestamp\": \"...\" }\n}\n```\n\n| Code                  | When |\n|-----------------------|------|\n| `UNAUTHORIZED`        | Missing or invalid API key |\n| `FORBIDDEN`           | Subscription doesn't allow API access |\n| `NOT_FOUND`           | Symbol/expiry/etc. not present in cache |\n| `VALIDATION_ERROR`    | Bad query parameters |\n| `RATE_LIMIT_EXCEEDED` | Per-tier limit hit |\n| `UPSTREAM_ERROR`      | Cache or DB temporarily unreachable |\n| `INTERNAL_ERROR`      | Anything else |\n    ",
-    "version": "2.6"
+    "version": "2.7"
   },
   "paths": {
     "/health": {
@@ -7786,6 +7786,1486 @@
               }
             },
             "description": "Bad Request"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/market/candles": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "OHLCV candles",
+        "description": "Open, high, low, close and volume for a crypto symbol, with the buy/sell volume split where the venue publishes it.\n\nServed from the cross-venue aggregate. Long windows are read from continuous aggregates rather than raw 1-minute rows, so asking for a year at `1d` is no more expensive than asking for a day at `1m`. The source actually used is reported in `meta.extra.sources`.\n\nWindows are capped at one year (matching retention) and at 30,000 points. Your plan's historical window applies on top of that: see `history_depth` in `GET /v2/meta`.",
+        "operationId": "get_candles_market_candles_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "1d"
+              ],
+              "type": "string",
+              "description": "Candle interval.",
+              "default": "1h",
+              "title": "Interval"
+            },
+            "description": "Candle interval."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8760,
+              "minimum": 1,
+              "description": "Lookback window in hours.",
+              "default": 168,
+              "title": "Hours"
+            },
+            "description": "Lookback window in hours."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/market/open-interest": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Open interest series",
+        "description": "Aggregate perpetual open interest over time, on the same interval grid as `/market/candles` so the two align without client-side resampling.",
+        "operationId": "get_open_interest_market_open_interest_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "1d"
+              ],
+              "type": "string",
+              "description": "Series interval.",
+              "default": "1h",
+              "title": "Interval"
+            },
+            "description": "Series interval."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8760,
+              "minimum": 1,
+              "description": "Lookback window in hours.",
+              "default": 168,
+              "title": "Hours"
+            },
+            "description": "Lookback window in hours."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/market/funding": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Funding rate series",
+        "description": "Aggregate perpetual funding rate over time, on the same interval grid as `/market/candles`.\n\nNote the source cadence: funding settles on each venue's own schedule, so a fine interval does not create new settlements, it resamples the ones that exist.",
+        "operationId": "get_funding_market_funding_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "1d"
+              ],
+              "type": "string",
+              "description": "Series interval.",
+              "default": "1h",
+              "title": "Interval"
+            },
+            "description": "Series interval."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8760,
+              "minimum": 1,
+              "description": "Lookback window in hours.",
+              "default": 168,
+              "title": "Hours"
+            },
+            "description": "Lookback window in hours."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/market/cvd": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Cumulative volume delta",
+        "description": "Aggressor buy volume, sell volume, their per-bucket difference, and the running cumulative across the window.\n\nDerived from the same buy/sell columns the candle series carries, so requesting candles and CVD over one window costs a single underlying read rather than two.\n\n**On OHLC.** `delta` is exact, and `open`/`close` are the running total at each bucket's boundaries, also exact. `high` and `low` require the path the cumulative took INSIDE the bucket, which bucket totals do not carry, so they are returned as `null` with `ohlc_complete: false` rather than interpolated. A fabricated wick would be worse than an honest gap.\n\nThe cumulative is relative to the start of the window, not an all-time figure. Compare shapes across windows, not levels.",
+        "operationId": "get_cvd_market_cvd_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "perp",
+                "spot"
+              ],
+              "type": "string",
+              "description": "`perp` for the perpetual aggregate, `spot` for spot.",
+              "default": "perp",
+              "title": "Market"
+            },
+            "description": "`perp` for the perpetual aggregate, `spot` for spot."
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "1d"
+              ],
+              "type": "string",
+              "description": "Series interval.",
+              "default": "1h",
+              "title": "Interval"
+            },
+            "description": "Series interval."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8760,
+              "minimum": 1,
+              "description": "Lookback window in hours.",
+              "default": 168,
+              "title": "Hours"
+            },
+            "description": "Lookback window in hours."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/market/liquidations": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Liquidation series",
+        "description": "Long and short liquidations over time, on the same interval grid as the other market series so they align without resampling.\n\nThis is the time series. For the strike-style views see `/liquidation/heatmap` and `/liquidation/distribution`.",
+        "operationId": "get_liquidations_market_liquidations_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "1d"
+              ],
+              "type": "string",
+              "description": "Series interval.",
+              "default": "1h",
+              "title": "Interval"
+            },
+            "description": "Series interval."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8760,
+              "minimum": 1,
+              "description": "Lookback window in hours.",
+              "default": 168,
+              "title": "Hours"
+            },
+            "description": "Lookback window in hours."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/market/bundle": {
+      "get": {
+        "tags": [
+          "Market"
+        ],
+        "summary": "Price, open interest and funding in one call",
+        "description": "Every time-indexed market series for a symbol, over one window, in a single request: price, open interest, funding, CVD on both the perpetual and spot aggregates, and liquidations.\n\nUse this instead of calling the individual endpoints: it is one round trip instead of six, and every series is returned against the same window so you do not have to align them yourself.\n\n**Quota:** charged per series requested, not per request. Three series cost three units, exactly as three separate calls would. The saving is latency and round trips, not allowance, so bundling is never a way to get more data for less.\n\n**Cost to us:** none beyond the individual endpoints. Each series is fetched through the same cache key those endpoints use, so a bundle following individual calls is served from cache, and concurrent callers share one computation.\n\nPartial failure does not fail the request: a series that cannot be served is returned as `null` with its reason under `meta.extra.errors`, so one cold series never costs you the others.",
+        "operationId": "get_bundle_market_bundle_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "4h",
+                "1d"
+              ],
+              "type": "string",
+              "description": "Interval for the gridded series.",
+              "default": "1h",
+              "title": "Interval"
+            },
+            "description": "Interval for the gridded series."
+          },
+          {
+            "name": "hours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8760,
+              "minimum": 1,
+              "description": "Lookback window in hours, applied to every series.",
+              "default": 168,
+              "title": "Hours"
+            },
+            "description": "Lookback window in hours, applied to every series."
+          },
+          {
+            "name": "series",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated subset of `candles`, `open_interest`, `funding`, `cvd_perp`, `cvd_spot`, `liquidations`. Defaults to all six. Ask only for what you need - each one costs a quota unit.",
+              "title": "Series"
+            },
+            "description": "Comma-separated subset of `candles`, `open_interest`, `funding`, `cvd_perp`, `cvd_spot`, `liquidations`. Defaults to all six. Ask only for what you need - each one costs a quota unit."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/etf/flows": {
+      "get": {
+        "tags": [
+          "ETF"
+        ],
+        "summary": "Spot ETF daily flows",
+        "description": "Daily creations and redemptions for spot crypto ETFs, per fund and in total, with running cumulatives.\n\n`region=us` (default) covers the US spot ETFs. `region=hk` covers the Hong Kong listings and is available for BTC only.\n\nFlows publish on trading days, so the newest date is normally the previous business day. Check `meta.extra.days_since_latest` before treating the last point as current.",
+        "operationId": "get_etf_flows_etf_flows_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTC",
+                "ETH",
+                "SOL",
+                "XRP"
+              ],
+              "type": "string",
+              "description": "Underlying asset.",
+              "default": "BTC",
+              "title": "Symbol"
+            },
+            "description": "Underlying asset."
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "us",
+                "hk"
+              ],
+              "type": "string",
+              "description": "Listing region.",
+              "default": "us",
+              "title": "Region"
+            },
+            "description": "Listing region."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/etf/premium": {
+      "get": {
+        "tags": [
+          "ETF"
+        ],
+        "summary": "Spot ETF premium or discount to NAV",
+        "description": "Premium or discount of each fund's market price to its net asset value. Available for BTC and ETH.",
+        "operationId": "get_etf_premium_etf_premium_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTC",
+                "ETH"
+              ],
+              "type": "string",
+              "description": "Underlying asset.",
+              "default": "BTC",
+              "title": "Symbol"
+            },
+            "description": "Underlying asset."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/etf/aum": {
+      "get": {
+        "tags": [
+          "ETF"
+        ],
+        "summary": "Spot ETF assets under management",
+        "description": "Assets under management per fund. Available for BTC and ETH.",
+        "operationId": "get_etf_aum_etf_aum_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTC",
+                "ETH"
+              ],
+              "type": "string",
+              "description": "Underlying asset.",
+              "default": "BTC",
+              "title": "Symbol"
+            },
+            "description": "Underlying asset."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [

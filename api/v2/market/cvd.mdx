@@ -1,0 +1,46 @@
+---
+title: "CVD"
+openapi: "GET /market/cvd"
+description: "Cumulative volume delta: aggressor buy volume, sell volume, per-bucket delta and the running cumulative."
+---
+
+Aggressor buy volume, sell volume, their per-bucket difference, and the running
+cumulative across the window.
+
+Derived from the same buy/sell columns
+[`/market/candles`](/api/v2/market/candles) already carries, so requesting
+candles and CVD over one window costs a **single** underlying read rather than
+two.
+
+## On OHLC
+
+`delta` is exact: buy minus sell for that bucket.
+
+`open` and `close` are the running cumulative at the bucket's boundaries, also
+exact.
+
+<Warning>
+`high` and `low` are returned as `null`, with `ohlc_complete: false`.
+
+They would require the path the cumulative took *inside* the bucket, and bucket
+totals do not carry that. We return nulls rather than interpolating, because a
+fabricated wick looks exactly like data and isn't.
+
+If you need true intra-bucket extremes, request a finer `interval` and
+aggregate client-side.
+</Warning>
+
+## Reading the cumulative
+
+The cumulative is **relative to the start of the window**, not an all-time
+figure. It begins at zero on the first bucket returned.
+
+Compare shapes across windows, not levels: two requests with different `hours`
+will not produce the same absolute values, and neither is wrong.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Candles" href="/api/v2/market/candles" icon="chart-candlestick" />
+  <Card title="Market bundle" href="/api/v2/market/bundle" icon="layer-group" />
+</CardGroup>

@@ -1,0 +1,66 @@
+---
+title: "Market bundle"
+openapi: "GET /market/bundle"
+description: "Price, open interest and funding for one symbol and window in a single request, on one aligned time axis."
+---
+
+Candles, open interest and funding for one symbol over one window, in a single
+request.
+
+Use this instead of calling
+[`/market/candles`](/api/v2/market/candles),
+[`/market/open-interest`](/api/v2/market/open-interest) and
+[`/market/funding`](/api/v2/market/funding) separately. It is one round trip
+rather than three, and the series come back against the same window, so you are
+not joining three timestamp axes yourself. That matters more than it sounds:
+the 30m, 4h and 1d sources are continuous aggregates keyed on a bucket
+boundary, while the finer intervals are keyed on raw time.
+
+Pick a subset with `series=` when you do not need all three.
+
+<Note>
+**Quota is charged per series, not per request.** Three series cost three
+units, exactly as three separate calls would, and the count is reported in
+`meta.extra.quota_units_charged`.
+
+The bundle saves you round trips and alignment work, never allowance. Ask only
+for the series you need.
+</Note>
+
+## Partial results
+
+A series that cannot be served comes back as `null`, with its reason under
+`meta.extra.errors`. The rest of the bundle is unaffected.
+
+This is deliberate: one cold or unavailable series should not cost you the two
+that were ready.
+
+```json
+{
+  "data": { "candles": { }, "open_interest": { }, "funding": null },
+  "meta": {
+    "extra": {
+      "series": ["candles", "open_interest", "funding"],
+      "quota_units_charged": 3,
+      "errors": { "funding": "No funding data for SOLUSDT" }
+    }
+  }
+}
+```
+
+## Windows and cost
+
+Long windows are read from continuous aggregates rather than raw one-minute
+rows, so a year at `1d` is no more expensive than a day at `1m`. The source
+actually used is reported in `meta.extra.sources`.
+
+Windows are capped at one year, matching retention. Your plan's historical
+window applies on top of that: see `history_depth` and `your_plan` in
+[`/v2/meta`](/api/v2/discovery/meta).
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Candles" href="/api/v2/market/candles" icon="chart-candlestick" />
+  <Card title="Rate limits" href="/concepts/rate-limits" icon="gauge" />
+</CardGroup>

@@ -1,0 +1,18 @@
+---
+title: "Liquidations"
+openapi: "GET /market/liquidations"
+description: "Long and short liquidations over time, on the same interval grid as the other market series."
+---
+
+Long and short liquidations over time, on the same interval grid as
+[`/market/candles`](/api/v2/market/candles), so they align with price, OI and
+CVD without resampling.
+
+This is the **time series**. For the strike-style views see
+[`/liquidation/heatmap`](/api/v2/liquidation/heatmap) and
+[`/liquidation/distribution`](/api/v2/liquidation/distribution).
+
+<Tip>
+Pulling liquidations alongside price and CVD? One call to
+[`/market/bundle`](/api/v2/market/bundle) returns all six series aligned.
+</Tip>

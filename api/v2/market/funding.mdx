@@ -1,0 +1,16 @@
+---
+title: "Funding"
+openapi: "GET /market/funding"
+description: "Aggregate perpetual funding rate over time."
+---
+
+Aggregate perpetual funding rate, on the same interval grid as
+[`/market/candles`](/api/v2/market/candles).
+
+<Note>
+Funding settles on each venue's own schedule. Asking for a finer interval
+resamples the settlements that exist; it does not create new ones.
+</Note>
+
+Same window rules as candles: capped at one year, long windows served from
+continuous aggregates, and your plan's historical window applies.

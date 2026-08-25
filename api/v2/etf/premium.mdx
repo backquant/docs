@@ -1,0 +1,11 @@
+---
+title: "ETF premium"
+openapi: "GET /etf/premium"
+description: "Premium or discount of each spot ETF's market price to its net asset value."
+---
+
+Premium or discount of each fund's market price to its net asset value.
+Available for BTC and ETH.
+
+As with [flows](/api/v2/etf/flows), check `meta.extra.days_since_latest` before
+treating the last point as current.
