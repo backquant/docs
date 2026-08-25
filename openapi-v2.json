@@ -8672,7 +8672,7 @@
           "Market"
         ],
         "summary": "Price, open interest and funding in one call",
-        "description": "Every time-indexed market series for a symbol, over one window, in a single request: price, open interest, funding, CVD on both the perpetual and spot aggregates, and liquidations.\n\nUse this instead of calling the individual endpoints: it is one round trip instead of six, and every series is returned against the same window so you do not have to align them yourself.\n\n**Quota:** charged per series requested, not per request. Three series cost three units, exactly as three separate calls would. The saving is latency and round trips, not allowance, so bundling is never a way to get more data for less.\n\n**Cost to us:** none beyond the individual endpoints. Each series is fetched through the same cache key those endpoints use, so a bundle following individual calls is served from cache, and concurrent callers share one computation.\n\nPartial failure does not fail the request: a series that cannot be served is returned as `null` with its reason under `meta.extra.errors`, so one cold series never costs you the others.",
+        "description": "Every time-indexed market series for a symbol, over one window, in a single request: price, open interest, funding, CVD on both the perpetual and spot aggregates, and liquidations.\n\nUse this instead of calling the individual endpoints: it is one round trip instead of six, and measured about 3x faster.\n\n**Every series shares one `timestamps` array.** Index `i` of any series corresponds to `timestamps[i]`, so you can zip them positionally without joining on time. The series come from different tables and do not all carry every bucket, so a gap is `null` at that position - never carried forward from the previous bucket, which would invent data. `meta.extra.coverage` reports how many buckets each series actually filled.\n\n**Quota:** charged per series requested, not per request. Three series cost three units, exactly as three separate calls would. The saving is latency and round trips, not allowance, so bundling is never a way to get more data for less.\n\n**Cost to us:** none beyond the individual endpoints. Each series is fetched through the same cache key those endpoints use, so a bundle following individual calls is served from cache, and concurrent callers share one computation.\n\nPartial failure does not fail the request: a series that cannot be served is returned as `null` with its reason under `meta.extra.errors`, so one cold series never costs you the others.",
         "operationId": "get_bundle_market_bundle_get",
         "parameters": [
           {
@@ -9281,7 +9281,7 @@
           "Tape"
         ],
         "summary": "Multi-venue options tape - paginated trade history",
-        "description": "Returns options trades from Deribit + Bybit + OKX + Binance (BTC + ETH today). Cursor-paginated; pass the response's `next_cursor` as `?before=` to walk older.\n\nAll filters compose with AND. Empty values are no-ops. The default page is the latest 200 trades for the requested coin across all venues.",
+        "description": "Returns options trades from every venue we collect - `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta`, `delta_india` (BTC + ETH today). Names are given as the tokens you pass to `?venues=`. Cursor-paginated; pass the response's `next_cursor` as `?before=` to walk older.\n\nVenue mix varies a lot by coin and by day, so do not assume a handful of venues carries the flow: filtering to a subset can drop most of the tape without any indication it happened. `meta.source` reports the venues a given response drew on.\n\nAll filters compose with AND. Empty values are no-ops. The default page is the latest 200 trades for the requested coin across all venues.",
         "operationId": "get_tape_tape_get",
         "parameters": [
           {
@@ -9315,13 +9315,13 @@
                   "type": "null"
                 }
               ],
-              "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex.",
+              "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex, delta, delta_india.",
               "examples": [
                 "deribit,bybit"
               ],
               "title": "Venues"
             },
-            "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex."
+            "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex, delta, delta_india."
           },
           {
             "name": "instrument",

@@ -7,16 +7,54 @@ description: "Price, open interest and funding for one symbol and window in a si
 Candles, open interest and funding for one symbol over one window, in a single
 request.
 
-Use this instead of calling
-[`/market/candles`](/api/v2/market/candles),
-[`/market/open-interest`](/api/v2/market/open-interest) and
-[`/market/funding`](/api/v2/market/funding) separately. It is one round trip
-rather than three, and the series come back against the same window, so you are
-not joining three timestamp axes yourself. That matters more than it sounds:
-the 30m, 4h and 1d sources are continuous aggregates keyed on a bucket
-boundary, while the finer intervals are keyed on raw time.
+Six series in one request: candles, open interest, funding, CVD on both the
+perpetual and spot aggregates, and liquidations.
 
-Pick a subset with `series=` when you do not need all three.
+Use this instead of calling the individual endpoints. It is one round trip
+rather than six, and measured about **3x faster** than making those calls
+separately.
+
+Pick a subset with `series=` when you do not need all six.
+
+## One shared time axis
+
+**Every series shares the response's single `timestamps` array.** Index `i` of
+any series corresponds to `timestamps[i]`, so you can zip them positionally
+without joining on time.
+
+This matters more than it sounds. The series come from different tables and do
+not all carry every bucket. Measured over a year at `1d`: candles 372, funding
+364, liquidations 367, across the *same* first and last timestamp. Returned
+unaligned, a positional zip would pair one day's open interest with another
+day's price and every number would still look plausible.
+
+A bucket a series does not have is **`null` at that position**, never carried
+forward from the previous one. Filling it would invent a print that did not
+happen and bias any average computed over the column.
+
+`meta.extra.coverage` reports how many buckets each series actually filled, so
+sparsity is visible without counting nulls:
+
+```json
+{
+  "data": {
+    "timestamps": [1756080000000, 1756166400000, 1756252800000],
+    "candles":    { "close": [80332.7, 80383.1, 80401.2] },
+    "funding":    { "rate_open": [0.0001, null, 0.0003] }
+  },
+  "meta": {
+    "extra": {
+      "coverage": { "candles": 3, "funding": 2 },
+      "aligned": true
+    }
+  }
+}
+```
+
+<Note>
+The individual endpoints still return their own `timestamps`. Only the bundle
+reindexes onto a shared axis, because doing that join is the reason it exists.
+</Note>
 
 <Note>
 **Quota is charged per series, not per request.** Three series cost three
