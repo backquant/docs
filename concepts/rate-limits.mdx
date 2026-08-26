@@ -97,6 +97,48 @@ as “upgrade / wrong plan,” not as a bad key.
 API access requires subscription status **`active`**. `trialing` grants
 the terminal but **not** the API until the trial converts.
 
+## Historical depth
+
+Separate from request limits, your plan sets how far back history
+endpoints may reach.
+
+| Plan | Window |
+| --- | ---: |
+| Evaluation (`sandbox`) | 30 days |
+| Terminal Yearly, Crypto API monthly | 30 days |
+| Crypto API annual | 90 days |
+| Terminal + API monthly | 180 days |
+| Terminal + API annual | 365 days |
+| Enterprise | Full history |
+
+A request beyond your window is **clamped, never rejected**. You receive
+the data you are entitled to, plus a `meta.extra.history_clamp` block
+saying what was asked for and what was served:
+
+```json
+{
+  "history_clamp": {
+    "requested": 365,
+    "allowed": 30,
+    "unit": "days",
+    "max_history_days": 30,
+    "enforced": true
+  }
+}
+```
+
+Call [`GET /v2/meta`](/api/v2/discovery/meta) to see the full ladder and,
+under `your_plan`, the window that applies to your own key.
+
+<Note>
+For existing paid plans the clamp is currently **reported but not
+enforced**: `meta.history_depth_enforced` is `false` and your request is
+served in full. Evaluation keys are the exception and are enforced today,
+so a trial reflects the plan being trialled. Check whether
+`history_clamp` appears in your traffic now, and you will know in advance
+whether enforcement affects you.
+</Note>
+
 ## Strategy
 
 **Cache aggressively.** Chain/GEX snapshots refresh ~30s server-side.
