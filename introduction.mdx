@@ -6,9 +6,11 @@ description: "Professional-grade options + GEX analytics for crypto markets"
 BackQuant is a professional market-data API focused on **crypto options
 analytics**: gamma exposure (GEX), implied volatility surfaces, dealer
 positioning, max-pain, OPEX calendar, and risk-neutral probability
-distributions. The same data that powers the BackQuant terminal is
+distributions, alongside price, open interest, funding, CVD, liquidations
+and spot ETF flows. The same data that powers the BackQuant terminal is
 available programmatically, ready to plug into your trading systems,
-research workflows, and dashboards.
+research workflows, and dashboards. It is also available over
+[MCP](/mcp-server) for Claude and other AI clients.
 
 <Card title="Get your API key" icon="key" href="https://backquant.com/api-access" horizontal>
   Sign up at **backquant.com/api-access**.
@@ -61,6 +63,9 @@ Thalex / Delta India / Delta Global when live - see
 | **Tape** | Multi-venue REST + WebSocket, imbalance, strike heat, whale prints, **flow by strike**, optional live GEX levels channel |
 | **Probability** | Breeden-Litzenberger PDF/CDF + 3D probability surface + confidence-band interpolation |
 | **Open interest** | By expiry (coin-unit multi-venue), time-series with cursor pagination, put/call ratio (intraday + daily) |
+| **Market data** | OHLCV candles with buy/sell split, aggregate open interest, funding, CVD on both perp and spot, liquidations over time, plus a bundle returning all of them on one shared time axis |
+| **ETF flows** | Daily creations and redemptions per fund with running cumulatives, premium/discount to NAV, assets under management |
+| **Cross-venue book** | Best bid and offer across every venue with the venue named on each side, spread and quote dispersion per contract |
 | **Other** | Premium tide (0DTE + weekly), dated-futures basis, liquidation heatmap + distribution, multi-symbol GEX bundle |
 
 Live dealer exposure defaults to **flow** positioning

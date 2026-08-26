@@ -3,10 +3,11 @@ title: "BackQuant API"
 description: "Professional-grade options + GEX analytics for crypto markets"
 ---
 
-BackQuant gives you programmatic access to institutional-quality options
-analytics for crypto markets - gamma exposure (GEX), implied volatility
-surfaces, dealer positioning, max-pain, OPEX calendar, and risk-neutral
-probability distributions - through a single REST API.
+BackQuant gives you programmatic access to institutional-quality analytics
+for crypto markets - gamma exposure (GEX), implied volatility surfaces,
+dealer positioning, max-pain, the options tape, price and open interest,
+funding, CVD, liquidations and spot ETF flows - through a single REST API,
+also available over MCP for AI clients.
 
 <CardGroup cols={2}>
   <Card title="Quick start" icon="bolt" href="/quickstart">
@@ -16,10 +17,10 @@ probability distributions - through a single REST API.
     Get your API key and authenticate your first request.
   </Card>
   <Card title="API reference" icon="code" href="/api/v2/gex/levels">
-    Browse all 38 endpoints with interactive try-it-out.
+    Browse all 62 endpoints with interactive try-it-out.
   </Card>
-  <Card title="Code examples" icon="terminal" href="/examples/python">
-    Python, TypeScript, and curl recipes for the common workflows.
+  <Card title="MCP server" icon="robot" href="/mcp-server">
+    Give Claude and other AI clients direct access to the same data.
   </Card>
 </CardGroup>
 
@@ -49,6 +50,22 @@ probability distributions - through a single REST API.
   <Card title="Multi-symbol bundle" icon="layer-group" href="/api/v2/multi/gex-levels">
     BTC + ETH + SOL + HYPE GEX levels in one round-trip - one Redis
     `MGET`, four symbols.
+  </Card>
+  <Card title="Market data bundle" icon="chart-candlestick" href="/api/v2/market/bundle">
+    Price, open interest, funding, spot and perp CVD, and liquidations
+    on one shared time axis, in a single request.
+  </Card>
+  <Card title="Spot ETF flows" icon="building-columns" href="/api/v2/etf/flows">
+    Daily creations and redemptions per fund with running cumulatives,
+    premium to NAV, and assets under management.
+  </Card>
+  <Card title="Options tape" icon="receipt" href="/api/v2/tape/overview">
+    Live multi-venue prints over REST and WebSocket, with imbalance,
+    strike heat, whale prints and flow by strike.
+  </Card>
+  <Card title="Cross-venue book" icon="scale-balanced" href="/api/v2/options/venue-book">
+    Best bid and offer across every venue we collect, with the venue
+    named on each side and how far apart they are quoting.
   </Card>
 </CardGroup>
 
