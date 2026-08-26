@@ -64,7 +64,10 @@ premium against a coin premium is exactly how a spread of -195% gets published.
 <ResponseField name="book_crossed" type="boolean">
   A negative spread: one venue bidding above another's offer. Reported, never
   hidden, but excluded from `median_spread_pct` so the headline is not dragged
-  below what trading actually costs.
+  below what trading actually costs, and sorted after every tradeable spread so
+  the first page is books you can act on. On a typical BTC chain a majority of
+  in-band contracts are crossed, so ordering on the raw number would bury the
+  executable ones. Use `crossed_only=true` to select them.
 </ResponseField>
 
 <ResponseField name="crossed" type="boolean">

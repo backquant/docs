@@ -14,6 +14,20 @@ first).
 
 | Version | Date | Summary |
 |---|---|---|
+| **2.7.1** | 2026-08-26 | [`GET /v2/options/venue-book`](/api/v2/options/venue-book) spread sorts rank tradeable spreads first and crossed books last. |
+| **2.7.0** | 2026-08-24 | Crypto market data and spot ETF flows: [candles](/api/v2/market/candles), [open interest](/api/v2/market/open-interest), [funding](/api/v2/market/funding), [CVD](/api/v2/market/cvd), [liquidations](/api/v2/market/liquidations), [ETF flows](/api/v2/etf/flows), and [`/v2/market/bundle`](/api/v2/market/bundle) returning them on one shared time axis. |
+| **2.6.11** | 2026-08-24 | Historical depth becomes a plan entitlement. Reported in `GET /v2/meta`, not yet enforced. |
+| **2.6.10** | 2026-08-24 | Dealer-flow served from a pre-computed aggregate instead of rebuilt per request. |
+| **2.6.9** | 2026-08-23 | Dealer-flow responses carry their own age; last good series retained six hours. |
+| **2.6.8** | 2026-08-22 | Dealer-flow no longer makes the first caller in a window wait out a rebuild. |
+| **2.6.7** | 2026-08-21 | Fixed: `GET /v2/gex/max-pain?expiry=0dte` computed across all expirations. |
+| **2.6.6** | 2026-08-21 | `429` responses send `Retry-After`; OpenAPI spec version matches response `meta.version`. |
+| **2.6.5** | 2026-08-20 | Fixed: `GET /v2/gex/strike-expiry-heatmap` returned 500 on every request. |
+| **2.6.4** | 2026-08-20 | `meta.extra.aggregation` wording no longer describes how the flow model is derived. |
+| **2.6.3** | 2026-08-19 | Fixed: `GET /v2/gex/stress-history` is now per symbol, not always BTC. |
+| **2.6.2** | 2026-08-18 | **Breaking:** consistency pass on [`GET /v2/options/oi/by-expiry`](/api/v2/options/oi/by-expiry); raw `exchange_breakdown` removed. |
+| **2.6.1** | 2026-08-18 | `?exchanges=` returns real per-venue numbers on every surface that accepts it. |
+| **2.6.0** | 2026-08-18 | **Breaking:** WebSocket `gex.levels` serves FLOW (not std); per-venue open interest on OI surfaces. |
 | **2.5.2** | 2026-08-17 | Thalex + Delta India + Delta Global venues. [`GET /v2/tape/flow-by-strike`](/api/v2/tape/flow-by-strike). |
 | **2.5.1** | 2026-08-17 | Thalex chain and tape always-on. |
 | **2.5.0** | 2026-08-04 | **Breaking:** entitlement failures return **403**; monthly request quotas; plan ladder. See [Rate limits](/concepts/rate-limits) and [Errors](/concepts/errors). |

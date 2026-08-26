@@ -7115,7 +7115,7 @@
           "Options"
         ],
         "summary": "Consolidated cross-venue book and quote dispersion",
-        "description": "Best bid and best offer for each contract **across every venue we collect**, with the venue named on each side, plus how far apart those venues are quoting the same contract.\n\nThis is not what `/options/chain` returns. The chain's `bid`/`ask` come from the aggregated row, which is based on a single venue; this endpoint is the genuine best-of, and by construction its spread is never wider than any individual venue's.\n\n**Scope.** Computed only for liquid contracts (0.85-1.15 moneyness, 2+ DTE). Outside that band implied vol stops carrying information: deep-ITM contracts have almost no vega, so a trivial price difference reads as tens of vol points. Contracts quoted by a single venue are omitted, since every field here is a comparison.\n\n**On `crossed`.** A crossed market (best bid vol above best ask vol) is reported as an observation, not an opportunity. Venue quote timestamps are collection times rather than exchange quote times, so a stale quote on the thinner venue cannot be ruled out, and measured crossings are small, short-dated and consistently one-directional - which points at structural causes (settlement, index, funding) rather than anything capturable.\n\n**On `mixed_settlement`.** Deribit's BTC/ETH options are inverse (coin-settled); the USDC venues are linear. Implied vol is comparable across the two to first order, but part of any gap flagged this way is numeraire rather than volatility.",
+        "description": "Best bid and best offer for each contract **across every venue we collect**, with the venue named on each side, plus how far apart those venues are quoting the same contract.\n\nThis is not what `/options/chain` returns. The chain's `bid`/`ask` come from the aggregated row, which is based on a single venue; this endpoint is the genuine best-of, and by construction its spread is never wider than any individual venue's.\n\n**Scope.** Computed only for liquid contracts (0.85-1.15 moneyness, 2+ DTE). Outside that band implied vol stops carrying information: deep-ITM contracts have almost no vega, so a trivial price difference reads as tens of vol points. Contracts quoted by a single venue are omitted, since every field here is a comparison.\n\n**On `crossed`.** A crossed market (best bid vol above best ask vol) is reported as an observation, not an opportunity. Venue quote timestamps are collection times rather than exchange quote times, so a stale quote on the thinner venue cannot be ruled out, and measured crossings are small, short-dated and consistently one-directional - which points at structural causes (settlement, index, funding) rather than anything capturable.\n\n**Ordering.** `sort=spread` and `sort=spread_pct` rank contracts with a non-negative spread first, ascending, and place crossed books after them. A crossed quote's spread is negative, so ordering on the raw number would fill the whole page with books nobody can trade on: on a typical BTC chain a majority of in-band contracts are crossed. They are still returned, and `crossed_only=true` selects them.\n\n**On `mixed_settlement`.** Deribit's BTC/ETH options are inverse (coin-settled); the USDC venues are linear. Implied vol is comparable across the two to first order, but part of any gap flagged this way is numeraire rather than volatility.",
         "operationId": "get_venue_book_options_venue_book_get",
         "parameters": [
           {
@@ -7200,11 +7200,11 @@
                 "strike"
               ],
               "type": "string",
-              "description": "Ordering for the returned contracts.",
+              "description": "Ordering for the returned contracts. The two spread sorts rank tradeable (non-negative) spreads first and crossed books last - see **Ordering** above.",
               "default": "spread_pct",
               "title": "Sort"
             },
-            "description": "Ordering for the returned contracts."
+            "description": "Ordering for the returned contracts. The two spread sorts rank tradeable (non-negative) spreads first and crossed books last - see **Ordering** above."
           },
           {
             "name": "limit",
