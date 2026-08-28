@@ -1,0 +1,157 @@
+---
+title: "Point-in-time (as_of)"
+description: "Ask what the chain, dealer positioning and implied vol were at a past instant, with the snapshot used and its limits reported alongside."
+---
+
+Most of this API answers *what is true now*. Nine endpoints also answer **what
+was true at a given moment**, so a signal can be evaluated against history
+rather than only observed live.
+
+```bash
+curl -H "X-API-Key: bq_live_your_key_here" \
+  "https://api.backquant.com/v2/gex/levels?symbol=BTCUSDT&as_of=2026-08-20T14:30:00Z"
+```
+
+Omit `as_of` and nothing changes. Supply it and the endpoint reconstructs the
+answer from the chain snapshot in force at that instant.
+
+## Where it works
+
+| Endpoint | |
+|---|---|
+| [`/v2/options/chain`](/api/v2/options/chain) | **The chain itself**, with every filter and projection |
+| [`/v2/gex/levels`](/api/v2/gex/levels) | Gamma flip, call wall, put support |
+| [`/v2/gex/strike-profile`](/api/v2/gex/strike-profile) | Dealer gamma by strike |
+| [`/v2/gex/dealer-flow`](/api/v2/gex/dealer-flow) | Dealer hedge flow series ending at that instant |
+| [`/v2/gex/gamma-flow`](/api/v2/gex/gamma-flow) | Gamma component of the same series |
+| [`/v2/options/iv/surface`](/api/v2/options/iv/surface) | Strike x expiry vol grid |
+| [`/v2/options/iv/term-structure`](/api/v2/options/iv/term-structure) | ATM IV by tenor |
+| [`/v2/options/iv/skew`](/api/v2/options/iv/skew) | Skew curve |
+| [`/v2/options/expected-move`](/api/v2/options/expected-move) | Expected move by expiry |
+
+Start with [`/v2/options/chain`](/api/v2/options/chain) if you would rather
+compute your own views: it returns the raw contracts as they stood, and every
+other endpoint above is derived from exactly that snapshot.
+
+The two flow endpoints differ from the rest. They return a **series across
+snapshots**, so `as_of` sets where that series ENDS rather than naming a single
+point. Each frame in it carries the tape as of that frame.
+
+For historical **price**, open interest, funding, CVD and liquidations, use
+[`/v2/market/*`](/api/v2/market/candles), which is built for time series.
+
+## It snaps backward, never forward
+
+Chains are persisted roughly every five minutes, so an arbitrary timestamp
+will not land on one exactly. `as_of` resolves to the nearest snapshot **at or
+before** the time you asked for.
+
+Never after. Snapping forward would let a backtest see a chain from after the
+moment it is meant to be trading, which makes a strategy look better than it
+is. Snapping backward can only ever be slightly stale, which is honest and
+measurable.
+
+The response tells you exactly what you got:
+
+```json
+"meta": {
+  "extra": {
+    "as_of": {
+      "requested":   "2026-08-20T14:30:00+00:00",
+      "snapshot_ts": "2026-08-20T14:27:31+00:00",
+      "lag_seconds": 149.0,
+      "resolution":  "nearest snapshot at or before the requested time"
+    }
+  }
+}
+```
+
+Align on `snapshot_ts`, not on what you requested.
+
+## Flow positioning is rebuilt as of that moment
+
+Under the default `positioning=flow`, the dealer flow map is reconstructed
+from the aggressor tape **as it stood at that instant** rather than from
+today's tape. A given timestamp therefore returns the same numbers every time
+you ask, which is what makes the series usable for research.
+
+Values are rounded before they are returned. The same aggregate run twice can
+differ in its last bits, which is meaningless as a quantity and unacceptable
+in something you are meant to be able to re-run.
+
+## Coverage
+
+Both sources are bounded by when ingestion began, not by a retention policy,
+and they do not start on the same day.
+
+| Source | Available from | Governs |
+|---|---|---|
+| Chain snapshots | **2026-04-16** | Everything below `as_of` |
+| Aggressor tape | **2026-05-17** | `positioning=flow` only |
+
+An `as_of` between those two dates has a chain but no tape. The response is
+signed with the textbook `std` convention instead and says so:
+
+```json
+"flow_unavailable_before": "2026-05-17",
+"flow_coverage_note": "positioning=flow needs the aggressor tape, which begins 2026-05-17. ..."
+```
+
+Earlier than the chain floor returns `404` rather than the oldest snapshot we
+happen to hold.
+
+## Nothing is borrowed from live
+
+An `as_of` response never contains a current value wearing a past timestamp.
+On [`/v2/gex/levels`](/api/v2/gex/levels), `max_pain` and `expected_move` are
+recomputed from the snapshot rather than read from the live caches that back
+them normally.
+
+Where an honest answer is not possible, the section is omitted and named:
+
+```json
+"unavailable_sections": {
+  "sections": ["candles", "spot"],
+  "reason": "Price history comes from the perps candle series, not the options snapshot. Use /v2/market/candles for historical price rather than a value back-dated from a chain."
+}
+```
+
+`include=spot` and `include=candles` come from the perpetual candle series, a
+different source with its own history. Back-dating a price from an options
+snapshot would be inventing one.
+
+## Your plan's window applies
+
+`as_of` is bounded by the same history entitlement as `days` and `hours`. A
+timestamp outside your window is **clamped, never rejected**, and reported:
+
+```json
+"history_clamp": {
+  "requested": "2025-08-20T14:30:00+00:00",
+  "allowed":   "2026-07-29T00:00:00+00:00",
+  "unit": "as_of",
+  "max_history_days": 30,
+  "enforced": true
+}
+```
+
+See [Rate limits](/concepts/rate-limits) for the ladder.
+
+## Practical notes
+
+- **A timestamp far in the past is not an error, it is a 404** when history
+  does not reach it. Check the coverage table before assuming a gap.
+- **Repeated requests are cheap.** Answers are cached on the resolved
+  snapshot, so sweeping a window pays for each snapshot once no matter how
+  many distinct timestamps you send.
+- **Future timestamps are rejected** with `400`. Omit `as_of` for the current
+  value.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Flow vs std" icon="scale-balanced" href="/concepts/positioning" />
+  <Card title="Rate limits" icon="gauge" href="/concepts/rate-limits" />
+  <Card title="Market data" icon="chart-candlestick" href="/api/v2/market/candles" />
+  <Card title="Data freshness" icon="clock" href="/concepts/data-freshness" />
+</CardGroup>

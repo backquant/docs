@@ -130,6 +130,15 @@ saying what was asked for and what was served:
 Call [`GET /v2/meta`](/api/v2/discovery/meta) to see the full ladder and,
 under `your_plan`, the window that applies to your own key.
 
+<Warning>
+**Your window is what you may REQUEST, not a promise the data exists.** Options
+history (used by [`as_of`](/concepts/point-in-time) and the GEX endpoints)
+begins when ingestion did, and market series depth varies by interval: coarser
+intervals are stored for longer. `GET /v2/meta` publishes `data_coverage`
+alongside this ladder so you can size a backtest against both numbers, and a
+short market window is reported on the response as `meta.extra.available_hours`.
+</Warning>
+
 <Note>
 For existing paid plans the clamp is currently **reported but not
 enforced**: `meta.history_depth_enforced` is `false` and your request is

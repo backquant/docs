@@ -42,6 +42,7 @@
             "pages": [
               "concepts/gex",
               "concepts/positioning",
+              "concepts/point-in-time",
               "concepts/opex",
               "concepts/max-pain",
               "concepts/probability-density",
