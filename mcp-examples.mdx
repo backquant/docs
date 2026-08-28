@@ -86,6 +86,24 @@ Good opening questions when you want a read on the market:
 > **"Has open interest been rising on ETH?"**
 > *(`get_oi`)*
 
+## Spot ETF flows
+
+> **"Are the spot ETFs buying or selling BTC?"**
+> Daily net creations and redemptions across every US spot fund.
+> *(`get_etf_flows`)*
+
+> **"Which fund took the money in the last session?"**
+> The per-fund split for the latest settled day, not just the total.
+> *(`get_etf_flows`)*
+
+> **"How much has gone into the ETH ETFs since launch?"**
+> The running cumulative rather than a single day.
+> *(`get_etf_flows`)*
+
+ETF data is daily and publishes on trading days, so the most recent point can
+be a day or more old over a weekend or holiday. The response carries the date
+it belongs to, and a good answer will say which day it is quoting.
+
 ## Getting better answers
 
 **Name the market.** "BTC" or "ETH" beats "bitcoin's options" for getting the

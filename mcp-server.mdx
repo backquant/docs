@@ -1,6 +1,6 @@
 ---
 title: "MCP server"
-description: "Use BackQuant's crypto options, GEX and flow data directly inside Claude, Cursor or any MCP client. OAuth sign-in or an API key, 19 tools, no code required."
+description: "Use BackQuant's crypto options, GEX and flow data directly inside Claude, Cursor or any MCP client. OAuth sign-in or an API key, 20 tools, no code required."
 ---
 
 BackQuant ships a remote **Model Context Protocol** server, so the same data
@@ -149,7 +149,7 @@ you do not need any of this.
 
 ## Tools
 
-Nineteen tools, grouped by what you would ask for. Each returns a shaped,
+Twenty tools, grouped by what you would ask for. Each returns a shaped,
 compact answer rather than a raw dump, so a question costs a sensible number of
 tokens.
 
@@ -189,6 +189,12 @@ tokens.
 | `get_opex` | Upcoming expiries and how much OI rolls off at each |
 | `get_history` | How a positioning metric has changed over time |
 | `get_liquidation` | Where leveraged perp positions get liquidated |
+
+**Spot ETFs**
+
+| Tool | Answers |
+|---|---|
+| `get_etf_flows` | Daily net creations and redemptions for the US spot crypto ETFs, per fund and in total, plus the cumulative since launch |
 
 **Discovery**
 
