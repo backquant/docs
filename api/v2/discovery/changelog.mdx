@@ -14,6 +14,8 @@ first).
 
 | Version | Date | Summary |
 |---|---|---|
+| **2.9.0** | 2026-08-30 | Per-venue dealer flow on [`/v2/tape/flow-by-strike`](/api/v2/tape/flow-by-strike) via `?include=by_venue`, with a `venue_disagreement` statistic. Venues disagree on direction for about 70% of multi-venue contracts. |
+| **2.8.1** | 2026-08-30 | Responses ~17% smaller (float noise trimmed everywhere). **Breaking:** [`/v2/options/pcr`](/api/v2/options/pcr) intraday now honours `days` and puts `exchange_breakdown` behind `?include=`. |
 | **2.8.0** | 2026-08-28 | **Breaking:** point-in-time [`as_of`](/concepts/point-in-time) on nine endpoints including the raw options chain; time-heatmap filtered history now signed as-of each frame; market series report short windows. |
 | **2.7.1** | 2026-08-26 | [`GET /v2/options/venue-book`](/api/v2/options/venue-book) spread sorts rank tradeable spreads first and crossed books last. |
 | **2.7.0** | 2026-08-24 | Crypto market data and spot ETF flows: [candles](/api/v2/market/candles), [open interest](/api/v2/market/open-interest), [funding](/api/v2/market/funding), [CVD](/api/v2/market/cvd), [liquidations](/api/v2/market/liquidations), [ETF flows](/api/v2/etf/flows), and [`/v2/market/bundle`](/api/v2/market/bundle) returning them on one shared time axis. |

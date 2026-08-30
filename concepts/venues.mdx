@@ -111,6 +111,44 @@ moneyness filter you applied. Requesting a single `expiry=` token returns
 whole-expiry venue OI with a `by_venue_note` saying so, because no finer
 per-(strike, expiry) split is published.
 
+## Per-venue dealer flow: `include=by_venue`
+
+Open interest by venue tells you where the **stock** sits. Flow by venue tells
+you who is **moving it**, and the two answer different questions.
+
+[`/v2/tape/flow-by-strike?include=by_venue`](/api/v2/tape/flow-by-strike)
+splits each strike's aggressor flow across the venues that traded it, with
+`net_size` as sold minus bought.
+
+### Why one venue is not enough
+
+Deribit carries roughly **88% of BTC option premium**. That share is why most
+data feeds are Deribit-only, and why a single-venue view looks like it should
+be sufficient.
+
+Measured over seven days of live data, restricted to contracts at least two
+venues traded $5,000 or more of premium on, so thin-venue noise cannot flatter
+the result:
+
+| | contracts | venues disagree on direction |
+|---|---|---:|
+| BTC | 391 | **271 (69.3%)** |
+| ETH | 250 | **172 (68.8%)** |
+
+On 57 of those BTC contracts and 41 of the ETH ones, **Deribit alone gives the
+opposite sign to the aggregate**.
+
+> **BTC 86,000 call, 11 Sep** - aggregate **+38.35**
+> Deribit **-26.20** ($200k) · Bybit **+44.63** ($143k) · OKX **+12.72** ($51k)
+
+A Deribit-only view reports dealers short that strike. They are long it. The
+12% of premium that sits elsewhere is not a rounding error on the answer, it
+is frequently the whole of it.
+
+Every response carries `venue_disagreement`, so you can see how much the
+venues are splitting on the window you actually requested rather than taking
+the figures above on trust.
+
 ## Delta Exchange units
 
 Delta lists **mini** options. The public API always exposes **coin**

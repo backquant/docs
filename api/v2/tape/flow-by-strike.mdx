@@ -37,8 +37,85 @@ do not yet have a multi-venue aggressor tape of this shape.
 | `expiries` | CSV of `YYYY-MM-DD` | - | Combine several live expiries; **takes precedence** over `expiry` |
 | `venues` | CSV | all | Filter: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta` |
 | `min_premium_usd` | number ≥ 0 | `0` | Drop prints below this USD premium (whale floor) |
+| `include` | string | - | `by_venue` adds the per-venue split and the disagreement statistic (see below) |
 
 Omit both `expiry` and `expiries` to include every still-open contract.
+
+## Per-venue split (`?include=by_venue`)
+
+Dealer flow aggregated across eight venues answers *which way are dealers
+positioned*. It does not tell you **which venue is driving it**, and that turns
+out to matter more often than not.
+
+```bash
+curl -H "X-API-Key: bq_live_your_key_here" \
+  "https://api.backquant.com/v2/tape/flow-by-strike?symbol=BTCUSDT&include=by_venue"
+```
+
+Adds a `by_venue` array parallel to `strikes`, so you can zip the two rather
+than join on strike:
+
+```json
+"by_venue": [
+  {
+    "strike": 30000,
+    "venues": {
+      "deribit": { "call_buy": 0.0, "call_sell": 41200.5,
+                   "put_buy": 0.0, "put_sell": 0.0, "net_size": 1413.10 },
+      "okx":     { "...": "...", "net_size":  116.49 },
+      "bybit":   { "...": "...", "net_size":  -14.35 }
+    }
+  }
+]
+```
+
+`net_size` is **sold minus bought**, the same convention the dealer flow model
+uses, so a venue's number here and its contribution there point the same way.
+
+### Why this exists
+
+Deribit carries about **88% of BTC option premium**. That is why most feeds are
+Deribit-only, and why it looks sufficient.
+
+It is not. Measured over seven days of live data, restricted to contracts at
+least two venues traded $5,000 or more of premium on:
+
+| | contracts | venues disagree on direction |
+|---|---|---:|
+| BTC | 391 | **271 (69.3%)** |
+| ETH | 250 | **172 (68.8%)** |
+
+On 57 of those BTC contracts and 41 of the ETH ones, **Deribit alone gives the
+opposite sign to the aggregate**. A worked example:
+
+> **BTC 86,000 call, 11 Sep** - aggregate **+38.35**
+> Deribit **-26.20** ($200k) · Bybit **+44.63** ($143k) · OKX **+12.72** ($51k)
+
+A Deribit-only view reports dealers short that strike. They are long it, and
+the venues carrying the other half of the volume are the reason.
+
+### `venue_disagreement`
+
+Returned in the body and in `meta.extra`:
+
+```json
+"venue_disagreement": {
+  "strikes_compared": 106,
+  "strikes_disagreeing": 82,
+  "disagreement_pct": 77.4
+}
+```
+
+Strikes only one venue traded are **excluded**. One venue cannot disagree with
+itself, and counting them would drag the figure toward zero as coverage widens
+rather than as agreement rises. A venue with no flow on a strike is not counted
+as a participant either, since zero is not a direction.
+
+### Cost
+
+The split is opt-in because it multiplies the row count, not because it is
+expensive: it is one extra `GROUP BY` column on a scan that already reads these
+rows. Measured at 880ms against the aggregated query's 961ms.
 
 ## Response shape
 
