@@ -2482,6 +2482,24 @@
             "description": "ISO-8601 instant to answer as of, e.g. `2026-08-20T14:30:00Z`. Omit for the current value. Resolves to the nearest chain snapshot AT OR BEFORE the requested time (never after, which would be look-ahead bias); the snapshot actually used and the lag are reported in `meta.extra.as_of`. Under `positioning=flow` the dealer flow map is rebuilt from the tape as it stood at that instant, so a given timestamp always returns the same numbers. Bounded by your plan's history window."
           },
           {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional sections. `by_venue` reports how the current dealer flow map splits across the venues that traded each contract, and how often they disagree on direction. Off by default; the query cost is the same, it just returns more.",
+              "title": "Include"
+            },
+            "description": "Optional sections. `by_venue` reports how the current dealer flow map splits across the venues that traded each contract, and how often they disagree on direction. Off by default; the query cost is the same, it just returns more."
+          },
+          {
             "name": "X-API-Key",
             "in": "header",
             "required": false,

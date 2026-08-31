@@ -11,10 +11,41 @@ risk-on).
 
 Two granularities:
 
-- **`?granularity=intraday`** - rolling intraday series, refreshed every 30s. Use for live dashboards.
-- **`?granularity=daily`** - one value per UTC day, sourced from the historical store. Use for time-series studies and backtests.
+- **`?granularity=intraday`** (default) - rolling series at roughly a
+  five-minute cadence. Use for live dashboards.
+- **`?granularity=daily`** - one value per UTC day where the daily rollup is
+  available. That rollup is not currently populated, so this falls back to the
+  intraday series and reports `granularity: "intraday-fallback"` in
+  `meta.extra`. Check that field rather than assuming daily buckets.
 
-Filter the daily mode with `?days=N` (1-365) to control window length.
+## Window
+
+`?days=N` (1 to 365, default 30) bounds **both** granularities.
+
+<Note>
+Before 2.8.1 `days` was accepted on the intraday branch and silently ignored,
+so a request for a week received the entire stored series regardless. It now
+genuinely bounds the window. `meta.extra` reports `points_available` and
+`points_returned` so a trimmed series is visible rather than assumed complete.
+</Note>
+
+## Per-venue breakdown
+
+`exchange_breakdown` gives call and put open interest per venue **for every
+point in the series**. It is roughly four fifths of the payload, so as of
+**2.8.1 it is opt-in**:
+
+```bash
+curl -H "X-API-Key: bq_live_your_key_here" \
+  "https://api.backquant.com/v2/options/pcr?symbol=BTCUSDT&include=exchange_breakdown"
+```
+
+<Warning>
+**Breaking in 2.8.1.** The intraday response previously included
+`exchange_breakdown` by default, which made it about 2.5 MB. If you read that
+field, add `?include=exchange_breakdown` to restore it. Everything else is
+unchanged.
+</Warning>
 
 ## See also
 
