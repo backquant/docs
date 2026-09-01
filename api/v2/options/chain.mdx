@@ -6,8 +6,40 @@ description: "Filtered options chain. Per-contract data (greeks, OI, IV, bid/ask
 
 Filtered chain with two-layer projection (`?fields=` top-level, `?include=` per-contract) and a payload cap (`?max_contracts`). Cached 30s per filter combination.
 
+## Where each number comes from
+
+A chain row mixes cross-venue and single-venue fields on purpose. Reading a
+single-venue field as a market-wide total is the most common way to misread
+this endpoint.
+
+| Field | Scope |
+|---|---|
+| `oi` | All eight venues, summed |
+| `bid`, `ask`, `mark` | **Deribit only.** Use [venue-book](/api/v2/options/venue-book) for consolidated best bid and offer |
+| `volume`, `notional_volume`, `trade_count` | All eight venues on **BTC and ETH**; Deribit only on SOL, Derive only on HYPE |
+
+The activity fields cover a rolling 24 hours and arrive under
+`?include=volume`. `volume` is contracts and `trade_count` is prints.
+
+`notional_volume` is **premium paid in USD** on BTC, ETH and SOL, but
+**underlying notional** (contracts x spot) on HYPE, which is what Derive
+publishes for it.
+
+<Warning>
+  On the activity fields, **`null` is not `0`**. A `0` means measured and
+  nothing traded; a `null` means not measured. SOL reports
+  `trade_count: null`, because no venue publishes a per-contract trade count
+  for it.
+</Warning>
+
+Full reasoning, including why SOL and HYPE are not blended, is in
+[Venues](/concepts/venues).
+
 ## See also
 
 <CardGroup cols={2}>
+  <Card title="Which fields are cross-venue" href="/concepts/venues" icon="layer-group" />
+  <Card title="Consolidated best bid/offer" href="/api/v2/options/venue-book" icon="scale-balanced" />
   <Card title="Greeks beyond delta" href="/concepts/greeks" icon="bookmark" />
+  <Card title="Refresh cadences" href="/concepts/data-freshness" icon="clock" />
 </CardGroup>

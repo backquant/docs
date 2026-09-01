@@ -47,6 +47,50 @@ Strike-profile payloads advertise `available_exchanges` with the full
 chain set (including Thalex / Derive / both Delta IDs) even on thin
 books, so UI filters stay stable.
 
+## Which fields are cross-venue, and which are one venue's
+
+A single row of [`/options/chain`](/api/v2/options/chain) deliberately mixes
+both kinds. Reading a single-venue field as a market-wide total is the most
+common way to misread this API, so the split is explicit:
+
+| Field | Scope | Why |
+|---|---|---|
+| `oi` | **All eight venues**, summed | Positioning is the whole market's, and OI is coin-native everywhere so it sums without conversion |
+| `bid`, `ask`, `mark` | **Deribit only** | Deribit is the reference book. For consolidated best bid and offer with the venue named on each side, use [`/options/venue-book`](/api/v2/options/venue-book) |
+| `volume`, `notional_volume`, `trade_count` | **All eight venues on BTC and ETH.** Deribit only on SOL, Derive only on HYPE | Measured over a rolling 24h from our aggressor tape, which spans every venue for BTC and ETH but not for SOL or HYPE |
+
+`volume` is contracts and `trade_count` is prints.
+
+`notional_volume` is **premium paid, in USD**, on BTC, ETH and SOL. On HYPE
+it is **underlying notional** (contracts x spot) instead, because that is
+what Derive publishes for it. The two differ by roughly the premium ratio,
+so do not compare HYPE's figure against the others without converting.
+
+### Why SOL and HYPE are not blended
+
+Publishing a "cross-venue" total that quietly omits a venue would be worse
+than publishing one venue's number and saying so. Our tape does not span
+venues for these two, so they carry the source venue's own figures and are
+labelled here rather than blended into something that looks complete.
+
+### `null` is not `0`
+
+On those three activity fields the distinction is load-bearing:
+
+- **`0`** means measured, and nothing traded in the window.
+- **`null`** means not measured.
+
+SOL reports `trade_count: null`, because no venue publishes a per-contract
+trade count for it. Collapsing the two is how a contract that traded
+thousands of times can read as untraded.
+
+### Counting prints and notional together
+
+A cross-venue trade count is dominated by retail flow. Over 24 hours on BTC,
+one venue contributed 194,063 of 255,369 prints but only $7.8M of $46M in
+premium, while Deribit contributed 6,060 prints and $30M. Neither number
+alone describes the activity; read them together.
+
 ## What `?exchanges=` actually does
 
 The filter **re-aggregates the surface from the per-venue breakdown**. It is

@@ -17,6 +17,18 @@ them.
 | **Liquidation heatmap** | **5 minutes** | Lower cadence; perp liquidations don't move that fast |
 | **IV-RV / VRP history** | **Daily** (after UTC midnight) | Daily snapshots, not intraday |
 | **Stress history** (`/v2/gex/stress-history`) | **Continuous** (Postgres-backed) | Persistent log of HVL / walls over time |
+| **Chain traded activity** (`volume`, `notional_volume`, `trade_count`) | **60 seconds**, over a rolling **24-hour** window | Measured from our cross-venue aggressor tape, not from a venue's own summary. See [Venues](/concepts/venues) for which symbols are blended |
+
+<Note>
+  The activity fields refresh on their own 60-second cadence, independently of
+  the 30-second chain snapshot they ride in. They are also the only fields on
+  the chain that describe a **window** (the last 24 hours) rather than an
+  instant, so they move even when nothing about the contract has changed.
+
+  If the measurement goes unavailable they become `null` rather than freezing
+  at their last value. A `null` there means not measured; a `0` means measured
+  and nothing traded.
+</Note>
 
 ## Reading freshness from a response
 
