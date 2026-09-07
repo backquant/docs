@@ -14,6 +14,9 @@ first).
 
 | Version | Date | Summary |
 |---|---|---|
+| **2.11.0** | 2026-09-07 | Dealer-flow positioning about 4x faster on the endpoints that were slowest (`flow` is the default, and it was scanning the whole options tape per request). **Breaking:** [`/v2/options/greeks/surfaces/{greek}`](/api/v2/options/greeks/surfaces) puts `exchange_breakdown` behind `?include=`. |
+| **2.10.1** | 2026-09-01 | `notional_volume` means premium paid on every symbol (HYPE carried underlying notional). Point-in-time chains recompute traded activity instead of serving pre-fix values, and a missing measurement reports `null` rather than a single-venue substitute. |
+| **2.10.0** | 2026-09-01 | **Breaking:** chain `volume` / `notional_volume` now cover all eight venues on BTC and ETH, and `trade_count` is populated for the first time. Fixes `bid` / `ask` on [`/v2/options/chain`](/api/v2/options/chain), which had been `0` on every contract. |
 | **2.9.0** | 2026-08-30 | Per-venue dealer flow on [`/v2/tape/flow-by-strike`](/api/v2/tape/flow-by-strike) via `?include=by_venue`, with a `venue_disagreement` statistic. Venues disagree on direction for about 70% of multi-venue contracts. |
 | **2.8.1** | 2026-08-30 | Responses ~17% smaller (float noise trimmed everywhere). **Breaking:** [`/v2/options/pcr`](/api/v2/options/pcr) intraday now honours `days` and puts `exchange_breakdown` behind `?include=`. |
 | **2.8.0** | 2026-08-28 | **Breaking:** point-in-time [`as_of`](/concepts/point-in-time) on nine endpoints including the raw options chain; time-heatmap filtered history now signed as-of each frame; market series report short windows. |

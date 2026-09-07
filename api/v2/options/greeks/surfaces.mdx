@@ -6,8 +6,29 @@ description: "Strike × time greek surface. Time-evolving surface for charm or v
 
 Time-evolving surface for `charm` or `vega`. Already pre-computed for the BackQuant terminal; exposed here for quant tooling.
 
+## Per-venue breakdown
+
+`exchange_breakdown` gives the per-venue split **at every point on the
+surface**. It is roughly three quarters of the payload, so as of **2.11.0 it
+is opt-in**:
+
+```bash
+curl -H "X-API-Key: bq_live_your_key_here" \
+  "https://api.backquant.com/v2/options/greeks/surfaces/vega?symbol=BTCUSDT&include=exchange_breakdown"
+```
+
+Same flag and same default as [`/v2/options/pcr`](/api/v2/options/pcr).
+
+<Warning>
+**Breaking in 2.11.0.** The response previously included `exchange_breakdown`
+by default, which made it about 638 KB compressed against 124 KB without. If
+you read that field, add `?include=exchange_breakdown` to restore it. The
+surface itself is unchanged either way.
+</Warning>
+
 ## See also
 
 <CardGroup cols={2}>
   <Card title="Greeks beyond delta" href="/concepts/greeks" icon="bookmark" />
+  <Card title="The same flag on PCR" href="/api/v2/options/pcr" icon="chart-pie" />
 </CardGroup>
