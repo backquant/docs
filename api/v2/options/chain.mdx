@@ -19,17 +19,21 @@ this endpoint.
 | `volume`, `notional_volume`, `trade_count` | All eight venues on **BTC and ETH**; Deribit only on SOL, Derive only on HYPE |
 
 The activity fields cover a rolling 24 hours and arrive under
-`?include=volume`. `volume` is contracts and `trade_count` is prints.
+`?include=volume`. `volume` is contracts, `notional_volume` is **premium paid
+in USD**, and `trade_count` is prints. All three mean the same thing on every
+symbol; only the venue scope differs.
 
-`notional_volume` is **premium paid in USD** on BTC, ETH and SOL, but
-**underlying notional** (contracts x spot) on HYPE, which is what Derive
-publishes for it.
+Under `?as_of=`, these three are **recomputed** from the tape for the window
+ending at that snapshot (`meta.extra.activity_rebuilt` confirms it). `bid` and
+`ask` are not recoverable that way and stay `0` on chains persisted before
+2026-09-01 - `meta.extra.quotes_note` says so.
 
 <Warning>
   On the activity fields, **`null` is not `0`**. A `0` means measured and
   nothing traded; a `null` means not measured. SOL reports
   `trade_count: null`, because no venue publishes a per-contract trade count
-  for it.
+  for it, and BTC/ETH read `null` in the brief window where the cross-venue
+  measurement is unavailable.
 </Warning>
 
 Full reasoning, including why SOL and HYPE are not blended, is in

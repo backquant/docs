@@ -59,12 +59,17 @@ common way to misread this API, so the split is explicit:
 | `bid`, `ask`, `mark` | **Deribit only** | Deribit is the reference book. For consolidated best bid and offer with the venue named on each side, use [`/options/venue-book`](/api/v2/options/venue-book) |
 | `volume`, `notional_volume`, `trade_count` | **All eight venues on BTC and ETH.** Deribit only on SOL, Derive only on HYPE | Measured over a rolling 24h from our aggressor tape, which spans every venue for BTC and ETH but not for SOL or HYPE |
 
-`volume` is contracts and `trade_count` is prints.
+`volume` is contracts, `notional_volume` is **premium paid in USD**, and
+`trade_count` is prints. All three mean the same thing on every symbol; only
+the venue scope differs.
 
-`notional_volume` is **premium paid, in USD**, on BTC, ETH and SOL. On HYPE
-it is **underlying notional** (contracts x spot) instead, because that is
-what Derive publishes for it. The two differ by roughly the premium ratio,
-so do not compare HYPE's figure against the others without converting.
+<Note>
+  Before 2026-09-01, `notional_volume` on HYPE carried *underlying* notional
+  (contracts x spot) rather than premium, because that is what Derive
+  publishes. It is now converted, so the field is comparable across symbols.
+  If you stored HYPE values before that date they are not comparable with
+  current ones.
+</Note>
 
 ### Why SOL and HYPE are not blended
 
@@ -83,6 +88,23 @@ On those three activity fields the distinction is load-bearing:
 SOL reports `trade_count: null`, because no venue publishes a per-contract
 trade count for it. Collapsing the two is how a contract that traded
 thousands of times can read as untraded.
+
+On BTC and ETH all three read `null` in the rare window where the cross-venue
+measurement is briefly unavailable (recovery is about 60 seconds). We report
+it missing rather than substituting one venue's figure, which would answer a
+cross-venue question with a number 10-20x smaller and give you no way to tell.
+
+### Under `as_of`
+
+Point-in-time chains **recompute** the activity fields for the 24 hours
+ending at the resolved snapshot, from the same cross-venue tape, so history
+does not serve figures that were only ever single-venue.
+`meta.extra.activity_rebuilt` confirms it ran.
+
+`bid` and `ask` are different. On chains persisted before 2026-09-01 they are
+`0` because they were never recorded, and no recomputation can recover them.
+`meta.extra.quotes_note` says so on every affected response, so those zeros
+are never mistaken for an unquoted market.
 
 ### Counting prints and notional together
 
