@@ -210,6 +210,63 @@ tokens.
 | `list_symbols` | Which markets are covered and which have data right now |
 | `list_expiries` | Valid expiry tokens to pass to the other tools |
 
+## What every response carries
+
+Alongside the numbers, tool results carry:
+
+| Field | What it tells you |
+|---|---|
+| `summary` | The answer in a sentence, for the model to relay. On every tool |
+| `units` | The scale of the numbers, so you never have to assume one |
+| `as_of` | When the data was computed, not when you asked. On a multi-source answer this is the OLDEST input, because a result is only as current as its stalest part |
+| `data_age_seconds` | How old it is, in seconds |
+| `venues` | Which exchanges the answer was built from |
+
+A few tools carry fewer of these, for reasons rather than by oversight.
+`list_symbols` and `list_expiries` report no `units`, because they return
+identifiers rather than measurements. `list_symbols` also reports no `as_of`:
+it lists which markets exist, and stamping it would describe when you asked
+rather than anything about the data. `get_history` and `get_etf_flows` report
+no `venues`, because a series spanning weeks or a fund's daily creations are
+not attributable to one set of exchanges.
+
+Two stamps mean exactly what they say, and are worth reading carefully:
+
+- `get_etf_flows` reports the **settlement date**, so `data_age_seconds` is
+  measured in days. These figures settle daily and are a business day or more
+  behind by design. That is the honest number: the cache behind them refreshes
+  every few minutes, and reporting that would tell you three-day-old flows
+  were two minutes old.
+- For bucketed series such as `get_perps`, `as_of` is the **newest bucket**,
+  so it trails by up to one `interval`. A one-hour series reading 50 minutes
+  old is current, not stale. The `interval` field tells you which.
+
+### The tools do not share one snapshot
+
+Each tool answers from its own read, and the underlying feeds move at different
+speeds. The trade tape is continuous. Dealer gamma is snapshotted periodically.
+Spot ETF flows settle daily and are a business day old by design.
+
+So a single question can combine numbers computed minutes apart. That is normal
+and usually harmless, but it is yours to see rather than guess at: compare
+`as_of` across two results and the gap is explicit.
+
+When one answer draws on several sources, it also carries
+`source_skew_seconds` and a note naming which input lags:
+
+```json
+{
+  "as_of": "2026-09-07T01:05:12+00:00",
+  "data_age_seconds": 1785.7,
+  "venues": ["binance", "bybit", "deribit", "okx"],
+  "source_skew_seconds": 1785.7,
+  "source_skew_note": "inputs span 1786s: /gex/dealer-flow is the oldest, /tape/stats the freshest. Not one snapshot."
+}
+```
+
+We do not publish a single snapshot ID across all 22 tools. It would imply the
+feeds were captured at one instant, and they are not.
+
 ## Limits
 
 MCP runs on the **same entitlements as the REST API**. There is no separate MCP
