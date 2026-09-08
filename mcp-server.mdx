@@ -173,8 +173,8 @@ tokens.
 
 | Tool | Answers |
 |---|---|
-| `get_tape` | Individual prints and aggregates over them |
-| `get_flow_by_strike` | Where aggressors actually bought and sold, strike by strike |
+| `get_tape` | Individual prints and aggregates over them. `hours` sets the lookback, 1 to 168, so "what traded in the last hour" and "biggest print this week" are both askable |
+| `get_flow_by_strike` | Where aggressors actually bought and sold, strike by strike. Pass `strike` to ask about one level directly, e.g. "is anyone buying calls at 100k"; if that strike is not open it answers for the nearest and says so |
 | `get_dealer_flow` | Dealer hedging pressure over time, measured from the tape |
 
 **Volatility and pricing**
@@ -184,7 +184,7 @@ tokens.
 | `get_iv` | Implied volatility in whichever cut you need |
 | `get_expected_move` | The move the market is pricing for an expiry |
 | `get_probability` | Market-implied odds of finishing above or below a price |
-| `get_basis` | The dated-futures curve, annualised basis by expiry |
+| `get_basis` | The dated-futures curve, annualised basis by expiry. For perpetual basis use `get_perps`, which reports `perp_basis_bps` |
 
 **Structure and history**
 
@@ -195,7 +195,7 @@ tokens.
 | `get_opex` | Upcoming expiries and how much OI rolls off at each |
 | `get_history` | How a positioning metric has changed over time |
 | `get_liquidation` | Where leveraged perp positions get liquidated |
-| `get_perps` | The perpetual-futures picture: open interest, funding, spot and perp CVD, and liquidations over a window. `view=` narrows it to one of those. |
+| `get_perps` | The perpetual-futures picture: open interest, funding, spot and perp CVD, liquidations, and the perpetual basis to spot. `view=` narrows it to one of those. |
 
 **Spot ETFs**
 
@@ -208,7 +208,7 @@ tokens.
 | Tool | Answers |
 |---|---|
 | `list_symbols` | Which markets are covered and which have data right now |
-| `list_expiries` | Valid expiry tokens to pass to the other tools |
+| `list_expiries` | Valid expiry tokens to pass to the other tools. You rarely need it first: any tool taking `expiry` also accepts `next` for the front expiry |
 
 ## What every response carries
 
