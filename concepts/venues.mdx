@@ -6,7 +6,7 @@ description: "Which exchanges BackQuant ingests for options chains, GEX, IV, lev
 BackQuant ingests crypto options from multiple exchanges and folds them
 into one canonical surface. Filterable venue IDs on public v2 are:
 
-`deribit` · `bybit` · `okx` · `binance` · `derive` · `thalex` · `delta_india` · `delta`
+`deribit` · `bybit` · `okx` · `binance` · `derive` · `thalex` · `delta_india` · `delta` · `bullish` · `paradex`
 
 ## Venues at a glance
 
@@ -20,12 +20,14 @@ into one canonical surface. Filterable venue IDs on public v2 are:
 | **`thalex`** | ✅ live WS | ✅ always-on | Book channel `book.{INSTR}.none.10.100ms` `trades[]` | BTC/ETH; USD-settled premium |
 | **`delta_india`** | ✅ live WS | ✅ always-on | `api.india.delta.exchange` + `socket.india.delta.exchange` | BTC/ETH minis; see [units](#delta-exchange-units) |
 | **`delta`** | ✅ live WS | ✅ always-on | `api.delta.exchange` + `socket.delta.exchange` | Global Delta book (thinner than India) |
+| **`bullish`** | Off (collector paused) | ✅ always-on (since 2026-09-29) | Option ladder snapshot (REST) | BTC only, USDC-settled. Trades are not collected yet, so Bullish is not in the tape or in `flow` positioning |
+| **`paradex`** | Off (collector paused) | ✅ always-on (since 2026-09-29) | `markets/summary` snapshot (REST) | BTC and ETH, USD-settled. Trades are not collected yet, so Paradex is not in the tape or in `flow` positioning |
 
 ### Coins
 
 | Coin | Chain / GEX | Flow tape |
 |---|---|---|
-| **BTC**, **ETH** | Full multi-venue | Full multi-venue (all eight IDs when live) |
+| **BTC**, **ETH** | Full multi-venue (all ten IDs) | The eight tape venues (Bullish and Paradex are OI only) |
 | **SOL**, **HYPE** | When Derive / Deribit linear HYPE are enabled | FLOW falls back to `std` if no aggressor tape |
 
 ## Where venues show up

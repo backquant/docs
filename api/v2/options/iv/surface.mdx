@@ -1,13 +1,27 @@
 ---
 title: "IV surface"
 openapi: "GET /options/iv/surface"
-description: "IV surface (strike × expiry). 2D implied-volatility grid: rows are strikes, columns are expiries (sorted by ascending DTE)."
+description: "The fitted implied-vol surface: vol by tenor and strike, with each expiry's forward, SVI parameters and fit error."
 ---
 
-2D implied-volatility grid: rows are strikes, columns are expiries (sorted by ascending DTE).
+The fitted implied-vol surface out to 180 days. `z_grid[i][j]` is the vol
+in percent at tenor `y_grid[i]` (days, ascending) and strike `x_grid[j]`.
+Cells are null where the expiry never traded that far out; nothing is
+extrapolated to fill them.
+
+`expiry_forwards` gives each row's forward and how it was found, the smile
+method and fit error, the raw SVI parameters `svi` where it fitted, its
+years to expiry `t`, the log-moneyness span of its quotes `k_range`, its
+quoted ATM and wing vols (`market`) and its quote count. `long_expiries`
+carries the same for expiries past 180 days, which are fitted but not
+drawn on the grid. `delta_surface` is the same surface by delta.
+
+Calendar arbitrage is removed on the grid. How every step works, and what is
+checked, is on [Vol surface methodology](/concepts/vol-surface).
 
 ## See also
 
 <CardGroup cols={2}>
+  <Card title="Vol surface methodology" href="/concepts/vol-surface" icon="book" />
   <Card title="IV suite" href="/concepts/iv-suite" icon="bookmark" />
 </CardGroup>

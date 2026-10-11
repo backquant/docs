@@ -1,0 +1,42 @@
+---
+title: "Constant-maturity vol"
+openapi: "GET /options/iv/constant-maturity"
+description: "ATM vol, 25- and 10-delta risk reversals and butterflies at fixed tenors from 7 days to 1 year, with static-arbitrage checks."
+---
+
+The vol desk's view of the surface: ATM, the 25- and 10-delta call and put
+vols, risk reversals and butterflies at 7, 14, 30, 60, 90, 120, 180, 270 and
+365 days. Fixed tenors compare cleanly across time and across coins, where
+listed expiries roll.
+
+Each expiry's ATM and wings are read off its quoted smile at Black-76
+forward-delta strikes; each tenor interpolates total variance linearly in
+time between the two fitted expiries around it. Nothing is extrapolated: a
+tenor or a wing the quotes do not reach is null.
+
+Every response also carries the static-arbitrage checks on each fitted
+smile (`butterfly_free`, `calendar_free`, `min_density_g`) and a summary in
+`arbitrage`. The full method is on
+[Vol surface methodology](/concepts/vol-surface).
+
+```json
+{
+  "tenors": [
+    { "tenor_days": 30, "atm_iv": 35.53, "iv_25c": 35.35, "iv_25p": 37.59,
+      "iv_10c": 36.23, "iv_10p": 41.72, "rr_25": -2.24, "bf_25": 0.94,
+      "rr_10": -5.49, "bf_10": 3.45, "bracket_dte": [26.15, 47.15] }
+  ],
+  "arbitrage": { "butterfly_free": true, "calendar_free": true, "violations": [] }
+}
+```
+
+Vols in percent. `rr` is call minus put, so it is negative when puts are
+bid; [`/v2/options/iv/skew`](/api/v2/options/iv/skew) reports put minus call.
+Current values only, refreshed with the surface about every 30 seconds.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Vol surface methodology" href="/concepts/vol-surface" icon="book" />
+  <Card title="Single-expiry smile" href="/api/v2/options/iv/smile" icon="chart-line" />
+</CardGroup>

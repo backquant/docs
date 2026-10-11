@@ -24,12 +24,15 @@ The handshake validates the key, subscription status and tier eligibility. Failu
 | `tape.{coin}.{venue}` | One trade per frame | Per trade (~10-100/s in burst) |
 | `tape.{coin}.agg` | Same trade payload, aggregated across all venues for that coin | Per trade |
 | `gex.levels.{SYMBOL}` | FLOW-signed GEX levels (all-expiry + 0DTE HVL, walls, spot) | When levels update (~30 s) |
+| `chain.{SYMBOL}.{EXPIRY}` | The consolidated options chain for one expiry: snapshot, then the contracts that changed | Per chain refresh (~30 s) |
+| `chain.{SYMBOL}.all` | The same for every listed expiry | Per chain refresh (~30 s) |
 | `status.heartbeat` | Server liveness + per-client queue stats | Every 15 s |
 
 `{coin}` is typically `BTC` or `ETH` (SOL/HYPE appear when tape exists).
 `{venue}` is one of `deribit`, `bybit`, `okx`, `binance`, `derive`,
-`thalex`, `delta_india`, `delta` (case-insensitive on subscribe; the
-server normalises to lowercase). `{SYMBOL}` is `BTCUSDT`, `ETHUSDT`,
+`thalex`, `delta_india`, `delta`, `bullish`, `paradex` (case-insensitive on
+subscribe; the server normalises to lowercase). `bullish` and `paradex` are
+accepted but quiet: their trades are not collected yet. `{SYMBOL}` is `BTCUSDT`, `ETHUSDT`,
 `SOLUSDT`, or `HYPEUSDT`. See [Venue coverage](/concepts/venues) for
 what each venue ships.
 
@@ -141,6 +144,47 @@ details see [Venue coverage → Delta units](/concepts/venues#delta-exchange-uni
 5. **Heartbeat liveness** - the server expects at least one client frame (subscribe / unsubscribe / ping) within 60 s. Otherwise it closes with code `1001`.
 6. **Slow consumer** - each client has a 1000-message send buffer. If full for > 5 s the server sends a `slow_consumer` event then closes with code `1013`. Reduce your subscription set or process frames faster.
 7. **Disconnect** → connection counter decrements; reconnect any time.
+
+## Consolidated chain
+
+`chain.{SYMBOL}.{EXPIRY}` (for example `chain.BTCUSDT.30OCT26`) and
+`chain.{SYMBOL}.all` stream the options chain merged across every venue
+that lists each contract, the same chain [`/v2/options/chain`](/api/v2/options/chain)
+serves. Channel names are case-insensitive; an expiry that is not listed is
+refused with an `error` carrying `available_expiries`.
+
+On subscribe the server sends a snapshot; after each chain refresh (about
+every 30 seconds) it sends only the contracts whose quotes, implied vol,
+open interest or 24h volume changed, and the ids that left the chain:
+
+```json
+{ "event": "chain", "channel": "chain.BTCUSDT.30OCT26", "ts": "...",
+  "data": { "snapshot": false, "ts": "...", "spot": 82842.0, "price_unit": "coin",
+            "changed": [ { "id": "30OCT26-90000-C", "...": "..." } ],
+            "removed": [] } }
+```
+
+Each contract:
+
+| Field | Meaning |
+|---|---|
+| `id` | `{EXPIRY}-{STRIKE}-{C or P}`, stable across updates |
+| `expiry`, `strike`, `type`, `dte` | Contract terms; `dte` in days |
+| `oi` | Open interest summed across venues, in coins |
+| `iv` | Open-interest-weighted implied vol across venues, percent |
+| `mark`, `bid`, `ask` | Deribit's mark and top of book, in `price_unit` (coin for BTC/ETH, USD for SOL/HYPE) |
+| `best_bid`, `best_bid_venue`, `best_ask`, `best_ask_venue`, `quoting_venues` | The consolidated best bid and ask across venues, with the venue on each side; null outside the liquid band (about 15% from spot, 2+ days out, 2+ quoting venues) |
+| `delta`, `gamma`, `theta`, `vega`, `vanna`, `charm` | Per contract, same units as [`/v2/options/chain`](/api/v2/options/chain) |
+| `volume_24h`, `trade_count_24h` | From our cross-venue aggressor tape |
+
+Greeks ride along on every changed contract, but a greek moving on its own
+does not count as a change (they all move with spot every refresh). Quote
+sizes and per-venue rows are not in the chain we publish, so they are not
+streamed.
+
+Limits: up to 12 chain channels per connection, of which one may be `.all`.
+Sizes on BTC (October 2026): about 630 KB for the whole-chain snapshot and
+400 KB per refresh; about 50 to 65 KB per expiry.
 
 ## Per-tier connection caps
 

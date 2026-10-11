@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "BackQuant API v2",
-    "description": "\n# BackQuant API v2\n\nOptions + gamma-exposure focused public API. Built on the same data the\nBackQuant Pro Terminal renders - pre-computed every 30s, served from cache.\n\n## What's in v2\n\n* **Discovery**: `/v2/symbols` (universe + per-symbol freshness + supported\n  endpoint list), `/v2/expiries` (active expiry tokens with DTE), `/v2/status`\n  (per-symbol-per-category health with thresholds + overall classification).\n* **GEX**: composable levels (HVL / call wall / put support / max-pain /\n  expected move / gamma-flip zones), strike profile with typed expiry\n  filter, expiry profile, strike × expiry heatmap with downsampling,\n  greek time-heatmap with DTE/OI/IV filters, history (cursor-paginated),\n  Postgres-backed stress history, **per-expiry max-pain with pain curve**.\n* **Options**: filtered options chain with two-layer projection (top-level\n  `?fields=` and per-contract `?include=oi,iv,greeks,bid_ask,volume,gex`)\n  plus moneyness filter (`?moneyness_min=0.9&moneyness_max=1.1`), expiry\n  summary table, full IV suite (surface / term structure / 25Δ-10Δ skew /\n  curves / **single-expiry smile** / IV-RV history / VRP), expected move,\n  **Breeden-Litzenberger probability density and surface**, typed greek\n  profiles (delta / theta / vanna / charm / vega), strike × time charm/vega\n  surfaces, strike × expiry 3D greek surface, OI by expiry + history,\n  put/call ratio (intraday or daily), 0DTE & weekly premium tide,\n  dated-futures term structure.\n* **Liquidation**: heatmap + leverage-tiered distribution.\n* **Multi**: `/v2/multi/gex/levels` - bundled multi-symbol read across the\n  universe in one round-trip, with the same `?include=` model as the\n  single-symbol endpoint.\n\n## Authentication\n\nEvery v2 route (except `/v2/openapi.json`, `/v2/docs`, `/v2/redoc`, and\n`/v2/health`) requires the `X-API-Key` header.\n\n```\nX-API-Key: bq_live_your_api_key_here\n```\n\n**Get your API key at [backquant.com/api-access](https://backquant.com/api-access).**\n\nThe same key works across v1 and v2 - if you already have a v1 key, no\nre-issuance is needed.\n\n## Rate limits\n\nTwo budgets, both derived from your subscription tier: a **monthly request\nallowance** per account, and a **per-minute burst** per key. Size your\nintegration against the monthly figure - sustained polling at the burst rate\nexhausts the month early.\n\n| Plan                      | Monthly allowance | Burst    | Sustained   |\n|---------------------------|-------------------|----------|-------------|\n| Starter (Terminal Yearly) | 10,000 req/month  | 10/min   | ~333/day    |\n| Standard (Crypto API)     | 250,000 req/month | 60/min   | ~8,300/day  |\n| Pro (Terminal + API)      | 1,000,000/month   | 120/min  | ~33,000/day |\n| Enterprise                | custom            | 600/min  | custom      |\n\nHeaders `X-RateLimit-Limit / -Remaining / -Reset` (burst) and\n`X-Quota-Limit / -Used / -Remaining / -Period` (monthly) are included in\nevery response; the rate-limit triple is echoed inside `meta.rate_limit`\nwhen populated by middleware. Exceeding either budget returns `429`.\n\nThe live ladder is served at `GET /v2/meta` under `rate_limits`.\n\n## Response envelope\n\n```json\n{\n  \"success\": true,\n  \"data\": { ... },\n  \"meta\": {\n    \"version\": \"2.0\",\n    \"timestamp\": \"2026-04-29T12:00:00.000Z\",\n    \"request_id\": \"req_…\",\n    \"symbol\": \"BTCUSDT\",\n    \"spot_price\": 67213.5,\n    \"computed_at\": \"2026-04-29T11:59:48.000Z\",\n    \"freshness_seconds\": 12.0,\n    \"source\": [\"deribit\",\"bybit\",\"okx\",\"binance\",\"derive\",\"thalex\",\"delta_india\",\"delta\"],\n    \"exchanges_filtered\": [\"deribit\",\"bybit\"]\n  }\n}\n```\n\n## Errors\n\n```json\n{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"No data for BTCUSDT\"\n  },\n  \"meta\": { \"version\": \"2.0\", \"timestamp\": \"...\" }\n}\n```\n\n| Code                  | When |\n|-----------------------|------|\n| `UNAUTHORIZED`        | Missing or invalid API key |\n| `FORBIDDEN`           | Subscription doesn't allow API access |\n| `NOT_FOUND`           | Symbol/expiry/etc. not present in cache |\n| `VALIDATION_ERROR`    | Bad query parameters |\n| `RATE_LIMIT_EXCEEDED` | Per-tier limit hit |\n| `UPSTREAM_ERROR`      | Cache or DB temporarily unreachable |\n| `INTERNAL_ERROR`      | Anything else |\n    ",
-    "version": "2.11"
+    "description": "\n# BackQuant API v2\n\nOptions + gamma-exposure focused public API. Built on the same data the\nBackQuant Pro Terminal renders - pre-computed every 30s, served from cache.\n\n## What's in v2\n\n* **Discovery**: `/v2/symbols` (universe + per-symbol freshness + supported\n  endpoint list), `/v2/expiries` (active expiry tokens with DTE), `/v2/status`\n  (per-symbol-per-category health with thresholds + overall classification).\n* **GEX**: composable levels (HVL / call wall / put support / max-pain /\n  expected move / gamma-flip zones), strike profile with typed expiry\n  filter, expiry profile, strike × expiry heatmap with downsampling,\n  greek time-heatmap with DTE/OI/IV filters, history (cursor-paginated),\n  Postgres-backed stress history, **per-expiry max-pain with pain curve**.\n* **Options**: filtered options chain with two-layer projection (top-level\n  `?fields=` and per-contract `?include=oi,iv,greeks,bid_ask,volume,gex`)\n  plus moneyness filter (`?moneyness_min=0.9&moneyness_max=1.1`), expiry\n  summary table, full IV suite (surface / term structure / 25Δ-10Δ skew /\n  curves / **single-expiry smile** / IV-RV history / VRP), expected move,\n  **Breeden-Litzenberger probability density and surface**, typed greek\n  profiles (delta / theta / vanna / charm / vega), strike × time charm/vega\n  surfaces, strike × expiry 3D greek surface, OI by expiry + history,\n  put/call ratio (intraday or daily), 0DTE & weekly premium tide,\n  dated-futures term structure.\n* **Liquidation**: heatmap + leverage-tiered distribution.\n* **Multi**: `/v2/multi/gex/levels` - bundled multi-symbol read across the\n  universe in one round-trip, with the same `?include=` model as the\n  single-symbol endpoint.\n\n## Authentication\n\nEvery v2 route (except `/v2/openapi.json`, `/v2/docs`, `/v2/redoc`, and\n`/v2/health`) requires the `X-API-Key` header.\n\n```\nX-API-Key: bq_live_your_api_key_here\n```\n\n**Get your API key at [backquant.com/api-access](https://backquant.com/api-access).**\n\nThe same key works across v1 and v2 - if you already have a v1 key, no\nre-issuance is needed.\n\n## Rate limits\n\nTwo budgets, both derived from your subscription tier: a **monthly request\nallowance** per account, and a **per-minute burst** per key. Size your\nintegration against the monthly figure - sustained polling at the burst rate\nexhausts the month early.\n\n| Plan                      | Monthly allowance | Burst    | Sustained   |\n|---------------------------|-------------------|----------|-------------|\n| Starter (Terminal Yearly) | 10,000 req/month  | 10/min   | ~333/day    |\n| Standard (Crypto API)     | 250,000 req/month | 60/min   | ~8,300/day  |\n| Pro (Terminal + API)      | 1,000,000/month   | 120/min  | ~33,000/day |\n| Enterprise                | custom            | 600/min  | custom      |\n\nHeaders `X-RateLimit-Limit / -Remaining / -Reset` (burst) and\n`X-Quota-Limit / -Used / -Remaining / -Period` (monthly) are included in\nevery response; the rate-limit triple is echoed inside `meta.rate_limit`\nwhen populated by middleware. Exceeding either budget returns `429`.\n\nThe live ladder is served at `GET /v2/meta` under `rate_limits`.\n\n## Response envelope\n\n```json\n{\n  \"success\": true,\n  \"data\": { ... },\n  \"meta\": {\n    \"version\": \"2.0\",\n    \"timestamp\": \"2026-04-29T12:00:00.000Z\",\n    \"request_id\": \"req_…\",\n    \"symbol\": \"BTCUSDT\",\n    \"spot_price\": 67213.5,\n    \"computed_at\": \"2026-04-29T11:59:48.000Z\",\n    \"freshness_seconds\": 12.0,\n    \"source\": [\"deribit\",\"bybit\",\"okx\",\"binance\",\"derive\",\"thalex\",\"delta_india\",\"delta\",\"bullish\",\"paradex\"],\n    \"exchanges_filtered\": [\"deribit\",\"bybit\"]\n  }\n}\n```\n\n## Errors\n\n```json\n{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"No data for BTCUSDT\"\n  },\n  \"meta\": { \"version\": \"2.0\", \"timestamp\": \"...\" }\n}\n```\n\n| Code                  | When |\n|-----------------------|------|\n| `UNAUTHORIZED`        | Missing or invalid API key |\n| `FORBIDDEN`           | Subscription doesn't allow API access |\n| `NOT_FOUND`           | Symbol/expiry/etc. not present in cache |\n| `VALIDATION_ERROR`    | Bad query parameters |\n| `RATE_LIMIT_EXCEEDED` | Per-tier limit hit |\n| `UPSTREAM_ERROR`      | Cache or DB temporarily unreachable |\n| `INTERNAL_ERROR`      | Anything else |\n    ",
+    "version": "2.13"
   },
   "paths": {
     "/health": {
@@ -639,7 +639,7 @@
           "Discovery"
         ],
         "summary": "v2 service status - per symbol, per category freshness",
-        "description": "Operational status. Each (symbol × category) cell is classified as `healthy`, `degraded`, `unhealthy`, or `unavailable` based on cache age. The `overall_status` is the worst case across the grid. Thresholds in the response reflect the underlying compute cadence.\n\n**`venues`** reports each of the eight venues as `chain` (options chain aggregation) and `tape` (live trade tape), each `on` / `off` / `unknown`. `chain_symbols` lists the symbols the venue is live on and `chain_contracts` how many instruments it contributed on the last cycle - a venue that is `on` but delivering `0` contracts is visible rather than reading as healthy. `unknown` means no fresh status was published (a writer is down), never `off`.",
+        "description": "Operational status. Each (symbol × category) cell is classified as `healthy`, `degraded`, `unhealthy`, or `unavailable` based on cache age. The `overall_status` is the worst case across the grid. Thresholds in the response reflect the underlying compute cadence.\n\n**`venues`** reports each of the ten venues as `chain` (options chain aggregation) and `tape` (live trade tape), each `on` / `off` / `unknown`. `chain_symbols` lists the symbols the venue is live on and `chain_contracts` how many instruments it contributed on the last cycle - a venue that is `on` but delivering `0` contracts is visible rather than reading as healthy. `unknown` means no fresh status was published (a writer is down), never `off`.",
         "operationId": "get_status_status_get",
         "parameters": [
           {
@@ -791,10 +791,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "include",
@@ -953,7 +953,7 @@
           "GEX"
         ],
         "summary": "GEX by strike",
-        "description": "Gamma exposure aggregated by strike. `?expiry=all` (default) covers every expiry, `?expiry=0dte` filters to today's expiry only, and an explicit expiry token (e.g. `28MAR25`) returns just that expiration.\n\n**Positioning (default: flow).** `positioning=flow` rebuilds the profile from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the Redis textbook-signed cache. See `meta.extra.positioning`.\n\nStrike-axis filters (intersected when more than one is set):\n* `strike_min` / `strike_max` - absolute bounds.\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps the ATM ±10% slab.\n* `spot_window_pct` - symmetric window in percent (e.g. `5` for   ±5% of spot). Combined by intersection with the others.\n\nWhen any strike filter narrows the set, `ranked_top_10` is rebuilt from the surviving strikes - the cached pre-filter ranking is not reused.\n\n**Per-venue open interest (`by_venue`):** `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}` rolled up over the strikes actually returned. OI is coin-native on every venue and attribution is positioning-independent, so the block is identical under `flow` and `std`. All eight venues are always present (zero-filled); use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` is non-null only when some OI could not be attributed to a venue. `expiry=<token>` returns `by_venue: null` with `by_venue_note` - a single-expiry venue split is not published.",
+        "description": "Gamma exposure aggregated by strike. `?expiry=all` (default) covers every expiry, `?expiry=0dte` filters to today's expiry only, and an explicit expiry token (e.g. `28MAR25`) returns just that expiration.\n\n**Positioning (default: flow).** `positioning=flow` rebuilds the profile from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the Redis textbook-signed cache. See `meta.extra.positioning`.\n\nStrike-axis filters (intersected when more than one is set):\n* `strike_min` / `strike_max` - absolute bounds.\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps the ATM ±10% slab.\n* `spot_window_pct` - symmetric window in percent (e.g. `5` for   ±5% of spot). Combined by intersection with the others.\n\nWhen any strike filter narrows the set, `ranked_top_10` is rebuilt from the surviving strikes - the cached pre-filter ranking is not reused.\n\n**Per-venue open interest (`by_venue`):** `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}` rolled up over the strikes actually returned. OI is coin-native on every venue and attribution is positioning-independent, so the block is identical under `flow` and `std`. All ten venues are always present (zero-filled); use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` is non-null only when some OI could not be attributed to a venue. `expiry=<token>` returns `by_venue: null` with `by_venue_note` - a single-expiry venue split is not published.",
         "operationId": "get_strike_profile_gex_strike_profile_get",
         "parameters": [
           {
@@ -987,10 +987,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "expiry",
@@ -1275,10 +1275,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "dte_min",
@@ -1493,10 +1493,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "dte_min",
@@ -1733,7 +1733,7 @@
           "GEX"
         ],
         "summary": "Strike × time greek heatmap",
-        "description": "Time-series of greek exposures by strike. Pick the greek (`gex|dex|vex|charm|vanna`) and bound by DTE / OI / IV.\n\n**Positioning (default: flow).** Each historical snapshot is re-signed with the current multi-venue aggressor tape (BTC/ETH) when `positioning=flow`. `std` uses textbook OI signs (or the legacy redis cache when unfiltered + std).\n\nUnfiltered std+gex still serves the pre-computed cache (cheap); flow and filters rebuild from the last ~48 raw snapshots.",
+        "description": "Time-series of greek exposures by strike. Pick the greek (`gex|dex|vex|charm|vanna`) and bound by DTE / OI / IV.\n\n**Units.** gex $ per 1% move, dex $ delta, vex $ per vol point, charm $ delta per day, vanna $ delta per vol point.\n\n**Positioning (default: flow).** Each historical snapshot is re-signed with the current multi-venue aggressor tape (BTC/ETH) when `positioning=flow`. `std` uses textbook OI signs (or the legacy redis cache when unfiltered + std).\n\nUnfiltered std+gex still serves the pre-computed cache (cheap); flow and filters rebuild from the last ~48 raw snapshots.",
         "operationId": "get_time_heatmap_gex_time_heatmap_get",
         "parameters": [
           {
@@ -2423,6 +2423,243 @@
         ]
       }
     },
+    "/gex/ladder": {
+      "get": {
+        "tags": [
+          "GEX"
+        ],
+        "summary": "Strike ladder: dealer exposure by strike x expiry",
+        "description": "Dealer exposure per strike and per expiry for one metric, the grid behind the terminal's HEATMAP. Every value is dealer position x greek per contract, summed per (strike, expiry):\n\n* `gex` - $ of delta dealers must trade per 1% move\n* `dex` - $ delta\n* `vanna` - $ of delta per +1 vol point\n* `charm` - $ of delta per day of time passing\n* `vega` - $ per +1 vol point\n* `oi` - open interest in contracts (unsigned)\n* `pos` - the dealer position itself, in contracts\n\n`cells` has one row per strike in `strikes` and one column per expiry in `expiries` (the nearest `expiries`, default 8). `total` is each strike summed over every expiry in scope, including those beyond the columns, and `top` / `king` rank strikes by it. For `gex`, `levels` carries the gamma flip and walls by the same rule as /v2/gex/levels.\n\n**Positioning (default: flow).** `flow` uses BackQuant's measured dealer position (BTC and ETH); `std` the textbook convention (call:+OI, put:-OI). See `meta.extra.positioning`; `oi` is unsigned.\n\n`expiry` scopes which expiries count: `all`, `0dte`, `front`, `week` (7 days), `month` (31 days), or a comma list of ISO dates or tokens like `30OCT26`. `span` keeps strikes within spot x (1 +/- span); `group` merges strikes into buckets about that many strike steps wide. Every venue in the chain is included.",
+        "operationId": "get_gex_ladder_gex_ladder_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "gex",
+                "dex",
+                "vanna",
+                "charm",
+                "vega",
+                "oi",
+                "pos"
+              ],
+              "type": "string",
+              "description": "Which exposure: gex, dex, vanna, charm, vega, oi or pos.",
+              "default": "gex",
+              "title": "Metric"
+            },
+            "description": "Which exposure: gex, dex, vanna, charm, vega, oi or pos."
+          },
+          {
+            "name": "positioning",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Dealer positioning model. **`flow`** (default) is BackQuant's measured dealer model, available for BTC/ETH; it falls back to `std` when it cannot be produced for a symbol. **`std`** is the textbook convention (call:+OI / put:-OI). The response reports which model actually ran in `meta.extra.positioning`.",
+              "default": "flow",
+              "title": "Positioning"
+            },
+            "description": "Dealer positioning model. **`flow`** (default) is BackQuant's measured dealer model, available for BTC/ETH; it falls back to `std` when it cannot be produced for a symbol. **`std`** is the textbook convention (call:+OI / put:-OI). The response reports which model actually ran in `meta.extra.positioning`."
+          },
+          {
+            "name": "expiry",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 400,
+              "description": "all, 0dte, front, week, month, or a comma list of ISO dates / tokens (30OCT26).",
+              "default": "all",
+              "title": "Expiry"
+            },
+            "description": "all, 0dte, front, week, month, or a comma list of ISO dates / tokens (30OCT26)."
+          },
+          {
+            "name": "expiries",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 24,
+              "minimum": 0,
+              "description": "How many of the nearest expiries get their own column.",
+              "default": 8,
+              "title": "Expiries"
+            },
+            "description": "How many of the nearest expiries get their own column."
+          },
+          {
+            "name": "span",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 0.5,
+                  "minimum": 0.005
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Strikes within spot x (1 +/- span). Default 0.12.",
+              "title": "Span"
+            },
+            "description": "Strikes within spot x (1 +/- span). Default 0.12."
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "description": "Merge strikes into buckets about this many strike steps wide.",
+              "default": 1,
+              "title": "Group"
+            },
+            "description": "Merge strikes into buckets about this many strike steps wide."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/gex/dealer-flow": {
       "get": {
         "tags": [
@@ -2430,7 +2667,7 @@
           "Flow"
         ],
         "summary": "Dealer hedge flow time series (gamma + vanna + charm)",
-        "description": "Estimated dealer hedging flow across successive chain snapshots. Components: `gamma_flow` (ΔS% × net GEX), `charm_flow` (−Δt × charm), `vanna_flow` (reserved), plus `total_flow` and `cumulative_flow`.\n\nPositive ≈ dealers buying the underlying to re-hedge; negative ≈ selling. Default `positioning=flow` (BackQuant's measured dealer model). See `meta.extra.formula` for the exact calculation and units.",
+        "description": "Estimated dealer hedging flow across successive chain snapshots. Components: `gamma_flow` (ΔS% × net GEX), `charm_flow` (−Δt in days × net charm, $ delta per day), `vanna_flow` (reserved), plus `total_flow` and `cumulative_flow`.\n\nPositive ≈ dealers buying the underlying to re-hedge; negative ≈ selling. Default `positioning=flow` (BackQuant's measured dealer model). See `meta.extra.formula` for the exact calculation and units.",
         "operationId": "get_dealer_flow_gex_dealer_flow_get",
         "parameters": [
           {
@@ -3106,7 +3343,7 @@
           "Options"
         ],
         "summary": "Filtered options chain",
-        "description": "Per-contract data (greeks, OI, IV, bid/ask) plus aggregate stats. Filters supported:\n\n* `expiries` - CSV of tokens (e.g. `28MAR25,25APR25`).\n* `dte_min` / `dte_max` - days-to-expiry bounds.\n* `oi_min` / `oi_max` - open interest bounds.\n* `delta_min` / `delta_max` - applied to |delta| (0..1).\n* `strike_min` / `strike_max` - absolute strike bounds.\n* `moneyness_min` / `moneyness_max` - strike / spot ratio bounds,   e.g. `0.9..1.1` keeps strikes within ±10% of spot. Useful for   cross-symbol screens since it normalises the strike grid.\n* `option_type` - `call`, `put`, or `both`.\n\nTwo layers of projection:\n\n* `fields` (top-level): comma-sep subset of `aggregates,available_expiries,contracts` - drops whole sections of the   response, e.g. `?fields=contracts` to skip aggregates.\n* `include` (per-contract): comma-sep subset of `bid_ask,gex,greeks,iv,oi,volume` - keeps only the   named sub-sections of each contract dict. Core identity fields (`strike,expiry,dte,type`) are always present. Default   is every section, matching v1 shape.\n\nPayload is capped at `?max_contracts=` (default 2000, hard ceiling 5000). On overflow the response is truncated to the closest-to-spot subset and `truncated=true` is set with `total_matching_count` so the client knows to narrow the filter.\n\nResponse is cached for 30s keyed by the exact filter combination, so repeated calls with identical filters are sub-millisecond.\n\n**Where each number comes from.** A chain row mixes two kinds of field on purpose, and which is which matters:\n\n* **Positioning is cross-venue.** `oi` is summed across all eight   venues. See `GET /v2/status` for which are live.\n* **Prices are Deribit's.** `bid`, `ask` and `mark` are one venue's   quote, not a consolidated one. That is deliberate: Deribit is the   reference book for crypto options. For best bid and offer across   every venue, with the venue named on each side, use   `GET /v2/options/venue-book`.\n* **Activity is cross-venue on BTC and ETH.** `volume`,   `notional_volume` and `trade_count` are measured over a rolling   24 hours from our own aggressor tape, which spans all eight   venues for these two symbols. `volume` is contracts,   `notional_volume` is premium in USD, `trade_count` is prints.\n* **Activity is single-venue on SOL and HYPE.** Our tape does not   span venues for them, so these fields carry the source venue's own   figures rather than a total that would look cross-venue and not   be. SOL is Deribit's; HYPE is Derive's.\n\n**`null` is not `0`.** On these three activity fields, `0` means measured and nothing traded, while `null` means not measured. SOL reports `trade_count: null` because no venue publishes a per-contract trade count for it, and on BTC/ETH all three read `null` in the rare window where the cross-venue measurement is unavailable - we report it as missing rather than substituting a single-venue number under a cross-venue field. Treating `null` and `0` as the same is how a contract that traded thousands of times can read as untraded.\n\n**Under `as_of`.** The activity fields are RECOMPUTED for the 24 hours ending at the resolved snapshot, from the same cross-venue tape, so a historical chain does not serve figures that were only ever single-venue. `meta.extra.activity_rebuilt` reports that it happened. `bid` and `ask` are a different case: on chains persisted before 2026-09-01 they are `0` because they were never recorded, and no amount of recomputation can recover them. `meta.extra.quotes_note` says so on every such response rather than leaving a caller to read those zeros as an unquoted market.",
+        "description": "Per-contract data (greeks, OI, IV, bid/ask) plus aggregate stats. Filters supported:\n\n* `expiries` - CSV of tokens (e.g. `28MAR25,25APR25`).\n* `dte_min` / `dte_max` - days-to-expiry bounds.\n* `oi_min` / `oi_max` - open interest bounds.\n* `delta_min` / `delta_max` - applied to |delta| (0..1).\n* `strike_min` / `strike_max` - absolute strike bounds.\n* `moneyness_min` / `moneyness_max` - strike / spot ratio bounds,   e.g. `0.9..1.1` keeps strikes within ±10% of spot. Useful for   cross-symbol screens since it normalises the strike grid.\n* `option_type` - `call`, `put`, or `both`.\n\nTwo layers of projection:\n\n* `fields` (top-level): comma-sep subset of `aggregates,available_expiries,contracts` - drops whole sections of the   response, e.g. `?fields=contracts` to skip aggregates.\n* `include` (per-contract): comma-sep subset of `bid_ask,gex,greeks,iv,oi,volume` - keeps only the   named sub-sections of each contract dict. Core identity fields (`strike,expiry,dte,type`) are always present. Default   is every section, matching v1 shape.\n\nPayload is capped at `?max_contracts=` (default 2000, hard ceiling 5000). On overflow the response is truncated to the closest-to-spot subset and `truncated=true` is set with `total_matching_count` so the client knows to narrow the filter.\n\nResponse is cached for 30s keyed by the exact filter combination, so repeated calls with identical filters are sub-millisecond.\n\n**Greeks are per contract, Black-Scholes:** `delta` per coin, `gamma` per $1 of spot, `theta` $ per day, `vega` $ per vol point, `vanna` delta per vol point, `charm` delta per day. `gex` is the contract's $ per 1% move, dealer-signed (puts negative).\n\n**Where each number comes from.** A chain row mixes two kinds of field on purpose, and which is which matters:\n\n* **Positioning is cross-venue.** `oi` is summed across all ten   venues. See `GET /v2/status` for which are live.\n* **Prices are Deribit's.** `bid`, `ask` and `mark` are one venue's   quote, not a consolidated one. That is deliberate: Deribit is the   reference book for crypto options. For best bid and offer across   every venue, with the venue named on each side, use   `GET /v2/options/venue-book`.\n* **Activity is cross-venue on BTC and ETH.** `volume`,   `notional_volume` and `trade_count` are measured over a rolling   24 hours from our own aggressor tape, which spans all ten   venues for these two symbols. `volume` is contracts,   `notional_volume` is premium in USD, `trade_count` is prints.\n* **Activity is single-venue on SOL and HYPE.** Our tape does not   span venues for them, so these fields carry the source venue's own   figures rather than a total that would look cross-venue and not   be. SOL is Deribit's; HYPE is Derive's.\n\n**`null` is not `0`.** On these three activity fields, `0` means measured and nothing traded, while `null` means not measured. SOL reports `trade_count: null` because no venue publishes a per-contract trade count for it, and on BTC/ETH all three read `null` in the rare window where the cross-venue measurement is unavailable - we report it as missing rather than substituting a single-venue number under a cross-venue field. Treating `null` and `0` as the same is how a contract that traded thousands of times can read as untraded.\n\n**Under `as_of`.** The activity fields are RECOMPUTED for the 24 hours ending at the resolved snapshot, from the same cross-venue tape, so a historical chain does not serve figures that were only ever single-venue. `meta.extra.activity_rebuilt` reports that it happened. `bid` and `ask` are a different case: on chains persisted before 2026-09-01 they are `0` because they were never recorded, and no amount of recomputation can recover them. `meta.extra.quotes_note` says so on every such response rather than leaving a caller to read those zeros as an unquoted market.",
         "operationId": "get_chain_options_chain_get",
         "parameters": [
           {
@@ -3535,7 +3772,7 @@
           "Options"
         ],
         "summary": "Per-expiry IV / skew / PCR / OI / GEX (with OPEX enrichment)",
-        "description": "One row per active expiry with the metrics most useful for chain-wide screening:\n\n**Pre-computed every 30s** - ATM IV, 25Δ skew, put/call 25Δ IVs, PCR, call/put/total OI, net GEX.\n\n**Added by v2 (OPEX enrichment, on-the-fly):**\n* `type` - `daily | weekly | monthly | quarterly` (Deribit token   parsed; quarterlies are last Fridays of Mar/Jun/Sep/Dec).\n* `is_anchor` - true for monthly + quarterly anchors.\n* `expiry_date` - ISO date when the token parses cleanly.\n* `notional_oi_usd` - `total_oi × spot_price` (each contract is   1 unit of underlying on Deribit-style chains).\n* `max_pain` - `{strike, value}` from a per-expiry max-pain pass   over the latest chain snapshot. Cached 30s, shared with   `/v2/gex/max-pain` and `/v2/options/opex`.\n* `by_venue` - `{venue: {call_oi, put_oi, total_oi,   notional_oi_usd}}` for that expiry. OI is coin-native on every   venue; `notional_oi_usd = total_oi x spot`, using the same spot as   the response. All eight venues are always present (zero-filled) -   `GET /v2/status` distinguishes a zero-OI venue from a disabled   one. Delta India and Delta Global are independent books and are   summed, never deduped.\n* `by_venue_unattributed` - residual open interest the aggregator   could not attribute to a venue; `null` when the split reconciles   with `call_oi` / `put_oi` (the normal case).",
+        "description": "One row per active expiry with the metrics most useful for chain-wide screening:\n\n**Pre-computed every 30s** - ATM IV, 25Δ skew, put/call 25Δ IVs, PCR, call/put/total OI, net GEX.\n\n**Added by v2 (OPEX enrichment, on-the-fly):**\n* `type` - `daily | weekly | monthly | quarterly` (Deribit token   parsed; quarterlies are last Fridays of Mar/Jun/Sep/Dec).\n* `is_anchor` - true for monthly + quarterly anchors.\n* `expiry_date` - ISO date when the token parses cleanly.\n* `notional_oi_usd` - `total_oi × spot_price` (each contract is   1 unit of underlying on Deribit-style chains).\n* `max_pain` - `{strike, value}` from a per-expiry max-pain pass   over the latest chain snapshot. Cached 30s, shared with   `/v2/gex/max-pain` and `/v2/options/opex`.\n* `by_venue` - `{venue: {call_oi, put_oi, total_oi,   notional_oi_usd}}` for that expiry. OI is coin-native on every   venue; `notional_oi_usd = total_oi x spot`, using the same spot as   the response. All ten venues are always present (zero-filled) -   `GET /v2/status` distinguishes a zero-OI venue from a disabled   one. Delta India and Delta Global are independent books and are   summed, never deduped.\n* `by_venue_unattributed` - residual open interest the aggregator   could not attribute to a venue; `null` when the split reconciles   with `call_oi` / `put_oi` (the normal case).",
         "operationId": "get_expiry_summary_options_expiry_summary_get",
         "parameters": [
           {
@@ -3665,7 +3902,7 @@
           "Options"
         ],
         "summary": "IV surface (strike × expiry)",
-        "description": "2D implied-volatility grid: rows are strikes, columns are expiries (sorted by ascending DTE). Useful for vol-surface visualisations and identifying skew/term-structure shape at a glance.",
+        "description": "The fitted implied-volatility surface from the ten-venue chain, out to 180 days: `z_grid[i][j]` is the vol (percent) at tenor `y_grid[i]` (days, ascending) and strike `x_grid[j]`; holes are null where the expiry never traded that far out.\n\nEach expiry is fitted with raw SVI on its own forward (put-call parity), the grid is lifted where needed so total variance never falls with maturity, and quotes too cheap to price are dropped. `expiry_forwards` gives each expiry's forward, fit method and error and, where it fitted, the SVI parameters `svi` {a, b, rho, m, sigma} (total variance w(k) = a + b (rho (k - m) + sqrt((k - m)^2 + sigma^2)), k = ln(K / F)), its years to expiry `t` and the log-moneyness span `k_range` of its quotes. The fit itself uses the quotes within four ATM standard deviations of the forward, and `smile_rmse` (vol points) is measured on those. The parameters are each expiry's own fit; the grid's calendar lift is not in them. `n_quotes` is how many out-of-the-money quotes the expiry's smile has. `long_expiries` carries the same fields for the expiries past 180 days (to about 18 months), which are fitted but not on the grid. `delta_surface` is the same surface by delta. Each fitted smile's static-arbitrage checks are on /v2/options/iv/constant-maturity.",
         "operationId": "get_iv_surface_options_iv_surface_get",
         "parameters": [
           {
@@ -3871,10 +4108,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "dte_max",
@@ -4309,7 +4546,7 @@
           "Options"
         ],
         "summary": "Single-expiry IV smile",
-        "description": "Implied volatility by strike for one expiry - the cheap path when you only need a single tenor. Pass `?expiry=` as a Deribit-style token (e.g. `28MAR25`); omit it to receive the default front-month smile from `iv:smile:{symbol}:default`. The lookup is case-insensitive on the token; if neither cased form exists, this returns 404 with the available tokens hinted in the error.",
+        "description": "Implied volatility by strike for one expiry, from the fitted surface (see /v2/options/iv/surface): rebuilt from the expiry's SVI fit between its lowest and highest quoted strikes, never past them (`method: svi`), or its row of the surface grid where the smile did not fit (`method: interp`, mostly same-day expiries). Each point gives the strike, log-moneyness against the expiry's forward and the vol in percent; the response adds that expiry's ATM vol, 25- and 10-delta risk reversal and butterfly, and the static-arbitrage checks on its fit (`butterfly_free`: Durrleman's density condition g(k) >= 0 between its lowest and highest quoted strikes; `calendar_free`: its total variance is at or above the previous fitted expiry's; both null on an `interp` row).\n\n`expiry` takes a token (`30OCT26`) or an ISO date. Omitted, the nearest fitted expiry is returned. `available_expiries` lists every expiry on the surface.",
         "operationId": "get_iv_smile_options_iv_smile_get",
         "parameters": [
           {
@@ -4343,10 +4580,146 @@
                   "type": "null"
                 }
               ],
-              "description": "Expiry token (e.g. `28MAR25`). Omit for the default front-month smile.",
+              "description": "Expiry token (`30OCT26`) or ISO date. Omit for the nearest fitted expiry.",
               "title": "Expiry"
             },
-            "description": "Expiry token (e.g. `28MAR25`). Omit for the default front-month smile."
+            "description": "Expiry token (`30OCT26`) or ISO date. Omit for the nearest fitted expiry."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/options/iv/constant-maturity": {
+      "get": {
+        "tags": [
+          "Options"
+        ],
+        "summary": "Constant-maturity vol: ATM, risk reversals, butterflies",
+        "description": "ATM vol and the 25- and 10-delta wings at fixed tenors (7, 14, 30, 60, 90, 120, 180, 270 and 365 days), from the expiries whose smile fitted on the surface, including the long-dated ones past its grid. Per expiry, ATM is the vol at the forward and each wing the vol at the strike of that delta (Black-76 forward deltas; a put's delta is read on the call-equivalent axis, so the 25-delta put sits at call delta 0.75), read off the expiry's quoted smile with total variance linear in log-moneyness between neighbouring quotes. Each point's total variance is then interpolated linearly in time between the two expiries that bracket the tenor. No extrapolation: a tenor outside the fitted expiries, or a wing beyond the quoted strikes, is null.\n\nConventions, all in vol points: `rr_25` = 25-delta call vol minus 25-delta put vol (negative when puts are bid), `bf_25` = their average minus ATM; the same for 10-delta. Note `/v2/options/iv/skew` reports put minus call.\n\n`expiries` gives the same numbers at each fitted expiry's own maturity with its quote count `n_quotes` and static-arbitrage checks; `bracket_dte` names the expiries each tenor sits between. `arbitrage` summarises the checks over every fitted smile: `butterfly_free` (Durrleman's density condition g(k) >= 0 across each expiry's quoted strikes), `calendar_free` (total variance does not fall from one fitted expiry to the next across their common strikes) and any `violations`. Current values, refreshed with the surface every 30 seconds.",
+        "operationId": "get_iv_constant_maturity_options_iv_constant_maturity_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
           },
           {
             "name": "X-API-Key",
@@ -4815,10 +5188,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "X-API-Key",
@@ -5259,7 +5632,7 @@
           "Options"
         ],
         "summary": "Greek exposure profile by strike",
-        "description": "Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`.\n\n**Positioning (default: flow).** Weights by BackQuant's measured dealer model (BTC/ETH) or textbook ±OI.\n\nFilters:\n* `exchanges` - comma-separated venue filter (std redis path).\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps ATM ±10% exposure only.\n* `dte_max` - re-aggregates from the raw chain to limit   contributing contracts to `DTE ≤ dte_max`.\n* `positioning` - `flow` (default) or `std`.",
+        "description": "Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`.\n\n**Units** (`unit` in the response): delta $ delta, theta $ per day, vanna $ delta per vol point, charm $ delta per day, vega $ per vol point.\n\n**Positioning (default: flow).** Weights by BackQuant's measured dealer model (BTC/ETH) or textbook ±OI.\n\nFilters:\n* `exchanges` - comma-separated venue filter (std redis path).\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps ATM ±10% exposure only.\n* `dte_max` - re-aggregates from the raw chain to limit   contributing contracts to `DTE ≤ dte_max`.\n* `positioning` - `flow` (default) or `std`.",
         "operationId": "get_greek_profile_options_greeks__greek__get",
         "parameters": [
           {
@@ -5311,10 +5684,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "moneyness_min",
@@ -5503,7 +5876,7 @@
           "Options"
         ],
         "summary": "Strike × time greek surface",
-        "description": "Time-evolving surface for `charm` or `vega` - strike on one axis, time on the other. Already pre-computed for the pro terminal; exposed here for quant tooling that wants the same view.\n\n`exchange_breakdown` - the per-venue split repeated at every point on the surface - is roughly three quarters of the payload and is **opt-in** via `?include=exchange_breakdown`. Same flag and same default as `GET /v2/options/pcr`.",
+        "description": "Time-evolving surface for `charm` or `vega` - strike on one axis, time on the other. Already pre-computed for the pro terminal; exposed here for quant tooling that wants the same view.\n\n**Units** (`unit` in the response): charm $ delta per day, vega $ per vol point, each summed over open interest at the strike.\n\n`exchange_breakdown` - the per-venue split repeated at every point on the surface - is roughly three quarters of the payload and is **opt-in** via `?include=exchange_breakdown`. Same flag and same default as `GET /v2/options/pcr`.",
         "operationId": "get_greek_surface_options_greeks_surfaces__greek__get",
         "parameters": [
           {
@@ -5672,7 +6045,7 @@
           "Options"
         ],
         "summary": "Strike × expiry surface for any greek",
-        "description": "Z = sum(greek × OI) per (strike, expiry) cell. Useful for 3D visualizations or for spotting where a particular greek is concentrated across the term structure.",
+        "description": "Z = the greek's $ exposure summed over OI per (strike, expiry) cell (no dealer sign). Useful for 3D visualizations or for spotting where a particular greek is concentrated across the term structure.\n\n**Units** (`unit` in the response): delta $ delta, gamma $ per 1% move, theta $ per day, vega $ per vol point, vanna $ delta per vol point, charm $ delta per day.",
         "operationId": "get_greek_3d_surface_options_greeks_3d_surface_get",
         "parameters": [
           {
@@ -5828,7 +6201,7 @@
           "Options"
         ],
         "summary": "Call/put OI per expiry",
-        "description": "Open interest aggregated by expiration with calls and puts split.\n\n**Per-venue split (`by_venue`)** - one entry per expiry, parallel to `expiries`: `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}`. OI is coin-native on every venue, so a cross-venue sum needs no conversion; `notional_oi_usd = total_oi x spot`. All eight venues are always present (zero-filled) - use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` (also parallel to `expiries`) is non-null only when some open interest could not be attributed to a venue. With `?exchanges=` set, both blocks cover only the requested venues, matching the filtered totals.\n\n`total_call_oi` / `total_put_oi` and the OI CDFs always describe the rows actually returned: apply a DTE filter and they are recomputed over the surviving expiries rather than left reporting the whole chain.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` - bound the DTE window.\n* `weekly_only=true` - exclude monthly + quarterly anchors   (last-Friday-of-month). Useful when monthly OI dominates the   picture and you want to see the weekly distribution alone.",
+        "description": "Open interest aggregated by expiration with calls and puts split.\n\n**Per-venue split (`by_venue`)** - one entry per expiry, parallel to `expiries`: `{venue: {call_oi, put_oi, total_oi, notional_oi_usd}}`. OI is coin-native on every venue, so a cross-venue sum needs no conversion; `notional_oi_usd = total_oi x spot`. All ten venues are always present (zero-filled) - use `GET /v2/status` to tell a zero-OI venue from a disabled one. `by_venue_unattributed` (also parallel to `expiries`) is non-null only when some open interest could not be attributed to a venue. With `?exchanges=` set, both blocks cover only the requested venues, matching the filtered totals.\n\n`total_call_oi` / `total_put_oi` and the OI CDFs always describe the rows actually returned: apply a DTE filter and they are recomputed over the surviving expiries rather than left reporting the whole chain.\n\nDTE-axis filters:\n* `dte_min` / `dte_max` - bound the DTE window.\n* `weekly_only=true` - exclude monthly + quarterly anchors   (last-Friday-of-month). Useful when monthly OI dominates the   picture and you want to see the weekly distribution alone.",
         "operationId": "get_oi_by_expiry_options_oi_by_expiry_get",
         "parameters": [
           {
@@ -5862,10 +6235,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "dte_min",
@@ -6386,7 +6759,7 @@
           "Options"
         ],
         "summary": "Net premium & volume tilt",
-        "description": "Net premium and notional volume from Deribit-side trades, split into call and put flow. Use `?horizon=0dte` for today's tape or `weekly` for the rolling weekly aggregate.",
+        "description": "Deribit option premium (USD) and contract volume in 1-minute buckets, split into calls and puts. Each bucket holds that minute's increment, so sum a range of buckets for its total; `call_premium_total` and `put_premium_total` are the sums over what is returned. Buckets are in time order.\n\n* `horizon=0dte` (default): today's session, the options expiring this UTC day, traded from 00:00 UTC up to their 08:00 UTC expiry. `session_date` names the session; after the expiry it is still that day's session until the next one starts.\n* `horizon=weekly`: options expiring within 7 days, over the last 3 days of buckets.\n\n`trade_count` is the number of trades the series has absorbed since it began, not the count for this window.",
         "operationId": "get_premium_tide_options_premium_tide_get",
         "parameters": [
           {
@@ -6417,11 +6790,165 @@
                 "weekly"
               ],
               "type": "string",
-              "description": "`0dte` returns today's tape; `weekly` returns the rolling weekly aggregate.",
+              "description": "`0dte` returns today's session; `weekly` returns options expiring within 7 days over the last 3 days.",
               "default": "0dte",
               "title": "Horizon"
             },
-            "description": "`0dte` returns today's tape; `weekly` returns the rolling weekly aggregate."
+            "description": "`0dte` returns today's session; `weekly` returns options expiring within 7 days over the last 3 days."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/options/range": {
+      "get": {
+        "tags": [
+          "Options"
+        ],
+        "summary": "Calibrated options range",
+        "description": "How far price is likely to move over the next 1, 4 and 24 hours: the move Deribit's implied vol index (DVOL) prices, rescaled to how far price has actually moved. Options overprice moves on average (the variance risk premium), so the raw priced range holds more often than it claims; here the multipliers are fitted on the last 30 days of hourly moves so the bands hold about 68% and 90% of the time.\n\nPer horizon: `priced_move` (the 1 sigma log move DVOL prices), `band_68` and `band_90` (price `low` / `high` around spot, the log `log_half_width` and the `multiplier` applied to the priced move), and `record`: how often the bands held out of sample (each day fitted only on the days before it), with the `days` and `samples` behind it.\n\n`include=past` adds the past bands per horizon (hourly for a week, 4-hourly for a month, daily from 00:00 UTC for half a year, within your plan's history depth) as compact rows in `past_columns` order: `time` (UTC, when the band starts), `price_at_start`, the 68% and 90% bands as prices (`low_68`, `high_68`, `low_90`, `high_90`), `price_at_end`, and whether price ended inside each band (`held_68`, `held_90`). The latest band is still running: its end price and held flags are null. Like the record, every past band is out of sample (fitted only on days before its own). BTC and ETH.",
+        "operationId": "get_options_range_options_range_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "BTCUSDT",
+                "ETHUSDT",
+                "SOLUSDT",
+                "HYPEUSDT"
+              ],
+              "type": "string",
+              "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT.",
+              "default": "BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Trading symbol: BTCUSDT, ETHUSDT, SOLUSDT, or HYPEUSDT."
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`past` adds the past bands per horizon.",
+              "title": "Include"
+            },
+            "description": "`past` adds the past bands per horizon."
           },
           {
             "name": "X-API-Key",
@@ -6836,7 +7363,7 @@
           "Options"
         ],
         "summary": "Forward (time × price) greek projection - gamma / charm / vanna",
-        "description": "Black-Scholes forward projection of dealer **gamma**, **charm**, or **vanna** across a (time × price) grid, holding today's chain constant and decaying τ toward each contract's expiry.\n\nReturns a 2D `field` of cell values, the `time_axis_ms` and `price_axis` it's keyed on, and the contracts it consumed. Intended for desk-grade dealer-positioning visualisations (the BackQuant Pro Terminal's TRACE panel runs the same math client-side).\n\n**Positioning (default: flow).**\n* `positioning=flow` (**default**) - BackQuant's measured dealer model (BTC/ETH). Falls back to `std` when it cannot be produced for the symbol (SOL/HYPE).\n* `positioning=std` - textbook call:+OI / put:−OI.\nResponse `meta.extra.positioning` is the model that actually ran; `positioning_fallback_reason` is set on fallback.\n\n**Units:**\n* `gamma` → `$ per 1% spot move` (γ × S² × qty × 0.01).\n* `charm` → 1/year (∂Δ/∂τ × qty).\n* `vanna` → per IV unit (∂Δ/∂σ × qty).\n* `delta_change` → dealer Δ at (price,time) minus Δ at (spot,now).\n\nAlso see `/v2/options/greeks/trace/{greek}/summary` for pin/accel reads.\n\n**Performance:** the field is computed on cache miss in ~50-100 ms for typical grids. Cached for 30 s per `(symbol, full-param-hash)` so identical repeated calls are essentially free.\n\n**What-if vol shifts:** `vol_shift_pct` multiplies every contract's σ by `1 + vol_shift_pct/100` before evaluation. Lets you build vol-up / vol-down surfaces without re-fetching.",
+        "description": "Black-Scholes forward projection of dealer **gamma**, **charm**, or **vanna** across a (time × price) grid, holding today's chain constant and decaying τ toward each contract's expiry.\n\nReturns a 2D `field` of cell values, the `time_axis_ms` and `price_axis` it's keyed on, and the contracts it consumed. Intended for desk-grade dealer-positioning visualisations (the BackQuant Pro Terminal's TRACE panel runs the same math client-side).\n\n**Positioning (default: flow).**\n* `positioning=flow` (**default**) - BackQuant's measured dealer model (BTC/ETH). Falls back to `std` when it cannot be produced for the symbol (SOL/HYPE).\n* `positioning=std` - textbook call:+OI / put:−OI.\nResponse `meta.extra.positioning` is the model that actually ran; `positioning_fallback_reason` is set on fallback.\n\n**Units:**\n* `gamma` → `$ per 1% spot move` (γ × S² × qty × 0.01).\n* `charm` → `$ of delta per day` (dΔ/dt per day × qty × S).\n* `vanna` → `$ of delta per vol point` (∂Δ/∂σ per vol point × qty × S).\n* `delta_change` → dealer $ delta at (price,time) minus at (spot,now).\nEvery cell is priced at its own row's price, the same numbers as the terminal's TRACE panel.\n\nAlso see `/v2/options/greeks/trace/{greek}/summary` for pin/accel reads.\n\n**Performance:** the field is computed on cache miss in ~50-100 ms for typical grids. Cached for 30 s per `(symbol, full-param-hash)` so identical repeated calls are essentially free.\n\n**What-if vol shifts:** `vol_shift_pct` multiplies every contract's σ by `1 + vol_shift_pct/100` before evaluation. Lets you build vol-up / vol-down surfaces without re-fetching.",
         "operationId": "get_greek_trace_options_greeks_trace__greek__get",
         "parameters": [
           {
@@ -7855,10 +8382,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
+              "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off.",
               "title": "Exchanges"
             },
-            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
+            "description": "Comma-separated venue filter, e.g. `deribit,bybit`. Restricts the response to those venues' contribution, recomputed from the per-venue breakdown - it is a re-aggregation, not a post-hoc scaling. Unknown names are ignored; an all-invalid filter returns every venue rather than nothing. Venues: `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta_india`, `delta`, `bullish`, `paradex`. A venue with no contracts on the surface contributes zero - use `GET /v2/status` to tell that apart from a venue that is switched off."
           },
           {
             "name": "include",
@@ -9491,13 +10018,816 @@
         ]
       }
     },
+    "/cot/markets": {
+      "get": {
+        "tags": [
+          "COT"
+        ],
+        "summary": "COT instruments",
+        "description": "The curated futures markets the CFTC Commitments of Traders report covers here, with each one's asset class, the report it reads (Traders in Financial Futures, Disaggregated or Legacy), its primary trader category and the categories compared as smart and fast money. `key` is what /v2/cot/instrument takes.",
+        "operationId": "get_cot_markets_cot_markets_get",
+        "parameters": [
+          {
+            "name": "asset_class",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Asset class: crypto, equity, rates, fx, commodity_energy, commodity_metal, commodity_ag. Default all.",
+              "default": "all",
+              "title": "Asset Class"
+            },
+            "description": "Asset class: crypto, equity, rates, fx, commodity_energy, commodity_metal, commodity_ag. Default all."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/cot/summary": {
+      "get": {
+        "tags": [
+          "COT"
+        ],
+        "summary": "COT positioning across markets",
+        "description": "Each instrument's latest weekly positioning for its primary trader category: `net` contracts (long minus short), `wow_change`, net as a share of open interest, where net sits in its own 1-year and 3-year history (`percentile_*`, 0 to 100) and its 3-year z-score, plus the smart-versus-fast money `divergence_score` and `flags` for extremes. Sorted most extreme first by default.\n\nCFTC data as of each report's Tuesday, released the following Friday.",
+        "operationId": "get_cot_summary_cot_summary_get",
+        "parameters": [
+          {
+            "name": "asset_class",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Asset class: crypto, equity, rates, fx, commodity_energy, commodity_metal, commodity_ag. Default crypto.",
+              "default": "crypto",
+              "title": "Asset Class"
+            },
+            "description": "Asset class: crypto, equity, rates, fx, commodity_energy, commodity_metal, commodity_ag. Default crypto."
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1y",
+                "3y",
+                "5y",
+                "all"
+              ],
+              "type": "string",
+              "description": "History the percentiles and z-score are taken over.",
+              "default": "3y",
+              "title": "Window"
+            },
+            "description": "History the percentiles and z-score are taken over."
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "extremity",
+                "wow_abs",
+                "divergence",
+                "net",
+                "percentile"
+              ],
+              "type": "string",
+              "description": "extremity (percentile furthest from 50), wow_abs, divergence, net or percentile.",
+              "default": "extremity",
+              "title": "Sort"
+            },
+            "description": "extremity (percentile furthest from 50), wow_abs, divergence, net or percentile."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Rows returned.",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Rows returned."
+          },
+          {
+            "name": "extreme_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Only rows flagged as extreme.",
+              "default": false,
+              "title": "Extreme Only"
+            },
+            "description": "Only rows flagged as extreme."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/cot/instrument": {
+      "get": {
+        "tags": [
+          "COT"
+        ],
+        "summary": "COT history for one market",
+        "description": "One instrument's weekly Commitments of Traders history: net contracts per trader category (`categories`, each a dated series), the `focus` category with its statistics, open interest and, where the report has both, the smart-minus-fast money divergence. `key` comes from /v2/cot/markets (`BTC`, `ETH`, `SP500`...). `weeks` is clamped to your plan's history depth.",
+        "operationId": "get_cot_instrument_cot_instrument_get",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "description": "Instrument key from /v2/cot/markets.",
+              "default": "BTC",
+              "title": "Key"
+            },
+            "description": "Instrument key from /v2/cot/markets."
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Trader category to focus; defaults to the instrument's primary one.",
+              "title": "Category"
+            },
+            "description": "Trader category to focus; defaults to the instrument's primary one."
+          },
+          {
+            "name": "weeks",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 520,
+              "minimum": 4,
+              "description": "Weeks of history.",
+              "default": 156,
+              "title": "Weeks"
+            },
+            "description": "Weeks of history."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/filings/insider": {
+      "get": {
+        "tags": [
+          "Filings"
+        ],
+        "summary": "Insider transactions (SEC Form 4)",
+        "description": "Form 4 transactions by the officers, directors and 10% owners of COIN and HOOD, newest first: who, their role, the SEC `transaction_code` with a readable `transaction` (purchase, sale, award, option_exercise, tax_withholding, gift...), shares, price, `value_usd` and the holding after. Purchases and sales are the discretionary trades; awards, exercises and tax withholding are compensation mechanics. `purchases_usd` and `sales_usd` sum the non-derivative purchases and sales only (option and award lines carry exercise prices, not trade values). Filings reach EDGAR within minutes of acceptance. `lookback` is clamped to your plan's history depth.",
+        "operationId": "get_insider_filings_insider_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "COIN",
+                "HOOD"
+              ],
+              "type": "string",
+              "description": "COIN or HOOD.",
+              "default": "COIN",
+              "title": "Ticker"
+            },
+            "description": "COIN or HOOD."
+          },
+          {
+            "name": "lookback",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "3m",
+                "6m",
+                "1y"
+              ],
+              "type": "string",
+              "description": "3m, 6m or 1y.",
+              "default": "1y",
+              "title": "Lookback"
+            },
+            "description": "3m, 6m or 1y."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/filings/holders": {
+      "get": {
+        "tags": [
+          "Filings"
+        ],
+        "summary": "Institutional holders (SEC 13F)",
+        "description": "The largest institutional holders of MSTR, COIN, HOOD or IBIT from the latest quarterly 13F filings, with each manager's change in shares from the quarter before (`share_change`, `share_change_pct`; null when the manager did not file it last quarter). 13F filings are due 45 days after quarter end, so `period_end` is that quarter.",
+        "operationId": "get_holders_filings_holders_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "MSTR",
+                "COIN",
+                "HOOD",
+                "IBIT"
+              ],
+              "type": "string",
+              "description": "MSTR, COIN, HOOD or IBIT.",
+              "default": "IBIT",
+              "title": "Ticker"
+            },
+            "description": "MSTR, COIN, HOOD or IBIT."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Holders returned.",
+              "default": 25,
+              "title": "Limit"
+            },
+            "description": "Holders returned."
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API key",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No data available for the requested resource",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "NOT_FOUND",
+                    "message": "No data for BTCUSDT"
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Invalid request parameters",
+                    "details": {
+                      "errors": []
+                    }
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "error": {
+                    "code": "RATE_LIMIT_EXCEEDED",
+                    "message": "Rate limit exceeded. Try again later."
+                  },
+                  "meta": {
+                    "version": "2.0",
+                    "timestamp": "2026-04-29T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/tape": {
       "get": {
         "tags": [
           "Tape"
         ],
         "summary": "Multi-venue options tape - paginated trade history",
-        "description": "Returns options trades from every venue we collect - `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta`, `delta_india` (BTC + ETH today). Names are given as the tokens you pass to `?venues=`. Cursor-paginated; pass the response's `next_cursor` as `?before=` to walk older.\n\nVenue mix varies a lot by coin and by day, so do not assume a handful of venues carries the flow: filtering to a subset can drop most of the tape without any indication it happened. `meta.source` reports the venues a given response drew on.\n\nAll filters compose with AND. Empty values are no-ops. The default page is the latest 200 trades for the requested coin across all venues.",
+        "description": "Returns options trades from every venue we collect - `deribit`, `bybit`, `okx`, `binance`, `derive`, `thalex`, `delta`, `delta_india`, `bullish`, `paradex` (BTC + ETH today). Names are given as the tokens you pass to `?venues=`. Cursor-paginated; pass the response's `next_cursor` as `?before=` to walk older.\n\nVenue mix varies a lot by coin and by day, so do not assume a handful of venues carries the flow: filtering to a subset can drop most of the tape without any indication it happened. `meta.source` reports the venues a given response drew on.\n\nAll filters compose with AND. Empty values are no-ops. The default page is the latest 200 trades for the requested coin across all venues.",
         "operationId": "get_tape_tape_get",
         "parameters": [
           {
@@ -9531,13 +10861,13 @@
                   "type": "null"
                 }
               ],
-              "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex, delta, delta_india.",
+              "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex, delta, delta_india, bullish, paradex.",
               "examples": [
                 "deribit,bybit"
               ],
               "title": "Venues"
             },
-            "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex, delta, delta_india."
+            "description": "CSV venue filter - any of: deribit, bybit, okx, binance, derive, thalex, delta, delta_india, bullish, paradex."
           },
           {
             "name": "instrument",
@@ -10856,10 +12186,10 @@
                   "type": "null"
                 }
               ],
-              "description": "CSV venue filter. Default: all. Allowed: binance, bybit, delta, delta_india, deribit, derive, okx, thalex",
+              "description": "CSV venue filter. Default: all. Allowed: binance, bullish, bybit, delta, delta_india, deribit, derive, okx, paradex, thalex",
               "title": "Venues"
             },
-            "description": "CSV venue filter. Default: all. Allowed: binance, bybit, delta, delta_india, deribit, derive, okx, thalex"
+            "description": "CSV venue filter. Default: all. Allowed: binance, bullish, bybit, delta, delta_india, deribit, derive, okx, paradex, thalex"
           },
           {
             "name": "include",
@@ -11474,7 +12804,7 @@
               }
             ],
             "title": "By Venue",
-            "description": "Per-venue open interest for this expiry (all eight venues, zero-filled). Null only when no venue split is available."
+            "description": "Per-venue open interest for this expiry (all ten venues, zero-filled). Null only when no venue split is available."
           },
           "by_venue_unattributed": {
             "anyOf": [
@@ -12171,7 +13501,7 @@
               }
             ],
             "title": "By Venue",
-            "description": "Per-venue open interest rolled up over the strikes returned. All eight venues are present (zero-filled); null for a single-expiry request, where no venue split is published (see by_venue_note). Attribution is positioning-independent."
+            "description": "Per-venue open interest rolled up over the strikes returned. All ten venues are present (zero-filled); null for a single-expiry request, where no venue split is published (see by_venue_note). Attribution is positioning-independent."
           },
           "by_venue_unattributed": {
             "anyOf": [
@@ -13948,7 +15278,7 @@
           "field_units": {
             "type": "string",
             "title": "Field Units",
-            "description": "Units of each cell - `dealer_gamma_dollars_per_pct_spot` for gamma (γ × S² × qty × 0.01), `dealer_charm_per_year` for charm, `dealer_vanna_per_iv_unit` for vanna, `dealer_delta_change_from_spot_now` for delta_change. Cells are sized by the effective positioning model (see `positioning`)."
+            "description": "Units of each cell, all $ at the cell's price - `dealer_gamma_dollars_per_pct_spot` for gamma (γ × S² × qty × 0.01), `dealer_charm_usd_delta_per_day` for charm, `dealer_vanna_usd_delta_per_vol_pt` for vanna, `dealer_delta_change_usd_from_spot_now` for delta_change. Cells are sized by the effective positioning model (see `positioning`)."
           },
           "positioning": {
             "anyOf": [
@@ -14330,6 +15660,14 @@
     {
       "name": "Multi",
       "description": "Bundled multi-symbol endpoints (single round-trip across the universe)"
+    },
+    {
+      "name": "COT",
+      "description": "CFTC Commitments of Traders: futures positioning by trader category (public CFTC data)"
+    },
+    {
+      "name": "Filings",
+      "description": "SEC Form 4 insider trades and 13F holders for MSTR, COIN, HOOD and IBIT (public SEC data)"
     }
   ]
 }

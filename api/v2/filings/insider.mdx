@@ -1,0 +1,13 @@
+---
+title: "Insider trades (SEC Form 4)"
+openapi: "GET /filings/insider"
+description: "Form 4 transactions by officers, directors and 10% owners of COIN and HOOD."
+---
+
+Newest first, with a readable `transaction` beside the SEC code. Purchases
+and sales are the discretionary trades; awards, option exercises and tax
+withholding are compensation mechanics, so `purchases_usd` and `sales_usd`
+count only non-derivative purchases and sales.
+
+MSTR is not included yet: its Form 4 lines do not record which share class
+they are in, and its directors buy the preferred series near $100 par.

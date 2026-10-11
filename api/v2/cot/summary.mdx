@@ -1,0 +1,13 @@
+---
+title: "COT positioning across markets"
+openapi: "GET /cot/summary"
+description: "CFTC Commitments of Traders: each market's latest positioning, most extreme first."
+---
+
+The latest weekly positioning of each market's primary trader category
+(leveraged funds for CME bitcoin and ether): net contracts, the weekly
+change, net as a share of open interest, where it sits in its own 1-year and
+3-year range, and flags for extremes. `asset_class` defaults to `crypto`;
+`all` covers the 48 markets.
+
+Public CFTC data: positions as of Tuesday, published Friday 15:30 ET.

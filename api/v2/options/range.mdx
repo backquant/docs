@@ -1,0 +1,33 @@
+---
+title: "Calibrated options range"
+openapi: "GET /options/range"
+description: "The move options price over 1h, 4h and 24h, rescaled to realised moves, with its out-of-sample record."
+---
+
+Options overprice moves on average (the variance risk premium), so a range
+built from implied vol alone holds more often than it claims. This endpoint
+takes the move DVOL prices and rescales it on the last 30 days of hourly
+moves, so the 68% and 90% bands hold about that often.
+
+Each horizon returns the bands as prices around spot and the `record`: how
+often such bands held out of sample, with each day fitted only on the days
+before it. On BTC and ETH the bands held 68-69% and 89-90% at 1h, 4h and
+24h in walk-forward tests.
+
+BTC and ETH (Deribit's DVOL).
+
+`include=past` adds the bands as they were drawn at the time, out of sample:
+hourly bands for the last week, 4-hourly for the last month and daily (from
+00:00 UTC) for the last six months, within your plan's history window. Each
+row, in `past_columns` order, gives the start time, the price at the start,
+the 68% and 90% bands as prices, the price at the end and whether price
+ended inside each band. The latest band is still running, so its end price
+and held flags are null. Rows tile the timeline, so they chart directly
+behind candles.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Expected move" href="/api/v2/options/expected-move" icon="chart-line" />
+  <Card title="IV suite" href="/concepts/iv-suite" icon="bookmark" />
+</CardGroup>

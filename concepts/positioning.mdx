@@ -28,13 +28,16 @@ Live signed surfaces use:
 
 Both models read the same multi-venue options chain for greeks and
 **coin-unit OI**: Deribit, Bybit, OKX, Binance, Derive (when enabled), Thalex,
-Delta India and Delta Global. See [Venue coverage](/concepts/venues) for what
-each venue contributes.
+Delta India, Delta Global, Bullish and Paradex. See
+[Venue coverage](/concepts/venues) for what each venue contributes.
 
 GEX is reported in **USD impact per 1% move in spot**, so magnitudes are
 comparable across symbols and across both models.
 
 `meta.extra.aggregation` echoes which venues were combined for the response.
+
+Bullish and Paradex contribute open interest but their trades are not
+collected yet, so they count in `std` and not in `flow`.
 
 ## Coin coverage
 
@@ -51,7 +54,7 @@ or `flow_qty_all_zero`).
 
 | Surface | Positioning |
 | --- | --- |
-| Levels, strike profile, expiry profile, heatmaps, TRACE, multi levels, greek profiles | **flow** default |
+| Levels, strike profile, expiry profile, heatmaps, TRACE, multi levels, greek profiles, `/v2/gex/ladder` | **flow** default |
 | `/v2/gex/history`, `/v2/gex/stress-history` | **std** only (stored series) |
 | WebSocket `gex.levels.{SYMBOL}` | **flow** default, same as REST levels |
 | Max pain, IV, PCR, OI, expected move, probability | Not a signed dealer model |

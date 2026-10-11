@@ -11,9 +11,15 @@ them.
 
 | Category | Refresh | What's in it |
 | --- | --- | --- |
-| **GEX** (levels, strike profile, expiry profile, max-pain, expiry summary, time heatmap, history) | **30 seconds** | Pulled from Deribit / Bybit / OKX / Binance, computed by our worker |
+| **GEX** (levels, strike profile, expiry profile, max-pain, expiry summary, time heatmap, history) | **30 seconds** | The ten-venue options chain (see [Venues](/concepts/venues)), computed by our worker; `flow` positions re-read from the tape behind a 15-second cache |
+| **Strike ladder** (`/v2/gex/ladder`) | **30 seconds** (10-second response cache) | Same chain and `flow` positions as GEX |
 | **Options** (chain, IV surface / term / skew / smile / curves, greeks, probability density, OI by expiry, expected move) | **30 seconds** | Same compute pipeline as GEX - they share the snapshot |
-| **Premium tide / OI history** | **30 seconds** | Append-only history of options trade flow |
+| **Premium tide** | **30 seconds** | 1-minute buckets of Deribit option premium and volume; `0dte` is today's session |
+| **OI history** | **30 seconds** | Append-only history of open interest |
+| **Options range** (`/v2/options/range`) | **1 minute** (implied vol), **10 minutes** (calibration) | The band widths follow DVOL each minute; the multipliers are refitted every 10 minutes on the last 30 days of hourly moves |
+| **COT** (`/v2/cot/*`) | **Weekly** | CFTC positions as of Tuesday, published Friday 15:30 ET; we load each release within hours |
+| **Insider trades** (`/v2/filings/insider`) | **Minutes** in US hours, slower overnight | SEC Form 4 filings, polled from EDGAR |
+| **13F holders** (`/v2/filings/holders`) | **Quarterly** | Filings are due 45 days after quarter end; `period_end` names the quarter |
 | **Liquidation heatmap** | **5 minutes** | Lower cadence; perp liquidations don't move that fast |
 | **IV-RV / VRP history** | **Daily** (after UTC midnight) | Daily snapshots, not intraday |
 | **Stress history** (`/v2/gex/stress-history`) | **Continuous** (Postgres-backed) | Persistent log of HVL / walls over time |

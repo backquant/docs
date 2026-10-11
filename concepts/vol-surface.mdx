@@ -1,0 +1,181 @@
+---
+title: "Vol surface methodology"
+description: "How the IV surface, smiles and constant-maturity vols are built, what is checked, and what is not"
+---
+
+Every implied-vol number in v2 starts from one surface per coin, rebuilt
+about every 30 seconds from the multi-venue options chain. This page is the
+full recipe, so you can reproduce it or decide where you disagree with it.
+
+## Inputs
+
+- **The chain.** One row per contract across every venue that lists it (see
+  [Venues](/concepts/venues)). A contract quoted on several venues carries
+  their implied vols blended by open interest.
+- **Out of the money only.** Puts below the forward, calls above, the
+  average of the two at the money. ITM options add no information that the
+  OTM side and parity do not already give, and their marks are noisier.
+- **Coordinates.** Log-moneyness `k = ln(K / F)` against each expiry's own
+  forward, and total variance `w = sigma^2 T`, with `T` in years (calendar
+  days / 365).
+
+## Forwards
+
+Each expiry gets its own forward. One forward for the whole surface is only
+right when basis is zero, and crypto basis is not (BTC's long-dated
+expiries sit several percent over spot).
+
+1. **Put-call parity.** `F = K + (C - P)` per strike in the strike currency,
+   undiscounted, then the median across strikes. Needs at least two
+   call/put pairs; a per-strike solve more than 50% from spot is a bad mark
+   and is dropped first. Against Deribit's listed BTC futures the parity
+   forward came within 0.12% at every tenor inside 180 days.
+2. **Delta.** Where parity has too few pairs, the strike where the
+   call-equivalent delta crosses 0.5.
+3. **Spot.** A forward from either method must sit within
+   `0.5% + 30% x T` of spot (the floor is mark noise, the rate is carry);
+   outside it the next method is tried, and if neither passes the expiry is
+   read against spot.
+
+`expiry_forwards[].method` (`parity`, `delta` or `anchor`) on [`/v2/options/iv/surface`](/api/v2/options/iv/surface)
+says which one each expiry used.
+
+## Smiles
+
+Each expiry's smile is fitted with raw SVI:
+
+```
+w(k) = a + b ( rho (k - m) + sqrt((k - m)^2 + sigma^2) )
+```
+
+- **Window.** Strikes within four ATM standard deviations
+  (`4 x ATM vol x sqrt(T)`, at least 0.10 in log-moneyness). The deep wings
+  carry no liquidity, and their marks are what wreck a naive fit.
+- **Weights.** Square root of open interest, so a dead wing mark cannot drag
+  the fit.
+- **Honesty gate.** A fit is used only if it lands within 2 vol points RMSE
+  of the quotes it was fitted to. Otherwise the expiry is published as
+  `interp`: its quotes joined in total variance, linear in `k`. In practice
+  that is same-day expiries, whose smile is a kink SVI cannot draw.
+
+The fitted parameters, the RMSE, the quote count and the log-moneyness span
+of the expiry's quotes (`svi`, `smile_rmse`, `n_quotes`, `k_range`) are on
+every expiry of the surface. Rebuild any smile yourself from them. Note that
+`k_range` can be wider than the fit window: between the window and the
+outermost quote the curve is the fit's continuation, which `smile_rmse` does
+not measure.
+
+## The grid
+
+`z_grid[i][j]` is the vol in percent at tenor `y_grid[i]` (days) and strike
+`x_grid[j]`. Rows are real listed expiries out to 180 days; no tenor is
+invented between them.
+
+- **Strike window.** Forward plus or minus 40%, tightened to the strikes
+  most expiries actually quote.
+- **No invented wings.** A fitted row is drawn at most half its own quoted
+  span (and never more than 0.25 in log-moneyness) past its outermost quote,
+  and never above 1.5 times its highest quoted vol. An `interp` row reaches
+  0.10 past its quotes. Past that, the cell is null.
+- **Unpriceable cells.** A cell whose out-of-the-money option is worth less
+  than a millionth of the forward has no vol worth reporting and is null. A
+  row left less than 35% filled is dropped whole.
+- **Range.** Vols outside 5% to 250% are dropped as broken marks, never
+  clipped to the limit.
+
+Expiries past 180 days are fitted the same way and published in
+`long_expiries` with the same fields, but not drawn on the grid. They are
+there for the 6-month to 1-year constant-maturity tenors.
+
+## Static arbitrage
+
+Two conditions make a surface arbitrage-free: no calendar arbitrage (total
+variance at a fixed moneyness never falls as maturity rises) and no
+butterfly arbitrage (every smile implies a non-negative density).
+
+**On the grid**, calendar arbitrage is removed: each cell is raised to the
+running maximum of total variance down the maturity axis, the smallest
+change that restores the condition. Where that would push a cell past what
+its own expiry could plausibly be worth (1.5 times its highest quoted vol),
+the cell becomes null instead, so a same-day wing mark is never carried
+forward into a later expiry. `n_calendar_lifted` counts the cells raised.
+
+**On the fitted smiles**, both conditions are checked on every response of
+[`/v2/options/iv/constant-maturity`](/api/v2/options/iv/constant-maturity)
+and [`/v2/options/iv/smile`](/api/v2/options/iv/smile), across each
+expiry's quoted strikes (`k_range`):
+
+- `butterfly_free`: Durrleman's condition `g(k) >= 0` everywhere in that
+  range, where
+
+  ```
+  g(k) = (1 - k w' / (2 w))^2 - (w'^2 / 4) (1 / w + 1 / 4) + w'' / 2
+  ```
+
+  The risk-neutral density is proportional to `g`, so a negative `g` is a
+  butterfly that pays you to own it. `min_density_g` is the lowest value
+  found.
+- `calendar_free`: the smile's total variance is at or above the previous
+  fitted expiry's at every strike both quote.
+
+Failures are listed in `arbitrage.violations`; nothing is hidden or quietly
+repaired. On live BTC on 2026-10-11, all 13 fitted expiries (1 day to 474
+days) passed both.
+
+**What is not done.** Each expiry is fitted on its own (raw SVI, not a joint
+SSVI surface), so the checks above are tests, not constraints of the fit.
+Butterfly repair is not applied to `interp` rows. A projection onto the
+nearest convex smile exists, and was measured on the live chains: on SOL it
+doubled the 90th-percentile repricing error to remove butterflies worth
+fractions of a cent, so it stays off until it can be bounded by each
+option's value.
+
+## Constant maturity
+
+[`/v2/options/iv/constant-maturity`](/api/v2/options/iv/constant-maturity)
+reports ATM and the 25- and 10-delta wings at 7, 14, 30, 60, 90, 120, 180,
+270 and 365 days.
+
+Per expiry:
+
+- **ATM** is the vol at the forward (`k = 0`).
+- **A wing** is the vol at the strike with that Black-76 forward delta,
+  `N(d1) = delta` with `d1 = (-k + w(k) / 2) / sqrt(w(k))`. Puts are read on
+  the call-equivalent axis, so the 25-delta put sits at call delta 0.75.
+- **The vol is read off the quoted smile**, not the SVI fit: total variance
+  linear in `k` between the neighbouring quotes. Checked on live BTC, SVI
+  matched the quotes at both 25-delta wings on most expiries but missed the
+  December put wing by about 0.7 vol, which is most of a risk reversal.
+- **A wing the quotes do not reach is null.** That vol was never quoted.
+
+Per tenor, each point's total variance is interpolated linearly in time
+between the two fitted expiries that bracket it (sticky delta), then turned
+back into vol. There is no extrapolation: a tenor before the first fitted
+expiry or after the last is null. `bracket_dte` names the two expiries
+behind each tenor, and `expiries[].n_quotes` shows how deep each one's book
+is, so you can see when a long tenor leans on a thin expiry.
+
+Conventions, in vol points:
+
+| Field | Definition |
+|---|---|
+| `rr_25`, `rr_10` | call vol minus put vol at that delta (negative when puts are bid) |
+| `bf_25`, `bf_10` | average of the call and put vols minus ATM |
+
+[`/v2/options/iv/skew`](/api/v2/options/iv/skew) reports skew as put minus
+call. It is the same quantity with the opposite sign.
+
+## Freshness
+
+The surface, smiles and constant-maturity vols share one build, about every
+30 seconds; `meta.computed_at` is that build's time. These are current
+values: there is no constant-maturity history.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="The IV suite" href="/concepts/iv-suite" icon="bookmark" />
+  <Card title="Venues" href="/concepts/venues" icon="building-columns" />
+  <Card title="Data freshness" href="/concepts/data-freshness" icon="clock" />
+  <Card title="Constant-maturity vol" href="/api/v2/options/iv/constant-maturity" icon="chart-line" />
+</CardGroup>

@@ -11,23 +11,29 @@ question.
 
 | Endpoint | What it shows | Use it for |
 | --- | --- | --- |
-| [`/v2/options/iv/surface`](/api/v2/options/iv/surface) | Full 2D IV grid (strike × expiry) | 3D vol-surface viz |
+| [`/v2/options/iv/surface`](/api/v2/options/iv/surface) | Fitted IV grid (tenor × strike) with each expiry's SVI fit | 3D vol-surface viz, your own pricing |
+| [`/v2/options/iv/constant-maturity`](/api/v2/options/iv/constant-maturity) | ATM, 25Δ / 10Δ RR and BF at 7 days to 1 year, arbitrage-checked | Vol desk monitoring at fixed tenors |
 | [`/v2/options/iv/term-structure`](/api/v2/options/iv/term-structure) | ATM IV per expiry | Calendar / term carry, contango vs backwardation |
 | [`/v2/options/iv/skew`](/api/v2/options/iv/skew) | 25Δ / 10Δ skew + 25Δ butterfly per expiry | Risk-reversal, fear gauge |
 | [`/v2/options/iv/curves`](/api/v2/options/iv/curves) | Full smile per expiry, multi-expiry | Vol surface comparison across tenors |
-| [`/v2/options/iv/smile`](/api/v2/options/iv/smile) | Single-expiry smile | Cheaper than `/curves` when you only need one tenor |
+| [`/v2/options/iv/smile`](/api/v2/options/iv/smile) | One expiry's fitted smile, with RR, BF and arbitrage checks | Cheaper than `/curves` when you only need one tenor |
 | [`/v2/options/iv/iv-rv`](/api/v2/options/iv/iv-rv) | Daily IV vs realised vol history | Vol-selling timing |
 | [`/v2/options/vrp`](/api/v2/options/vrp) | Volatility risk premium (IV − RV history) | Mean-reversion signal on premium richness |
 
 ## Surface
 
-The full strike × expiry grid of implied volatilities. Best rendered as
+The fitted grid of implied volatilities out to 180 days. Best rendered as
 a 3D surface or contour plot. Returns:
 
 - `x_grid` - strikes
-- `y_grid` - expiry tenors (DTE)
-- `z_grid` - IV values at each (strike, expiry) cell
+- `y_grid` - expiry tenors (DTE), listed expiries only
+- `z_grid` - `z_grid[i][j]` is the IV at tenor `y_grid[i]` and strike
+  `x_grid[j]`; null where the expiry never traded that far out
 - `min_iv` / `max_iv` - for color scaling
+- `expiry_forwards` / `long_expiries` - each expiry's forward and SVI fit
+
+How the surface is fitted and checked is on
+[Vol surface methodology](/concepts/vol-surface).
 
 Most useful when you can see the whole shape - local "wings" up means
 fat-tail pricing, "smirk" with low call-side IV means upside-skew
@@ -53,6 +59,18 @@ Filter `?dte_max=60` to focus on the front of the curve, or pass
 IV from 30 days ago - useful for showing "term structure shifted right"
 in dashboards.
 
+## Constant maturity
+
+`/v2/options/iv/constant-maturity` reads ATM and the 25- and 10-delta wings
+off each expiry's quoted smile and interpolates them to fixed tenors: 7, 14,
+30, 60, 90, 120, 180, 270 and 365 days. Poll it to track a 30-day risk
+reversal or a 3-month butterfly through time without the jumps that come
+from expiries rolling. `rr_25` there is call minus put, the desk convention;
+`/iv/skew` below reports put minus call.
+
+Each response says whether the fitted smiles are free of butterfly and
+calendar arbitrage, expiry by expiry.
+
 ## Skew
 
 `/v2/options/iv/skew` gives you per-expiry:
@@ -76,8 +94,9 @@ merged-IV smile (OTM puts below spot, OTM calls above) for *every*
 active expiry, sorted by DTE. Best for plotting all smiles on a single
 chart for visual comparison.
 
-[`/v2/options/iv/smile`](/api/v2/options/iv/smile) returns the same data
-for *one* expiry. Lighter payload; use this if you only need the front
+[`/v2/options/iv/smile`](/api/v2/options/iv/smile) returns *one* expiry's
+smile from its SVI fit, by strike and log-moneyness, with its RR, BF and
+arbitrage checks. Lighter payload; use this if you only need the front
 month or a specific tenor.
 
 ## IV-RV history

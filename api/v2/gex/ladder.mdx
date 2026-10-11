@@ -1,0 +1,29 @@
+---
+title: "Strike ladder"
+openapi: "GET /gex/ladder"
+description: "Dealer exposure by strike and expiry for every greek, and the dealer position in contracts."
+---
+
+The grid behind the terminal's HEATMAP: one metric per call (`gex`, `dex`,
+`vanna`, `charm`, `vega`, `oi` or `pos`), with a row per strike and a column
+per expiry, plus each strike's total over every expiry in scope.
+
+`pos` is the dealer position itself, in contracts: where dealers are longest
+and shortest, by strike and by expiry. With `positioning=flow` (the default
+for BTC and ETH) it is measured from the tape; see
+[How flow is measured](/concepts/positioning#how-flow-is-measured).
+
+```bash
+curl -H "X-API-Key: $KEY" \
+  "https://api.backquant.com/v2/gex/ladder?symbol=BTCUSDT&metric=pos&expiry=week"
+```
+
+`expiry` takes `all`, `0dte`, `front`, `week`, `month`, ISO dates or tokens
+such as `30OCT26`. Every expiry in the response carries both forms.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Dealer positioning" href="/concepts/positioning" icon="bookmark" />
+  <Card title="Strike profile" href="/api/v2/gex/strike-profile" icon="chart-column" />
+</CardGroup>
