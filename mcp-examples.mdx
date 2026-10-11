@@ -130,6 +130,25 @@ ETF data is daily and publishes on trading days, so the most recent point can
 be a day or more old over a weekend or holiday. The response carries the date
 it belongs to, and a good answer will say which day it is quoting.
 
+## Positioning reports and filings
+
+> **"How are hedge funds positioned in CME bitcoin futures?"**
+> Leveraged funds, asset managers and dealers, net, with the weekly change and
+> where it sits in three years of history.
+> *(`get_filings`)*
+
+> **"Are Coinbase insiders selling?"**
+> Form 4 buys and sells at COIN over recent months.
+> *(`get_filings`)*
+
+> **"Who are the biggest holders of IBIT, and who added last quarter?"**
+> The top 13F holders with the quarter-on-quarter change.
+> *(`get_filings`)*
+
+COT is weekly (positions as of Tuesday, released Friday) and 13F is quarterly
+with a lag of up to 45 days after the quarter, so these describe positioning as
+of the report date, not now. A good answer will quote that date.
+
 ## Getting better answers
 
 **Name the market.** "BTC" or "ETH" beats "bitcoin's options" for getting the

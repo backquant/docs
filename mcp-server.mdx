@@ -1,6 +1,6 @@
 ---
 title: "MCP server"
-description: "Use BackQuant's crypto options, GEX and flow data directly inside Claude, Cursor or any MCP client. OAuth sign-in or an API key, 22 tools, no code required."
+description: "Use BackQuant's crypto options, GEX and flow data directly inside Claude, Cursor or any MCP client. OAuth sign-in or an API key, 23 tools, no code required."
 ---
 
 BackQuant ships a remote **Model Context Protocol** server, so the same data
@@ -149,7 +149,7 @@ you do not need any of this.
 
 ## Tools
 
-Twenty-two tools, grouped by what you would ask for. Each returns a shaped,
+Twenty-three tools, grouped by what you would ask for. Each returns a shaped,
 compact answer rather than a raw dump, so a question costs a sensible number of
 tokens.
 
@@ -182,7 +182,7 @@ tokens.
 | Tool | Answers |
 |---|---|
 | `get_iv` | Implied volatility in whichever cut you need |
-| `get_expected_move` | The move the market is pricing for an expiry |
+| `get_expected_move` | The move the market is pricing for an expiry. `view=calibrated` (BTC, ETH) gives realistic 68% and 90% price bands for the next 1, 4 and 24 hours, rescaled to how far price has actually moved, with how often they have held |
 | `get_probability` | Market-implied odds of finishing above or below a price |
 | `get_basis` | The dated-futures curve, annualised basis by expiry. For perpetual basis use `get_perps`, which reports `perp_basis_bps` |
 
@@ -202,6 +202,12 @@ tokens.
 | Tool | Answers |
 |---|---|
 | `get_etf_flows` | Daily net creations and redemptions for the US spot crypto ETFs, per fund and in total, plus the cumulative since launch |
+
+**Positioning reports and filings**
+
+| Tool | Answers |
+|---|---|
+| `get_filings` | Public regulatory data, weekly or quarterly. CFTC Commitments of Traders for CME bitcoin and ether and other futures markets (how leveraged funds, asset managers and dealers are net positioned, the weekly change and its 3-year percentile), SEC Form 4 insider trades at COIN and HOOD, and the top 13F holders of MSTR, COIN, HOOD and IBIT |
 
 **Discovery**
 
@@ -264,7 +270,7 @@ When one answer draws on several sources, it also carries
 }
 ```
 
-We do not publish a single snapshot ID across all 22 tools. It would imply the
+We do not publish a single snapshot ID across all 23 tools. It would imply the
 feeds were captured at one instant, and they are not.
 
 ## Limits
