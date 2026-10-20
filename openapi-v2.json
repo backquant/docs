@@ -5136,7 +5136,7 @@
           "Options"
         ],
         "summary": "Implied 1σ move",
-        "description": "ATM-straddle-derived 1- and 2-sigma expected move (1d horizon).",
+        "description": "ATM-implied 1- and 2-sigma expected move to the nearest liquid expiry: the closest expiry 7-30 days out, else the closest one 1-60 days out (`days_to_expiry` says which). Move = `atm_iv` x sqrt(days/365) x spot; `straddle_price` is the ATM straddle for the same expiry.\n\nUnit: `atm_iv` here is a decimal (0.33 = 33%). Elsewhere in v2, `atm_iv` is in percent (33.0 = 33%).",
         "operationId": "get_expected_move_options_expected_move_get",
         "parameters": [
           {
@@ -12405,7 +12405,8 @@
                 "type": "null"
               }
             ],
-            "title": "Atm Iv"
+            "title": "Atm Iv",
+            "description": "ATM implied volatility in percent (33.0 = 33%)."
           },
           "contract_count": {
             "type": "integer",
@@ -12653,7 +12654,8 @@
                 "type": "null"
               }
             ],
-            "title": "Atm Iv"
+            "title": "Atm Iv",
+            "description": "ATM implied volatility in percent (33.0 = 33%)."
           },
           "skew_25d": {
             "anyOf": [
@@ -13665,7 +13667,8 @@
                 "type": "null"
               }
             ],
-            "title": "Atm Iv"
+            "title": "Atm Iv",
+            "description": "ATM implied volatility in percent (33.0 = 33%)."
           },
           "put_25d_iv": {
             "anyOf": [
@@ -13858,7 +13861,8 @@
                 "type": "null"
               }
             ],
-            "title": "Atm Iv"
+            "title": "Atm Iv",
+            "description": "ATM implied volatility in percent (33.0 = 33%)."
           },
           "ts": {
             "type": "string",
@@ -13935,7 +13939,8 @@
                 "type": "null"
               }
             ],
-            "title": "Atm Iv"
+            "title": "Atm Iv",
+            "description": "ATM implied volatility per expiry, in percent (33.0 = 33%)."
           },
           "ts": {
             "anyOf": [
@@ -14510,7 +14515,8 @@
                 "type": "null"
               }
             ],
-            "title": "Atm Iv"
+            "title": "Atm Iv",
+            "description": "ATM implied volatility in percent (33.0 = 33%)."
           },
           "skew_25d": {
             "anyOf": [
