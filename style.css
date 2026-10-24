@@ -1,44 +1,1010 @@
-/* BackQuant docs - global layout overrides
- * Mintlify auto-loads any .css file at the repo root. */
+/* BackQuant docs theme
+ * Layered on top of Mintlify's "aspen" theme (see docs.json).
+ * Mintlify auto-loads any .css file at the repo root.
+ *
+ * Direction: clean app UI in the style of Untitled UI. Neutral greys, no
+ * tinted panels, hairline borders, Inter for reading, Satoshi (from
+ * bq-website) for headings, floating sidebar. */
 
-/* ===== Wider left sidebar on desktop ===== */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap");
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-Variable.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi-VariableItalic.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ===== Design tokens ===== */
+:root {
+  --bq-bg: #ffffff;
+  --bq-bg-hover: #fafafa;
+  --bq-bg-active: #f5f5f5;
+  --bq-bg-code-inline: #f5f5f5;
+  --bq-border: #e9eaeb;
+  --bq-border-strong: #d5d7da;
+  --bq-text: #181d27;
+  --bq-text-secondary: #414651;
+  --bq-text-tertiary: #535862;
+  --bq-text-quaternary: #717680;
+  --bq-icon: #a4a7ae;
+  --bq-icon-active: #414651;
+  --bq-accent: #0a0d12;
+  --bq-accent-contrast: #ffffff;
+  --bq-warning: #b54708;
+  --bq-shadow-xs: 0 1px 2px rgba(10, 13, 18, 0.05);
+  --bq-shadow-sm: 0 1px 3px rgba(10, 13, 18, 0.1), 0 1px 2px -1px rgba(10, 13, 18, 0.1);
+  --bq-radius-sm: 6px;
+  --bq-radius: 8px;
+  --bq-radius-lg: 12px;
+  --bq-font-body: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --bq-font-heading: "Satoshi", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --bq-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --bq-sidebar-w: 272px;
+  --bq-sidebar-inset: 12px;
+  --bq-header-h: 56px;
+}
+
+html.dark {
+  --bq-bg: #0c0e12;
+  --bq-bg-hover: #13161b;
+  --bq-bg-active: #1a1d23;
+  --bq-bg-code-inline: #1a1d23;
+  --bq-border: #22262f;
+  --bq-border-strong: #373a41;
+  --bq-text: #f7f7f7;
+  --bq-text-secondary: #cecfd2;
+  --bq-text-tertiary: #94979c;
+  --bq-text-quaternary: #85888e;
+  --bq-icon: #61656c;
+  --bq-icon-active: #cecfd2;
+  --bq-accent: #f7f7f7;
+  --bq-accent-contrast: #0c0e12;
+  --bq-warning: #f79009;
+  --bq-shadow-xs: none;
+  --bq-shadow-sm: none;
+}
+
+/* ===== Base ===== */
+html,
+body,
+button,
+input,
+textarea {
+  font-family: var(--bq-font-body) !important;
+}
+
+body {
+  background: var(--bq-bg) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+}
+
+code,
+kbd,
+pre,
+samp,
+.font-mono {
+  font-family: var(--bq-font-mono) !important;
+  font-feature-settings: normal;
+}
+
+::selection {
+  background: var(--bq-text);
+  color: var(--bq-bg);
+}
+
+/* Quiet page scrollbar; hide the inner ones entirely */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bq-border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bq-border-strong);
+  border-radius: 8px;
+  border: 2px solid var(--bq-bg);
+}
+
+#navigation-items,
+#table-of-contents,
+#sidebar-content * {
+  scrollbar-width: none !important;
+}
+
+#navigation-items::-webkit-scrollbar,
+#table-of-contents::-webkit-scrollbar,
+#sidebar-content *::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* ===== Layout =====
+ * Mintlify centres the page in a max-w-8xl box. Use the full width, float
+ * the sidebar as an inset panel, and centre the text column in the space
+ * between the sidebar and the table of contents. */
+#navbar > div,
+#body-content {
+  max-width: none !important;
+}
+
+#navbar > div {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+#navbar > div > div {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+@media (min-width: 1024px) {
+  #body-content {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  #sidebar-content {
+    width: var(--bq-sidebar-w) !important;
+    margin: var(--bq-sidebar-inset) 0 var(--bq-sidebar-inset) var(--bq-sidebar-inset);
+    top: calc(var(--bq-header-h) + var(--bq-sidebar-inset)) !important;
+    height: calc(100vh - var(--bq-header-h) - var(--bq-sidebar-inset) * 2) !important;
+    border: 1px solid var(--bq-border) !important;
+    border-radius: var(--bq-radius-lg);
+    background: var(--bq-bg);
+    box-shadow: var(--bq-shadow-sm);
+    overflow: hidden;
+  }
+
+  #navigation-items {
+    padding: 0.75rem 0.75rem 1.25rem !important;
+  }
+
+  #content-container {
+    max-width: none !important;
+    padding-left: clamp(2rem, 4vw, 4.5rem) !important;
+    padding-right: clamp(1.5rem, 3vw, 3rem) !important;
+    column-gap: clamp(2rem, 4vw, 4rem) !important;
+  }
+}
+
 @media (min-width: 1280px) {
-  #sidebar-content {
-    width: 320px !important;
-    max-width: 320px !important;
+  #content-area {
+    width: auto !important;
+    flex: 1 1 0%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  /* Centre the reading column inside the content area */
+  #content-area > #header,
+  #content-area > .mdx-content,
+  #content-area > div.prose,
+  #content-area > #pagination,
+  #content-area > #footer,
+  #content-area > [id^="api-playground"] {
+    max-width: 46rem;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  #content-side-layout {
+    width: 15rem !important;
+    flex-shrink: 0;
+  }
+
+  #table-of-contents-layout {
+    width: 100% !important;
+    padding-left: 0 !important;
+  }
+
+  #content-side-layout #table-of-contents,
+  #content-side-layout #table-of-contents-content {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* API pages: keep Mintlify's own width for the request/response column */
+  #content-side-layout:has(.code-block, .code-group) {
+    width: 28rem !important;
   }
 }
 
-@media (min-width: 1600px) {
-  #sidebar-content {
-    width: 360px !important;
-    max-width: 360px !important;
+/* ===== Top navbar =====
+ * Single row: logo and search on the left, section tabs centred, links on
+ * the right. Aspen normally puts the tabs on a second row. */
+@media (min-width: 1024px) {
+  #navbar div:has(> .nav-tabs) {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 56px !important;
+    padding: 0 !important;
+    z-index: 30;
+  }
+
+  #navbar div:has(> a .nav-logo) {
+    flex: 0 0 auto !important;
+  }
+
+  #navbar div:has(> #search-bar-entry) {
+    flex: 0 0 auto !important;
+    width: 15rem;
+    margin-left: 0.5rem;
+    justify-content: flex-start !important;
+  }
+
+  #navbar .topbar-right-container {
+    flex: 1 1 0% !important;
   }
 }
 
-/* ===== Sidebar link polish ===== */
-@media (min-width: 768px) {
-  #sidebar-content a {
-    padding-top: 0.4rem !important;
-    padding-bottom: 0.4rem !important;
-    font-size: 0.92rem;
-  }
+
+#navbar {
+  background: var(--bq-bg) !important;
+  border-bottom: 1px solid var(--bq-border);
+}
+
+#navbar [class*="bg-background"] {
+  background: transparent !important;
+}
+
+.nav-logo {
+  height: 1.6rem !important;
+}
+
+#search-bar-entry {
+  border-radius: var(--bq-radius) !important;
+  background: var(--bq-bg) !important;
+  border: 1px solid var(--bq-border-strong) !important;
+  box-shadow: var(--bq-shadow-xs) !important;
+  color: var(--bq-text-quaternary) !important;
+  font-weight: 400;
+}
+
+#search-bar-entry:hover {
+  border-color: var(--bq-text-quaternary) !important;
+}
+
+#navbar .navbar-link a,
+#navbar .navbar-link > * {
+  background: transparent !important;
+  color: var(--bq-text-tertiary) !important;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+#navbar .navbar-link a:hover {
+  color: var(--bq-text) !important;
+}
+
+#topbar-cta-button a {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+#topbar-cta-button a > span:first-child {
+  border-radius: var(--bq-radius) !important;
+  background: var(--bq-accent) !important;
+  box-shadow: var(--bq-shadow-xs);
+}
+
+#topbar-cta-button a span,
+#topbar-cta-button a svg {
+  color: var(--bq-accent-contrast) !important;
+}
+
+.nav-tabs {
+  gap: 1.5rem !important;
+}
+
+.nav-tabs-item {
+  color: var(--bq-text-quaternary) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+}
+
+.nav-tabs-item:hover,
+.nav-tabs-item[data-active="true"] {
+  color: var(--bq-text) !important;
+}
+
+.nav-tabs-item > div {
+  height: 2px !important;
+}
+
+.nav-tabs-item[data-active="true"] > div {
+  background: var(--bq-text) !important;
+}
+
+/* ===== Sidebar: Untitled-style nav with dividers instead of headings ===== */
+.sidebar-group-header {
+  display: none !important;
+}
+
+.sidebar-nav-group-divider {
+  background: var(--bq-border) !important;
+}
+
+div:has(> .sidebar-nav-group-divider) {
+  padding: 0.6rem 0.65rem !important;
+}
+
+#navigation-items li > a,
+#navigation-items li > button {
+  border-radius: var(--bq-radius-sm) !important;
+  padding-top: 0.45rem !important;
+  padding-bottom: 0.45rem !important;
+  padding-right: 0.6rem !important;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--bq-text-secondary) !important;
+  background: transparent !important;
+  text-shadow: none !important;
+  column-gap: 0.65rem !important;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+/* Top-level rows line up with the icon column */
+#navigation-items .sidebar-group > li > a,
+#navigation-items .sidebar-group > li > button {
+  padding-left: 0.65rem !important;
+}
+
+/* Nested pages: indent under the folder's label */
+#navigation-items li > ul li > a {
+  padding-left: 2.35rem !important;
+  font-weight: 400;
+  color: var(--bq-text-tertiary) !important;
+}
+
+#navigation-items li > a:hover,
+#navigation-items li > button:hover {
+  background: var(--bq-bg-hover) !important;
+  color: var(--bq-text) !important;
+}
+
+#navigation-items li[data-active="true"] > a,
+#navigation-items li > a[aria-current="page"] {
+  background: var(--bq-bg-active) !important;
+  color: var(--bq-text) !important;
+  font-weight: 600;
+}
+
+/* Icons: mask-based SVGs take their colour from background-color */
+#navigation-items li > a svg[class*="bg-"],
+#navigation-items li > a svg[style*="mask"],
+#navigation-items li > button > div:first-child svg {
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+  background-color: var(--bq-icon) !important;
+}
+
+#navigation-items li[data-active="true"] > a svg[style*="mask"],
+#navigation-items li > a[aria-current="page"] svg[style*="mask"],
+#navigation-items li[data-active="true"] > button > div:first-child svg {
+  background-color: var(--bq-icon-active) !important;
+}
+
+/* Every endpoint is a GET; the badge adds noise without information */
+.method-nav-pill {
+  display: none !important;
+}
+
+/* ===== Page header ===== */
+.breadcrumb-list,
+.eyebrow,
+#header [class*="eyebrow"] {
+  display: none !important;
+}
+
+#page-title {
+  font-family: var(--bq-font-heading) !important;
+  font-size: clamp(1.875rem, 2.4vw, 2.25rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.2 !important;
+  color: var(--bq-text) !important;
+  word-break: normal !important;
+}
+
+#header .prose {
+  margin-top: 0.75rem !important;
+  color: var(--bq-text-tertiary) !important;
+  font-size: 1.125rem !important;
+  line-height: 1.6;
+}
+
+/* ===== Body content ===== */
+.mdx-content {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--bq-text-secondary);
+}
+
+.mdx-content [data-as="p"],
+.mdx-content p,
+.mdx-content li {
+  color: var(--bq-text-secondary);
+}
+
+.mdx-content strong {
+  color: var(--bq-text);
+  font-weight: 600;
+}
+
+.mdx-content h2,
+.mdx-content h3,
+.mdx-content h4 {
+  font-family: var(--bq-font-heading) !important;
+  color: var(--bq-text) !important;
+}
+
+.mdx-content h2 {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em;
+  margin-top: 3rem !important;
+}
+
+.mdx-content h3 {
+  font-size: 1.2rem !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.01em;
+  margin-top: 2rem !important;
+}
+
+.mdx-content h4 {
+  font-weight: 650 !important;
+}
+
+/* Links: plain underline */
+.mdx-content a.link,
+.mdx-content [data-as="p"] > a,
+.mdx-content li a,
+.mdx-content td a {
+  color: var(--bq-text) !important;
+  font-weight: 500;
+  border-bottom: 0 !important;
+  text-decoration: underline !important;
+  text-decoration-color: var(--bq-border-strong) !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.mdx-content a.link:hover,
+.mdx-content [data-as="p"] > a:hover,
+.mdx-content li a:hover,
+.mdx-content td a:hover {
+  text-decoration-color: var(--bq-text) !important;
+}
+
+/* Inline code: monospace with a faint wash, no outline */
+.mdx-content :not(pre) > code {
+  font-size: 0.875em !important;
+  font-weight: 500;
+  padding: 0.1em 0.35em !important;
+  border-radius: 4px !important;
+  background: var(--bq-bg-code-inline) !important;
+  border: 0 !important;
+  color: var(--bq-text) !important;
+}
+
+.mdx-content :not(pre) > code {
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+.mdx-content :not(pre) > code::before,
+.mdx-content :not(pre) > code::after {
+  content: none !important;
+}
+
+.mdx-content hr {
+  border-color: var(--bq-border);
+  margin: 2.5rem 0;
+}
+
+.mdx-content blockquote {
+  border-left: 2px solid var(--bq-border-strong);
+  background: none;
+  padding: 0 0 0 1rem;
+  font-style: normal;
+  color: var(--bq-text-tertiary);
+}
+
+/* ===== Code blocks ===== */
+.code-block,
+.code-group {
+  border-radius: var(--bq-radius-lg) !important;
+  border: 1px solid var(--bq-border) !important;
+  background: var(--bq-bg) !important;
+  box-shadow: var(--bq-shadow-xs) !important;
+  overflow: hidden;
+}
+
+.code-block pre,
+.code-group pre {
+  background: transparent !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.7 !important;
+}
+
+.code-block [data-component-part="code-block-header"],
+.code-group [data-component-part="code-group-tab-bar"] {
+  background: transparent !important;
+  border-bottom: 1px solid var(--bq-border) !important;
+  font-weight: 500;
+}
+
+.code-group [data-component-part="code-group-tab-bar"] button[data-state="active"],
+.code-group [data-component-part="code-group-tab-bar"] [aria-selected="true"] {
+  color: var(--bq-text) !important;
+  border-color: var(--bq-text) !important;
+}
+
+/* Monochrome syntax highlighting. Shiki writes token colours inline;
+ * flatten them, then separate strings, numbers and comments with weight
+ * and grey shades. Matched colours are the github-light/dark tokens
+ * Mintlify uses for API examples. */
+.code-block pre span[style],
+.code-group pre span[style] {
+  color: var(--bq-text) !important;
+}
+
+.code-block pre span[style*="#032F62" i],
+.code-group pre span[style*="#032F62" i],
+.code-block pre span[style*="#9ECBFF" i],
+.code-group pre span[style*="#9ECBFF" i] {
+  color: var(--bq-text-tertiary) !important;
+}
+
+.code-block pre span[style*="#005CC5" i],
+.code-group pre span[style*="#005CC5" i],
+.code-block pre span[style*="#79B8FF" i],
+.code-group pre span[style*="#79B8FF" i],
+.code-block pre span[style*="#D73A49" i],
+.code-group pre span[style*="#D73A49" i],
+.code-block pre span[style*="#6F42C1" i],
+.code-group pre span[style*="#6F42C1" i] {
+  font-weight: 600;
+}
+
+.code-block pre span[style*="#6A737D" i],
+.code-group pre span[style*="#6A737D" i],
+.code-block pre span[style*="#999999" i],
+.code-group pre span[style*="#999999" i] {
+  color: var(--bq-text-quaternary) !important;
+  font-style: italic;
+}
+
+/* ===== Cards: outline only, plain icon ===== */
+.card {
+  border-radius: var(--bq-radius-lg) !important;
+  border: 1px solid var(--bq-border) !important;
+  background: var(--bq-bg) !important;
+  box-shadow: var(--bq-shadow-xs);
+  transition: border-color 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--bq-border-strong) !important;
+}
+
+.card [data-component-part="card-content-container"] {
+  padding: 1.1rem 1.25rem !important;
+}
+
+.card [data-component-part="card-icon"] {
+  margin-bottom: 0.75rem;
+}
+
+.card [data-component-part="card-icon"] svg {
+  width: 1.15rem !important;
+  height: 1.15rem !important;
+  background-color: var(--bq-text-tertiary) !important;
+}
+
+.card [data-component-part="card-title"],
+.card h2 {
+  font-family: var(--bq-font-body) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  color: var(--bq-text) !important;
+  letter-spacing: 0;
+  margin-top: 0 !important;
+}
+
+.card [data-component-part="card-content"],
+.card [data-component-part="card-content"] [data-as="p"] {
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  color: var(--bq-text-tertiary) !important;
+}
+
+.card [data-component-part="card-content"] strong {
+  color: var(--bq-text-secondary) !important;
+  font-weight: 500;
+}
+
+.card #card-link-arrow-icon {
+  color: var(--bq-icon) !important;
+}
+
+/* Title-only cards ("See also" rows): drop the icon, make them compact links */
+.card:not(:has([data-component-part="card-content"] *)) [data-component-part="card-icon"] {
+  display: none !important;
+}
+
+.card:not(:has([data-component-part="card-content"] *)) [data-component-part="card-content-container"] {
+  padding: 0.8rem 1rem !important;
+}
+
+.card:not(:has([data-component-part="card-content"] *)) [data-component-part="card-title"]::after {
+  content: "→";
+  margin-left: 0.4rem;
+  color: var(--bq-icon);
+}
+
+/* ===== Callouts: outline, no fill ===== */
+.callout {
+  border-radius: var(--bq-radius-lg) !important;
+  border: 1px solid var(--bq-border) !important;
+  background: var(--bq-bg) !important;
+  box-shadow: var(--bq-shadow-xs);
+  padding: 0.9rem 1.1rem !important;
+}
+
+.callout [data-component-part="callout-icon"] svg {
+  color: var(--bq-text-tertiary) !important;
+}
+
+.callout[data-callout-type="warning"] [data-component-part="callout-icon"] svg,
+.callout[data-callout-type="danger"] [data-component-part="callout-icon"] svg {
+  color: var(--bq-warning) !important;
+}
+
+.callout [data-component-part="callout-content"] {
+  color: var(--bq-text-secondary) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.65;
+}
+
+.callout [data-component-part="callout-content"] strong,
+.callout [data-component-part="callout-content"] code {
+  color: var(--bq-text) !important;
 }
 
 /* ===== Tables ===== */
-table {
-  font-size: 0.92rem;
+.mdx-content table {
+  border-collapse: separate !important;
+  border-spacing: 0;
+  border: 1px solid var(--bq-border);
+  border-radius: var(--bq-radius-lg);
+  box-shadow: var(--bq-shadow-xs);
+  overflow: hidden;
+  font-size: 0.875rem;
+  margin: 1.5rem 0 !important;
 }
-table th,
-table td {
-  padding: 0.5rem 0.75rem;
+
+.mdx-content thead th {
+  background: transparent;
+  color: var(--bq-text-quaternary) !important;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.7rem 1rem !important;
+  border-bottom: 1px solid var(--bq-border) !important;
+}
+
+.mdx-content tbody td {
+  padding: 0.85rem 1rem !important;
+  border-bottom: 1px solid var(--bq-border) !important;
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.mdx-content tbody tr:last-child td {
+  border-bottom: 0 !important;
 }
 
 @media (max-width: 767px) {
-  table {
-    font-size: 0.85rem;
+  .mdx-content table {
+    font-size: 0.82rem;
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* ===== Steps ===== */
+.steps [data-component-part="step-number"] > div {
+  background: var(--bq-bg) !important;
+  border: 1px solid var(--bq-border-strong);
+  color: var(--bq-text-secondary) !important;
+  box-shadow: var(--bq-shadow-xs);
+}
+
+.steps [data-component-part="step-line"] {
+  background: var(--bq-border) !important;
+}
+
+.steps [data-component-part="step-title"] {
+  font-weight: 600 !important;
+  color: var(--bq-text) !important;
+}
+
+/* ===== Accordions & tabs ===== */
+.accordion,
+details {
+  border-radius: var(--bq-radius-lg) !important;
+  border-color: var(--bq-border) !important;
+  background: var(--bq-bg) !important;
+}
+
+.tabs [role="tab"][data-state="active"],
+.tab[aria-selected="true"] {
+  color: var(--bq-text) !important;
+  border-color: var(--bq-text) !important;
+}
+
+/* ===== Table of contents ===== */
+#table-of-contents {
+  font-size: 0.8125rem !important;
+}
+
+#table-of-contents h2 button {
+  color: var(--bq-text) !important;
+  font-weight: 600 !important;
+}
+
+#table-of-contents .toc-item a {
+  color: var(--bq-text-quaternary) !important;
+  border-color: var(--bq-border) !important;
+}
+
+#table-of-contents .toc-item a:hover {
+  color: var(--bq-text) !important;
+}
+
+#table-of-contents .toc-item[data-active="true"] > a {
+  color: var(--bq-text) !important;
+  font-weight: 500;
+  text-shadow: none !important;
+  border-color: var(--bq-text) !important;
+}
+
+/* ===== Prev / next ===== */
+#pagination a {
+  border-radius: var(--bq-radius-lg) !important;
+  border: 1px solid var(--bq-border) !important;
+  box-shadow: var(--bq-shadow-xs);
+  padding: 0.9rem 1.15rem !important;
+  transition: border-color 0.15s ease;
+}
+
+#pagination a:hover {
+  border-color: var(--bq-border-strong) !important;
+}
+
+#pagination a span,
+#pagination a div {
+  font-weight: 600;
+  color: var(--bq-text);
+}
+
+#footer {
+  border-top: 1px solid var(--bq-border) !important;
+}
+
+/* ===== API reference: parameter list ===== */
+.primitive-param-field {
+  border-color: var(--bq-border) !important;
+}
+
+.primitive-param-field > div {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+
+[data-component-part="field-name"] {
+  font-family: var(--bq-font-mono) !important;
+  font-size: 0.85rem;
+  font-weight: 600 !important;
+  color: var(--bq-text) !important;
+}
+
+[data-component-part="field-meta"] > div,
+[data-component-part="field-info-pill"] {
+  font-family: var(--bq-font-mono) !important;
+  font-size: 0.75rem !important;
+  font-weight: 400 !important;
+  background: transparent !important;
+  color: var(--bq-text-quaternary) !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+[data-component-part="field-required-pill"] {
+  font-family: var(--bq-font-mono) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  text-transform: lowercase;
+  background: transparent !important;
+  color: var(--bq-warning) !important;
+  padding: 0 !important;
+}
+
+.primitive-param-field .prose,
+.primitive-param-field [data-as="p"] {
+  font-size: 0.9rem !important;
+  color: var(--bq-text-secondary) !important;
+}
+
+[data-component-part="expandable-button"] {
+  border-radius: var(--bq-radius) !important;
+  border-color: var(--bq-border) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: var(--bq-text-secondary) !important;
+}
+
+[data-component-part="expandable-content"] {
+  border-color: var(--bq-border) !important;
+}
+
+#content-area h4,
+.api-section-heading-title {
+  font-family: var(--bq-font-heading) !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: var(--bq-text) !important;
+}
+
+.method-pill {
+  font-family: var(--bq-font-mono) !important;
+  font-size: 0.75rem !important;
+  background: var(--bq-bg-active) !important;
+  color: var(--bq-text) !important;
+  border-radius: var(--bq-radius-sm) !important;
+}
+
+.tryit-button {
+  background: var(--bq-accent) !important;
+  color: var(--bq-accent-contrast) !important;
+  border-radius: var(--bq-radius) !important;
+  font-weight: 600 !important;
+}
+
+.tryit-button svg {
+  background-color: var(--bq-accent-contrast) !important;
+}
+
+/* ===== "In short" summaries on concept pages (bq-summary) ===== */
+.bq-summary {
+  margin: 0 0 2.25rem;
+  padding: 0.1rem 0 0.1rem 1.1rem;
+  border-left: 2px solid var(--bq-border-strong);
+}
+
+.bq-summary::before {
+  content: "In short";
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--bq-text);
+}
+
+.bq-summary ul {
+  margin: 0 !important;
+  padding-left: 1rem !important;
+}
+
+.bq-summary li {
+  margin: 0.25rem 0 !important;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.bq-summary li::marker {
+  color: var(--bq-icon);
+}
+
+/* ===== Enterprise banner at the foot of API pages =====
+ * Markup lives in snippets/enterprise-cta.mdx; enterprise-cta.js moves a
+ * copy below the generated API sections and the original gets hidden. */
+.bq-cta.bq-cta-source {
+  display: none !important;
+}
+
+.bq-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin: 0 0 3rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--bq-border);
+  border-radius: var(--bq-radius-lg);
+  background: var(--bq-bg);
+  box-shadow: var(--bq-shadow-xs);
+}
+
+#content-area .bq-cta p {
+  margin: 0 !important;
+}
+
+#content-area .bq-cta .bq-cta-title {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--bq-text) !important;
+}
+
+#content-area .bq-cta .bq-cta-sub {
+  margin-top: 0.15rem !important;
+  font-size: 0.875rem;
+  color: var(--bq-text-tertiary) !important;
+}
+
+.bq-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#content-area .bq-cta .bq-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 2.25rem;
+  padding: 0 0.9rem;
+  border-radius: var(--bq-radius);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none !important;
+  border-bottom: 0;
+  box-shadow: var(--bq-shadow-xs);
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+#content-area .bq-cta .bq-btn-primary {
+  background: var(--bq-accent);
+  color: var(--bq-accent-contrast) !important;
+}
+
+#content-area .bq-cta .bq-btn-primary:hover {
+  opacity: 0.88;
+}
+
+#content-area .bq-cta .bq-btn-secondary {
+  border: 1px solid var(--bq-border-strong);
+  background: var(--bq-bg);
+  color: var(--bq-text-secondary) !important;
+}
+
+#content-area .bq-cta .bq-btn-secondary:hover {
+  background: var(--bq-bg-hover);
 }

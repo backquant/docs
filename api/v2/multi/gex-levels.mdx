@@ -4,6 +4,8 @@ openapi: "GET /multi/gex/levels"
 description: "GEX levels across multiple symbols (bundled). Multi-symbol GEX levels in one round-trip."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Bundled multi-symbol read. Up to 8 symbols per request. Returns
 per-symbol entries plus a `served` / `missing` / `invalid` breakdown.
 
@@ -17,3 +19,5 @@ single-symbol levels). See [Positioning](/concepts/positioning).
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
   <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
 </CardGroup>
+
+<EnterpriseCta />

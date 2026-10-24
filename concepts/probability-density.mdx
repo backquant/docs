@@ -3,6 +3,14 @@ title: "Probability density"
 description: "Risk-neutral PDF / CDF via Breeden-Litzenberger - the market's implied price distribution"
 ---
 
+<div className="bq-summary">
+
+- [`/v2/options/probability/density`](/api/v2/options/probability/density) returns the risk-neutral PDF and CDF for every active expiry, extracted from option prices.
+- Pass `?confidence_band=0.68` or `?confidence_band=0.95` to get `lower` and `upper` price bounds per expiry.
+- Treat it as risk-neutral, not a real-world forecast, and expect noisier tails where far-OTM strikes are sparse.
+
+</div>
+
 **Risk-neutral probability density** is the full implied probability
 distribution of the underlying's price at a future expiry, extracted
 from option prices. It tells you not just where the market expects

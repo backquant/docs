@@ -4,6 +4,8 @@ openapi: "GET /gex/dealer-flow"
 description: "Dealer hedge flow time series (gamma + vanna + charm). Estimated dealer hedging flow across successive chain snapshots."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Estimated **dealer** hedging pressure across successive chain
 snapshots: gamma, charm (and vanna when available), total, and
 cumulative.
@@ -33,3 +35,5 @@ Full model notes: [Positioning](/concepts/positioning).
   <Card title="By level" href="/api/v2/gex/dealer-flow-by-level" icon="chart-bar" />
   <Card title="Positioning models" href="/concepts/positioning" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

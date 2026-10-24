@@ -3,6 +3,15 @@ title: "Vol surface methodology"
 description: "How the IV surface, smiles and constant-maturity vols are built, what is checked, and what is not"
 ---
 
+<div className="bq-summary">
+
+- Every v2 implied-vol number comes from one surface per coin, rebuilt about every 30 seconds from the multi-venue chain.
+- Each expiry gets its own forward and an SVI smile, used only within 2 vol points RMSE; otherwise the expiry is published as `interp`.
+- The grid covers listed expiries out to 180 days, and cells with no honest value are null rather than invented.
+- Calendar arbitrage is removed on the grid, while fitted smiles are only checked, with failures listed in `arbitrage.violations`.
+
+</div>
+
 Every implied-vol number in v2 starts from one surface per coin, rebuilt
 about every 30 seconds from the multi-venue options chain. This page is the
 full recipe, so you can reproduce it or decide where you disagree with it.

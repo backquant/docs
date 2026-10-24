@@ -4,6 +4,8 @@ openapi: "GET /gex/strike-profile"
 description: "GEX by strike. Gamma exposure aggregated by strike."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Gamma exposure aggregated by strike. Filter by `?expiry=all|0dte|<token>`
 and by strike window (`strike_min/max`, `moneyness_min/max`,
 `spot_window_pct`).
@@ -31,3 +33,5 @@ Underlying OI is **coin-unit** across venues.
   <Card title="GEX levels" href="/api/v2/gex/levels" icon="chart-simple" />
   <Card title="Flow by strike" href="/api/v2/tape/flow-by-strike" icon="chart-column" />
 </CardGroup>
+
+<EnterpriseCta />

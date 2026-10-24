@@ -4,6 +4,8 @@ openapi: "GET /options/expiry-summary"
 description: "Per-expiry IV / skew / PCR / OI / GEX (with OPEX enrichment). One row per active expiry with the metrics most useful for chain-wide screening:..."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 One row per active expiry with ATM IV, 25Δ skew, PCR, OI, net GEX, plus
 OPEX enrichment (`type`, `is_anchor`, `expiry_date`, `notional_oi_usd`,
 `max_pain`).
@@ -24,3 +26,5 @@ See [Venue coverage](/concepts/venues) for which venues feed the blend.
   <Card title="OI by expiry" href="/api/v2/options/oi/by-expiry" icon="chart-simple" />
   <Card title="IV suite" href="/concepts/iv-suite" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

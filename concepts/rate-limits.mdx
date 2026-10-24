@@ -3,6 +3,15 @@ title: "Rate limits"
 description: "Per-tier burst and monthly quotas, response headers, and backoff strategy"
 ---
 
+<div className="bq-summary">
+
+- Limits apply per user, shared across all your API keys, as a per-minute burst cap plus a UTC calendar-month request quota.
+- Exceeding either returns `429` with `RATE_LIMIT_EXCEEDED`; if `X-Quota-Remaining` is `0`, stop retrying rather than sleeping on `Retry-After`.
+- WebSocket sessions count only against the concurrent connection cap, not your monthly REST quota.
+- History requests beyond your plan's window are never rejected; `meta.extra.history_clamp` reports what you asked for and what was served.
+
+</div>
+
 Rate limits are enforced per **user** (shared across that user's API
 keys) based on subscription level. Exceeding a limit returns `429` with
 `RATE_LIMIT_EXCEEDED`.

@@ -3,6 +3,15 @@ title: "Dealer positioning: flow vs std"
 description: "How GEX and TRACE sign dealer exposure, multi-venue aggregation, and when each model applies"
 ---
 
+<div className="bq-summary">
+
+- Live GEX and TRACE default to `flow`, BackQuant's measured dealer model; pass `?positioning=std` for the textbook call-positive, put-negative convention.
+- Read `meta.extra.positioning` for the model that actually ran, and `meta.extra.positioning_fallback_reason` when flow fell back to std.
+- SOL and HYPE fall back to std without aggressor tape, and `/v2/gex/history` and `/v2/gex/stress-history` are std only.
+- Don't mix customer flow (`/v2/gex/delta-flow`) with dealer hedge flow (`/v2/gex/dealer-flow`).
+
+</div>
+
 Dealer exposure needs a **sign** at every contract: is the desk long or
 short that option's gamma? Two models are available on the live GEX and
 TRACE surfaces.

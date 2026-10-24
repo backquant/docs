@@ -4,6 +4,8 @@ openapi: "GET /options/iv/smile"
 description: "One expiry's implied-vol smile from the fitted surface, by strike and log-moneyness, with its ATM, risk reversals, butterflies and arbitrage checks."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 One expiry's smile, rebuilt from its SVI fit between its lowest and highest
 quoted strikes and never past them (`method: svi`), or its row of the surface grid where the smile
 did not fit (`method: interp`, mostly same-day expiries). Each point gives
@@ -29,3 +31,5 @@ expiry you can ask for, including fitted ones past the grid's 180 days.
   <Card title="Constant-maturity vol" href="/api/v2/options/iv/constant-maturity" icon="chart-line" />
   <Card title="IV suite" href="/concepts/iv-suite" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

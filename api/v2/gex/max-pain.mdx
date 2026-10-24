@@ -4,6 +4,8 @@ openapi: "GET /gex/max-pain"
 description: "Max-pain strike (per-expiry). The strike at which option writers profit most at expiry."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 The strike where option writers profit most at expiry. Use `?expiry=0dte` for the cheapest path, `?expiry=all` for a per-expiry table, or pass a specific expiry token to also receive the full pain curve.
 
 ## See also
@@ -11,3 +13,5 @@ The strike where option writers profit most at expiry. Use `?expiry=0dte` for th
 <CardGroup cols={2}>
   <Card title="Max pain explained" href="/concepts/max-pain" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

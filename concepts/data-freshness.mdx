@@ -3,6 +3,15 @@ title: "Data freshness"
 description: "How current the data is - and how to tell from the response"
 ---
 
+<div className="bq-summary">
+
+- Every v2 response carries `computed_at` and `freshness_seconds` in `meta`, and GEX and options data refresh every 30 seconds.
+- On a healthy 30-second endpoint, `freshness_seconds` sits between 0 and 60; values consistently above 90 mean you should check `/v2/status`.
+- A large `freshness_seconds` on daily or historical series such as `/v2/options/vrp` is normal.
+- [`/v2/health`](/api/v2/health) always returns HTTP 200, so read the `status` in the body.
+
+</div>
+
 Every v2 response carries `computed_at` and `freshness_seconds` in the
 `meta` block. This page explains what they mean and the cadence behind
 them.

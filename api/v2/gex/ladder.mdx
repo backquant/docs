@@ -4,6 +4,8 @@ openapi: "GET /gex/ladder"
 description: "Dealer exposure by strike and expiry for every greek, and the dealer position in contracts."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 The grid behind the terminal's HEATMAP: one metric per call (`gex`, `dex`,
 `vanna`, `charm`, `vega`, `oi` or `pos`), with a row per strike and a column
 per expiry, plus each strike's total over every expiry in scope.
@@ -27,3 +29,5 @@ such as `30OCT26`. Every expiry in the response carries both forms.
   <Card title="Dealer positioning" href="/concepts/positioning" icon="bookmark" />
   <Card title="Strike profile" href="/api/v2/gex/strike-profile" icon="chart-column" />
 </CardGroup>
+
+<EnterpriseCta />

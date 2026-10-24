@@ -4,6 +4,8 @@ openapi: "GET /symbols"
 description: "Supported symbols + per-symbol availability. Lists every symbol covered by v2 with the data categories that are currently live, the freshness of each..."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 The first call most integrators make. Returns every symbol the API
 supports with the categories of data currently live for each, the
 spot price, the count of active expiries, and the full set of
@@ -23,3 +25,5 @@ Powered by a single Redis `MGET` round-trip - sub-millisecond when warm.
   <Card title="Service status" icon="bookmark" href="/api/v2/discovery/status" />
   <Card title="Data freshness" icon="bookmark" href="/concepts/data-freshness" />
 </CardGroup>
+
+<EnterpriseCta />

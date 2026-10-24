@@ -4,6 +4,8 @@ openapi: "GET /market/funding"
 description: "Aggregate perpetual funding rate over time."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Aggregate perpetual funding rate, on the same interval grid as
 [`/market/candles`](/api/v2/market/candles).
 
@@ -14,3 +16,5 @@ resamples the settlements that exist; it does not create new ones.
 
 Same window rules as candles: capped at one year, long windows served from
 continuous aggregates, and your plan's historical window applies.
+
+<EnterpriseCta />

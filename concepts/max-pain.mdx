@@ -3,6 +3,15 @@ title: "Max pain"
 description: "The strike where option writers profit most - and how to read it"
 ---
 
+<div className="bq-summary">
+
+- Max pain is the strike that minimises the total payout to option buyers at expiry, where writers keep the most premium.
+- [`/v2/gex/max-pain`](/api/v2/gex/max-pain) takes `expiry=0dte`, `expiry=all`, or a specific expiry token that also returns the full `pain_curve`.
+- `value` is the total option-buyer payout at the max-pain strike, in USD.
+- A sharp U-shaped `pain_curve` signals a strong magnet; a flat curve, common on thin expiries, means no real magnet exists.
+
+</div>
+
 **Max pain** is the strike at which the largest dollar amount of
 options expires worthless. It's the single number that summarizes
 "where do option *writers* (dealers + sellers) want price to be at

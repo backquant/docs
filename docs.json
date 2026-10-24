@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "luma",
+  "theme": "aspen",
   "name": "BackQuant API",
   "colors": {
-    "primary": "#0F4C81",
-    "light": "#E8F1FA",
-    "dark": "#0A2E50"
+    "primary": "#0A0A0A",
+    "light": "#FAFAFA",
+    "dark": "#000000"
   },
   "navbar": {
     "primary": {
@@ -30,7 +30,7 @@
         "tab": "Terminal API",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Get started",
             "pages": [
               "introduction",
               "authentication",
@@ -38,175 +38,201 @@
             ]
           },
           {
-            "group": "Concepts",
+            "group": "Guides",
             "pages": [
-              "concepts/gex",
-              "concepts/positioning",
-              "concepts/point-in-time",
-              "concepts/opex",
-              "concepts/max-pain",
-              "concepts/probability-density",
-              "concepts/iv-suite",
-              "concepts/vol-surface",
-              "concepts/greeks",
-              "concepts/multi-symbol",
-              "concepts/venues",
-              "concepts/data-freshness",
-              "concepts/response-format",
-              "concepts/rate-limits",
-              "concepts/errors",
-              "concepts/faq",
-              "concepts/glossary"
+              {
+                "group": "Concepts",
+                "icon": "book-open",
+                "pages": [
+                  "concepts/gex",
+                  "concepts/positioning",
+                  "concepts/point-in-time",
+                  "concepts/opex",
+                  "concepts/max-pain",
+                  "concepts/probability-density",
+                  "concepts/iv-suite",
+                  "concepts/vol-surface",
+                  "concepts/greeks",
+                  "concepts/multi-symbol",
+                  "concepts/venues",
+                  "concepts/data-freshness",
+                  "concepts/response-format",
+                  "concepts/rate-limits",
+                  "concepts/errors",
+                  "concepts/faq",
+                  "concepts/glossary"
+                ]
+              },
+              {
+                "group": "Code examples",
+                "icon": "brackets-curly",
+                "pages": [
+                  "examples/python",
+                  "examples/typescript",
+                  "examples/curl"
+                ]
+              }
             ]
           },
           {
-            "group": "Code examples",
+            "group": "API reference",
             "pages": [
-              "examples/python",
-              "examples/typescript",
-              "examples/curl"
-            ]
-          },
-          {
-            "group": "API: Discovery & Meta",
-            "pages": [
-              "api/v2/health",
-              "api/v2/discovery/symbols",
-              "api/v2/discovery/expiries",
-              "api/v2/discovery/status",
-              "api/v2/discovery/meta",
-              "api/v2/discovery/endpoints",
-              "api/v2/discovery/changelog"
-            ]
-          },
-          {
-            "group": "API: GEX",
-            "pages": [
-              "api/v2/gex/levels",
-              "api/v2/gex/strike-profile",
-              "api/v2/gex/expiry-profile",
-              "api/v2/gex/strike-expiry-heatmap",
-              "api/v2/gex/ladder",
-              "api/v2/gex/time-heatmap",
-              "api/v2/gex/history",
-              "api/v2/gex/stress-history",
-              "api/v2/gex/max-pain",
-              "api/v2/gex/dealer-flow",
-              "api/v2/gex/gamma-flow",
-              "api/v2/gex/delta-flow",
-              "api/v2/gex/dealer-flow-by-level"
-            ]
-          },
-          {
-            "group": "API: Options chain & OPEX",
-            "pages": [
-              "api/v2/options/chain",
-              "api/v2/options/venue-book",
-              "api/v2/options/expiry-summary",
-              "api/v2/options/opex"
-            ]
-          },
-          {
-            "group": "API: IV analytics",
-            "pages": [
-              "api/v2/options/iv/surface",
-              "api/v2/options/iv/constant-maturity",
-              "api/v2/options/iv/term-structure",
-              "api/v2/options/iv/skew",
-              "api/v2/options/iv/curves",
-              "api/v2/options/iv/smile",
-              "api/v2/options/iv/iv-rv",
-              "api/v2/options/vrp",
-              "api/v2/options/expected-move",
-              "api/v2/options/range"
-            ]
-          },
-          {
-            "group": "API: Probability density",
-            "pages": [
-              "api/v2/options/probability/density",
-              "api/v2/options/probability/surface"
-            ]
-          },
-          {
-            "group": "API: Greeks",
-            "pages": [
-              "api/v2/options/greeks/by-greek",
-              "api/v2/options/greeks/surfaces",
-              "api/v2/options/greeks/3d-surface",
-              "api/v2/options/greeks/trace",
-              "api/v2/options/greeks/trace-summary"
-            ]
-          },
-          {
-            "group": "API: Open interest & flow",
-            "pages": [
-              "api/v2/options/oi/by-expiry",
-              "api/v2/options/oi/history",
-              "api/v2/options/pcr",
-              "api/v2/options/premium-tide"
-            ]
-          },
-          {
-            "group": "API: Futures & liquidation",
-            "pages": [
-              "api/v2/options/futures/term-structure",
-              "api/v2/liquidation/heatmap",
-              "api/v2/liquidation/distribution"
-            ]
-          },
-          {
-            "group": "API: Multi-symbol",
-            "pages": [
-              "api/v2/multi/gex-levels"
-            ]
-          },
-          {
-            "group": "API: Tape & WebSocket",
-            "pages": [
-              "api/v2/tape/overview",
-              "api/v2/tape/tape",
-              "api/v2/tape/recent",
-              "api/v2/tape/stats",
-              "api/v2/tape/imbalance",
-              "api/v2/tape/strike-heat",
-              "api/v2/tape/whale",
-              "api/v2/tape/flow-by-strike",
-              "api/v2/tape/websocket"
-            ]
-          },
-          {
-            "group": "API: Market data",
-            "pages": [
-              "api/v2/market/candles",
-              "api/v2/market/open-interest",
-              "api/v2/market/funding",
-              "api/v2/market/cvd",
-              "api/v2/market/bundle",
-              "api/v2/market/liquidations"
-            ]
-          },
-          {
-            "group": "API: ETF flows",
-            "pages": [
-              "api/v2/etf/flows",
-              "api/v2/etf/premium",
-              "api/v2/etf/aum"
-            ]
-          },
-          {
-            "group": "API: COT positioning",
-            "pages": [
-              "api/v2/cot/summary",
-              "api/v2/cot/instrument",
-              "api/v2/cot/markets"
-            ]
-          },
-          {
-            "group": "API: SEC filings",
-            "pages": [
-              "api/v2/filings/insider",
-              "api/v2/filings/holders"
+              {
+                "group": "Discovery & Meta",
+                "icon": "compass",
+                "pages": [
+                  "api/v2/health",
+                  "api/v2/discovery/symbols",
+                  "api/v2/discovery/expiries",
+                  "api/v2/discovery/status",
+                  "api/v2/discovery/meta",
+                  "api/v2/discovery/endpoints",
+                  "api/v2/discovery/changelog"
+                ]
+              },
+              {
+                "group": "GEX",
+                "icon": "chart-bar",
+                "pages": [
+                  "api/v2/gex/levels",
+                  "api/v2/gex/strike-profile",
+                  "api/v2/gex/expiry-profile",
+                  "api/v2/gex/strike-expiry-heatmap",
+                  "api/v2/gex/ladder",
+                  "api/v2/gex/time-heatmap",
+                  "api/v2/gex/history",
+                  "api/v2/gex/stress-history",
+                  "api/v2/gex/max-pain",
+                  "api/v2/gex/dealer-flow",
+                  "api/v2/gex/gamma-flow",
+                  "api/v2/gex/delta-flow",
+                  "api/v2/gex/dealer-flow-by-level"
+                ]
+              },
+              {
+                "group": "Options chain & OPEX",
+                "icon": "calendar-days",
+                "pages": [
+                  "api/v2/options/chain",
+                  "api/v2/options/venue-book",
+                  "api/v2/options/expiry-summary",
+                  "api/v2/options/opex"
+                ]
+              },
+              {
+                "group": "IV analytics",
+                "icon": "wave-square",
+                "pages": [
+                  "api/v2/options/iv/surface",
+                  "api/v2/options/iv/constant-maturity",
+                  "api/v2/options/iv/term-structure",
+                  "api/v2/options/iv/skew",
+                  "api/v2/options/iv/curves",
+                  "api/v2/options/iv/smile",
+                  "api/v2/options/iv/iv-rv",
+                  "api/v2/options/vrp",
+                  "api/v2/options/expected-move",
+                  "api/v2/options/range"
+                ]
+              },
+              {
+                "group": "Probability density",
+                "icon": "chart-area",
+                "pages": [
+                  "api/v2/options/probability/density",
+                  "api/v2/options/probability/surface"
+                ]
+              },
+              {
+                "group": "Greeks",
+                "icon": "function",
+                "pages": [
+                  "api/v2/options/greeks/by-greek",
+                  "api/v2/options/greeks/surfaces",
+                  "api/v2/options/greeks/3d-surface",
+                  "api/v2/options/greeks/trace",
+                  "api/v2/options/greeks/trace-summary"
+                ]
+              },
+              {
+                "group": "Open interest & flow",
+                "icon": "arrow-right-arrow-left",
+                "pages": [
+                  "api/v2/options/oi/by-expiry",
+                  "api/v2/options/oi/history",
+                  "api/v2/options/pcr",
+                  "api/v2/options/premium-tide"
+                ]
+              },
+              {
+                "group": "Futures & liquidation",
+                "icon": "fire",
+                "pages": [
+                  "api/v2/options/futures/term-structure",
+                  "api/v2/liquidation/heatmap",
+                  "api/v2/liquidation/distribution"
+                ]
+              },
+              {
+                "group": "Multi-symbol",
+                "icon": "layer-group",
+                "pages": [
+                  "api/v2/multi/gex-levels"
+                ]
+              },
+              {
+                "group": "Tape & WebSocket",
+                "icon": "tower-broadcast",
+                "pages": [
+                  "api/v2/tape/overview",
+                  "api/v2/tape/tape",
+                  "api/v2/tape/recent",
+                  "api/v2/tape/stats",
+                  "api/v2/tape/imbalance",
+                  "api/v2/tape/strike-heat",
+                  "api/v2/tape/whale",
+                  "api/v2/tape/flow-by-strike",
+                  "api/v2/tape/websocket"
+                ]
+              },
+              {
+                "group": "Market data",
+                "icon": "chart-candlestick",
+                "pages": [
+                  "api/v2/market/candles",
+                  "api/v2/market/open-interest",
+                  "api/v2/market/funding",
+                  "api/v2/market/cvd",
+                  "api/v2/market/bundle",
+                  "api/v2/market/liquidations"
+                ]
+              },
+              {
+                "group": "ETF flows",
+                "icon": "building-columns",
+                "pages": [
+                  "api/v2/etf/flows",
+                  "api/v2/etf/premium",
+                  "api/v2/etf/aum"
+                ]
+              },
+              {
+                "group": "COT positioning",
+                "icon": "scale-balanced",
+                "pages": [
+                  "api/v2/cot/summary",
+                  "api/v2/cot/instrument",
+                  "api/v2/cot/markets"
+                ]
+              },
+              {
+                "group": "SEC filings",
+                "icon": "file-lines",
+                "pages": [
+                  "api/v2/filings/insider",
+                  "api/v2/filings/holders"
+                ]
+              }
             ]
           }
         ]
@@ -226,9 +252,10 @@
       },
       {
         "tab": "TradingView Indicators",
+        "hidden": true,
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Get started",
             "pages": [
               "tradingview/overview"
             ]
@@ -247,7 +274,7 @@
   },
   "favicon": "/images/favicon.ico",
   "appearance": {
-    "default": "dark"
+    "default": "light"
   },
   "footer": {
     "socials": {
@@ -263,10 +290,39 @@
     "openapi": "/openapi-v2.json"
   },
   "thumbnails": {
-    "appearance": "dark"
+    "appearance": "light"
   },
-  "logo": "/images/bq-logo2.png",
+  "logo": {
+    "light": "/images/mark-light.png",
+    "dark": "/images/mark-dark.png",
+    "href": "https://backquant.com/"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Satoshi",
+      "source": "/fonts/Satoshi-Variable.woff2",
+      "format": "woff2"
+    },
+    "body": {
+      "family": "Inter"
+    }
+  },
   "background": {
-    "decoration": "gradient"
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#0A0A0A"
+    }
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs",
+    "codeblocks": {
+      "theme": {
+        "light": "min-light",
+        "dark": "min-dark"
+      }
+    }
+  },
+  "metadata": {
+    "timestamp": true
   }
 }

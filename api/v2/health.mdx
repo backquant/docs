@@ -4,6 +4,8 @@ openapi: "GET /health"
 description: "v2 health check (no auth). Lightweight liveness/readiness probe for external monitors."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Auth-free liveness probe for monitors. Returns subsystem status (Redis + Postgres).
 
 ## See also
@@ -11,3 +13,5 @@ Auth-free liveness probe for monitors. Returns subsystem status (Redis + Postgre
 <CardGroup cols={2}>
   <Card title="Data freshness" href="/concepts/data-freshness" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

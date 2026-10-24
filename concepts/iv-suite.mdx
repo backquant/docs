@@ -3,6 +3,15 @@ title: "The IV suite"
 description: "Surface, term structure, skew, smile, IV-RV, VRP - what each one tells you"
 ---
 
+<div className="bq-summary">
+
+- The IV endpoints cover every standard slice of the surface: fitted surface, constant maturity, term structure, skew, curves, smile, IV-RV and VRP.
+- Use `/v2/options/iv/constant-maturity` to track ATM, risk reversals and butterflies at fixed tenors without the jumps from expiries rolling.
+- Watch the sign: `rr_25` on constant maturity is call minus put, while `/iv/skew` reports put minus call.
+- Use `/v2/options/iv/smile` instead of `/curves` when you only need one expiry.
+
+</div>
+
 The implied-volatility (IV) endpoints in v2 give you every standard
 slice and aggregate of the IV surface. Each one answers a different
 question.

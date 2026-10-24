@@ -4,6 +4,8 @@ openapi: "GET /options/oi/history"
 description: "Total OI history (cursor-paginated). Time-series of total / call / put open interest."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Cursor-paginated time-series of total / call / put open interest for
 the underlying. Use cursor pagination (`?limit` + `?before=<ts>`) to
 walk backwards through history without missing rows or double-counting
@@ -28,3 +30,5 @@ Useful for:
   <Card title="Venue coverage" icon="building" href="/concepts/venues" />
   <Card title="OPEX calendar" icon="bookmark" href="/concepts/opex" />
 </CardGroup>
+
+<EnterpriseCta />

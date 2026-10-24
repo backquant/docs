@@ -4,6 +4,8 @@ openapi: "GET /market/cvd"
 description: "Cumulative volume delta: aggressor buy volume, sell volume, per-bucket delta and the running cumulative."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Aggressor buy volume, sell volume, their per-bucket difference, and the running
 cumulative across the window.
 
@@ -44,3 +46,5 @@ will not produce the same absolute values, and neither is wrong.
   <Card title="Candles" href="/api/v2/market/candles" icon="chart-candlestick" />
   <Card title="Market bundle" href="/api/v2/market/bundle" icon="layer-group" />
 </CardGroup>
+
+<EnterpriseCta />

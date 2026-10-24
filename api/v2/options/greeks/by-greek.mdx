@@ -4,6 +4,8 @@ openapi: "GET /options/greeks/{greek}"
 description: "Greek exposure profile by strike. Net greek exposure per strike."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Net greek exposure per strike. `greek` is one of `delta` (DEX),
 `theta`, `vanna`, `charm`, `vega`. Optional `?dte_max` recomputes from
 the raw chain limited to short-DTE contracts.
@@ -17,3 +19,5 @@ Default **`positioning=flow`**. See [Positioning](/concepts/positioning).
   <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

@@ -4,6 +4,8 @@ openapi: "GET /gex/levels"
 description: "Composable GEX key levels. All-expiry HVL/walls plus 0DTE-specific levels in a single call."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Composable HVL / call wall / put support / 0DTE levels in one call. Use
 `?include=` to opt into max-pain, expected move, ranked top-10, gamma
 flip zones, spot, candles.
@@ -19,3 +21,5 @@ call/put OI signing. See [Positioning](/concepts/positioning).
   <Card title="Strike profile" href="/api/v2/gex/strike-profile" icon="chart-bar" />
   <Card title="Multi-symbol bundle" href="/concepts/multi-symbol" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

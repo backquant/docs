@@ -3,6 +3,15 @@ title: "Response format"
 description: "The standard envelope every BackQuant API response uses"
 ---
 
+<div className="bq-summary">
+
+- Every response uses the same envelope, so check `success` before reading `data` or `error`.
+- The `meta` block is present on every response, success or error; include `meta.request_id` when reporting issues.
+- Use `meta.computed_at` and `meta.freshness_seconds` to check how current the data is.
+- Don't assert equality on `meta.version`, because the minor version bumps whenever a public default or response contract changes.
+
+</div>
+
 Every response from the BackQuant API uses the same envelope structure,
 whether the request succeeds or fails. **Always check the `success`
 field before reading `data` or `error`.**

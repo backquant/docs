@@ -3,6 +3,14 @@ title: "Greeks beyond delta"
 description: "DEX, theta, vanna, charm, vega - what they measure and how to use them"
 ---
 
+<div className="bq-summary">
+
+- The greek profile endpoints give you dealer-aggregated delta (DEX), theta, vega, vanna and charm exposure per strike.
+- Profiles default to `positioning=flow`; pass `?positioning=std` for textbook call/put OI sign.
+- Cached profiles span every expiry, so pass `?dte_max` to recompute from short-DTE contracts only.
+
+</div>
+
 The greek profile endpoints in v2 give you the **dealer-aggregated
 greek exposure per strike** for the four underlyings. Same idea as
 [GEX](/concepts/gex) but for the higher-order greeks that drive

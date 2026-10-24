@@ -4,6 +4,8 @@ openapi: "GET /tape/recent"
 description: "Latest N trades (shorthand for /tape?limit=N&order=desc). Convenience endpoint for clients who just want the newest N trades across all venues without..."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Shorthand for the latest N trades across the requested venues, sorted newest-first. Equivalent to `GET /v2/tape?limit=N&order=desc`, with no cursor state to manage.
 
 Use this when you just want a sanity sample or a "what's been happening" dump. Use [`/v2/tape`](/api/v2/tape/tape) when you need filters or pagination.
@@ -14,3 +16,5 @@ Use this when you just want a sanity sample or a "what's been happening" dump. U
   <Card title="Full tape with filters" href="/api/v2/tape/tape" icon="filter" />
   <Card title="Live WebSocket" href="/api/v2/tape/websocket" icon="bolt" />
 </CardGroup>
+
+<EnterpriseCta />

@@ -4,6 +4,8 @@ openapi: "GET /gex/history"
 description: "Total GEX history (cursor-paginated). Time-series of total GEX (and net-local-5pct, call/put walls when available)."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Cursor-paginated time-series of total GEX, net-local-5pct, call wall,
 put wall.
 
@@ -17,3 +19,5 @@ textbook model. Live levels default to flow. See
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
   <Card title="Stress history" href="/api/v2/gex/stress-history" icon="clock" />
 </CardGroup>
+
+<EnterpriseCta />

@@ -4,6 +4,8 @@ openapi: "GET /options/range"
 description: "The move options price over 1h, 4h and 24h, rescaled to realised moves, with its out-of-sample record."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Options overprice moves on average (the variance risk premium), so a range
 built from implied vol alone holds more often than it claims. This endpoint
 takes the move DVOL prices and rescales it on the last 30 days of hourly
@@ -31,3 +33,5 @@ behind candles.
   <Card title="Expected move" href="/api/v2/options/expected-move" icon="chart-line" />
   <Card title="IV suite" href="/concepts/iv-suite" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

@@ -4,6 +4,8 @@ openapi: "GET /market/candles"
 description: "OHLCV candles with buy/sell volume split, across the cross-venue aggregate."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Open, high, low, close and volume, with the buy/sell split where the venue
 publishes it. Served from the cross-venue aggregate, so you do not need to pick
 an exchange.
@@ -21,3 +23,5 @@ Fetching open interest or funding over the same window? Use
 [`/market/bundle`](/api/v2/market/bundle) instead: one round trip, and the
 series arrive already aligned.
 </Tip>
+
+<EnterpriseCta />

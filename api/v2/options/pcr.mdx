@@ -4,6 +4,8 @@ openapi: "GET /options/pcr"
 description: "Put/call ratio. OI-weighted put/call ratio."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 OI-weighted put/call ratio - the most-asked-for single sentiment
 indicator from options data. PCR > 1 means more put OI than call OI
 (typically defensive / fear bid); PCR < 1 means call-heavy (typically
@@ -54,3 +56,5 @@ unchanged.
   <Card title="OI history" icon="bookmark" href="/api/v2/options/oi/history" />
   <Card title="Premium tide" icon="bookmark" href="/api/v2/options/premium-tide" />
 </CardGroup>
+
+<EnterpriseCta />

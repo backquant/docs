@@ -4,6 +4,8 @@ openapi: "GET /gex/strike-expiry-heatmap"
 description: "2D strike × expiry GEX matrix. Rows are strikes, columns are expiries (sorted ascending DTE)."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 2D matrix of net GEX with rows=strikes, cols=expiries (sorted ascending
 DTE). `?max_strikes` and `?max_expiries` downsample around spot / front
 of curve.
@@ -16,3 +18,5 @@ Default **`positioning=flow`**. See [Positioning](/concepts/positioning).
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
   <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
 </CardGroup>
+
+<EnterpriseCta />

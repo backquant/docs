@@ -4,6 +4,8 @@ openapi: "GET /options/greeks/trace/{greek}/summary"
 description: "TRACE field summary - pin zones, accel pockets, lean. Same projection as /greeks/trace/{greek} but returns an interpretability summary instead of the..."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Same forward projection as [TRACE](/api/v2/options/greeks/trace), but
 returns an interpretability summary instead of the full 2D field:
 
@@ -21,3 +23,5 @@ Supports `gamma`, `charm`, `vanna`, and `delta_change`. Default
   <Card title="Full TRACE field" href="/api/v2/options/greeks/trace" icon="chart-area" />
   <Card title="Positioning models" href="/concepts/positioning" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

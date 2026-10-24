@@ -3,6 +3,8 @@ title: "Tape - live WebSocket"
 description: "Channel-multiplexed live stream of options trades across all tape venues, with API-key auth, per-tier connection caps and slow-consumer protection."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 `wss://api.backquant.com/v2/ws/options`
 
 Single connection, multiple subscriptions. The same canonical trade payload from the REST tape, pushed sub-second after the upstream venue emits it.
@@ -243,3 +245,5 @@ Full working client: [`scripts/v2_ws_demo/ws_tape_demo.py`](https://github.com/b
   <Card title="GEX levels (REST, flow default)" href="/api/v2/gex/levels" icon="chart-simple" />
   <Card title="Authentication" href="/authentication" icon="key" />
 </CardGroup>
+
+<EnterpriseCta />

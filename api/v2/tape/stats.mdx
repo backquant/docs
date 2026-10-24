@@ -4,6 +4,8 @@ openapi: "GET /tape/stats"
 description: "Tape statistics for a window. Aggregate stats over a time window - useful for Methix-style scorers that don't need raw trades, just the summary numbers."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Aggregate roll-up over a configurable window (up to 7 days). Returns overall + per-venue totals: trade count, total premium in USD, contract volume, call/put split, and buy-side vs sell-side premium.
 
 Use this when you don't need raw trades - just the headline numbers for a scoring model, dashboard, or alert.
@@ -41,3 +43,5 @@ Use this when you don't need raw trades - just the headline numbers for a scorin
   <Card title="Full tape with filters" href="/api/v2/tape/tape" icon="filter" />
   <Card title="Live WebSocket" href="/api/v2/tape/websocket" icon="bolt" />
 </CardGroup>
+
+<EnterpriseCta />

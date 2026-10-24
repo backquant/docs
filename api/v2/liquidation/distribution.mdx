@@ -4,6 +4,8 @@ openapi: "GET /liquidation/distribution"
 description: "Liquidation histogram with leverage tiers. Per-price-level long and short liquidation volumes, with a leverage tier estimate based on distance from..."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Per-price-level long and short liquidation volumes with a leverage-tier
 estimate based on distance from spot. Use it as a histogram visualisation
 or as input to position-sizing logic - clusters of leverage near current
@@ -26,3 +28,5 @@ Updated every 5 minutes server-side.
   <Card title="Liquidation heatmap" icon="bookmark" href="/api/v2/liquidation/heatmap" />
   <Card title="Data freshness" icon="bookmark" href="/concepts/data-freshness" />
 </CardGroup>
+
+<EnterpriseCta />

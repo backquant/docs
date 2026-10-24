@@ -4,6 +4,8 @@ openapi: "GET /options/greeks/surfaces/{greek}"
 description: "Strike × time greek surface. Time-evolving surface for charm or vega - strike on one axis, time on the other."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Time-evolving surface for `charm` or `vega`. Already pre-computed for the BackQuant terminal; exposed here for quant tooling.
 
 ## Per-venue breakdown
@@ -32,3 +34,5 @@ surface itself is unchanged either way.
   <Card title="Greeks beyond delta" href="/concepts/greeks" icon="bookmark" />
   <Card title="The same flag on PCR" href="/api/v2/options/pcr" icon="chart-pie" />
 </CardGroup>
+
+<EnterpriseCta />

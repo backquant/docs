@@ -4,6 +4,8 @@ openapi: "GET /tape"
 description: "Multi-venue options tape - paginated trade history. Returns options trades from Deribit + Bybit + OKX + Binance (BTC + ETH today)."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Multi-venue options trade tape with cursor pagination. All filters compose with AND. Returns up to 5000 trades per page; pass the response's `next_cursor` back as `?before=` to walk older history.
 
 ## How pagination works
@@ -35,3 +37,5 @@ See [Tape overview → Venue coverage](/api/v2/tape/overview#venue-coverage) for
   <Card title="Live WebSocket" href="/api/v2/tape/websocket" icon="bolt" />
   <Card title="Venue coverage" href="/concepts/venues" icon="building" />
 </CardGroup>
+
+<EnterpriseCta />

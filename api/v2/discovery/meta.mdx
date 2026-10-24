@@ -4,6 +4,8 @@ openapi: "GET /meta"
 description: "API-level metadata. Static metadata about the v2 API."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Static metadata about the API itself: name, version, the auth scheme,
 the rate-limit ladder, the response envelope shape, the full error code
 catalog with HTTP status mapping, and the supported symbol + exchange
@@ -21,3 +23,5 @@ doesn't drift from the API contract.
   <Card title="Response format" icon="bookmark" href="/concepts/response-format" />
   <Card title="Rate limits" icon="bookmark" href="/concepts/rate-limits" />
 </CardGroup>
+
+<EnterpriseCta />

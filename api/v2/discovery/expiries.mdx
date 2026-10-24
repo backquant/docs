@@ -4,6 +4,8 @@ openapi: "GET /expiries"
 description: "Active expiry tokens with DTE. Currently-tradeable expiry tokens for a symbol with DTE and an ISO date when the token is parseable."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Currently-tradeable expiry tokens for a symbol with DTE and ISO date. Use this to populate filter UIs without parsing /options/expiry-summary.
 
 ## See also
@@ -11,3 +13,5 @@ Currently-tradeable expiry tokens for a symbol with DTE and ISO date. Use this t
 <CardGroup cols={2}>
   <Card title="OPEX calendar" href="/concepts/opex" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

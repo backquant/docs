@@ -4,6 +4,8 @@ openapi: "GET /gex/gamma-flow"
 description: "Total gamma flow time series. Gamma component of dealer hedge flow only: each point is ΔS% × net_GEX under the selected positioning model, with session..."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Dealer gamma hedge series only: each point is `ΔS% × net_GEX` under the
 selected positioning model, plus a cumulative sum of those increments.
 
@@ -18,3 +20,5 @@ Default `positioning=flow`. See [Positioning](/concepts/positioning).
   <Card title="Full dealer flow" href="/api/v2/gex/dealer-flow" icon="chart-line" />
   <Card title="Delta flow (customer)" href="/api/v2/gex/delta-flow" icon="chart-line" />
 </CardGroup>
+
+<EnterpriseCta />

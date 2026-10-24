@@ -4,6 +4,8 @@ openapi: "GET /market/bundle"
 description: "Price, open interest and funding for one symbol and window in a single request, on one aligned time axis."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Candles, open interest and funding for one symbol over one window, in a single
 request.
 
@@ -102,3 +104,5 @@ window applies on top of that: see `history_depth` and `your_plan` in
   <Card title="Candles" href="/api/v2/market/candles" icon="chart-candlestick" />
   <Card title="Rate limits" href="/concepts/rate-limits" icon="gauge" />
 </CardGroup>
+
+<EnterpriseCta />

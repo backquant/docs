@@ -4,6 +4,8 @@ openapi: "GET /market/liquidations"
 description: "Long and short liquidations over time, on the same interval grid as the other market series."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Long and short liquidations over time, on the same interval grid as
 [`/market/candles`](/api/v2/market/candles), so they align with price, OI and
 CVD without resampling.
@@ -16,3 +18,5 @@ This is the **time series**. For the strike-style views see
 Pulling liquidations alongside price and CVD? One call to
 [`/market/bundle`](/api/v2/market/bundle) returns all six series aligned.
 </Tip>
+
+<EnterpriseCta />

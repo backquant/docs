@@ -4,6 +4,8 @@ openapi: "GET /gex/expiry-profile"
 description: "GEX by expiry. Net / call / put gamma per expiration date with days-to-expiry."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Net / call / put gamma per expiration date with DTE.
 `?weekly_only=true` excludes monthly + quarterly anchors.
 
@@ -16,3 +18,5 @@ Default **`positioning=flow`**. See [Positioning](/concepts/positioning).
   <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
   <Card title="OPEX calendar" href="/concepts/opex" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

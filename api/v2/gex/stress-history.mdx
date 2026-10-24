@@ -4,6 +4,8 @@ openapi: "GET /gex/stress-history"
 description: "Long-window GEX levels from Postgres (per symbol). Persistent record of HVL / call wall / put wall / net GEX, suitable for backtests or regime analysis."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Long-window record of HVL / call wall / put wall / net GEX from the
 persistent store. Suitable for backtests or regime work. Bounded to 30 days.
 
@@ -16,3 +18,5 @@ default to flow.
   <Card title="What is GEX?" href="/concepts/gex" icon="bookmark" />
   <Card title="GEX history" href="/api/v2/gex/history" icon="clock" />
 </CardGroup>
+
+<EnterpriseCta />

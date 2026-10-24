@@ -4,6 +4,8 @@ openapi: "GET /gex/delta-flow"
 description: "Customer delta flow (HIRO-style) from options tape. Time-bucketed customer signed Black-Scholes delta notional from the multi-venue options tape..."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Time-bucketed **customer** signed Black-Scholes delta notional from the
 options tape (HIRO-style delta line), with cumulative net.
 
@@ -23,3 +25,5 @@ For multi-venue premium quadrants (not delta), use
   <Card title="Dealer flow" href="/api/v2/gex/dealer-flow" icon="chart-line" />
   <Card title="Tape overview" href="/api/v2/tape/overview" icon="circle-info" />
 </CardGroup>
+
+<EnterpriseCta />

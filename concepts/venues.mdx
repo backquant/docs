@@ -3,6 +3,15 @@ title: "Venue coverage"
 description: "Which exchanges BackQuant ingests for options chains, GEX, IV, levels and the tape - plus how to filter by venue."
 ---
 
+<div className="bq-summary">
+
+- BackQuant folds options from multiple exchanges into one surface; filter with `?exchanges=` on GEX endpoints where supported, or `?venues=` on the tape.
+- On `/options/chain`, `oi` is summed across venues, but `bid`, `ask` and `mark` come from Deribit only.
+- `?exchanges=` re-aggregates per-venue data, so exposures sum back to the total, but filtered IV is that venue's own mark IV.
+- On the activity fields, `null` means not measured, while `0` means measured with nothing traded.
+
+</div>
+
 BackQuant ingests crypto options from multiple exchanges and folds them
 into one canonical surface. Filterable venue IDs on public v2 are:
 

@@ -4,7 +4,11 @@ openapi: "GET /cot/instrument"
 description: "One futures market's Commitments of Traders positioning by trader category."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Net contracts per trader category (dealers, asset managers, leveraged funds,
 other reportables and non-reportables for the financial futures report),
 the focus category's statistics, open interest and the smart-versus-fast
 money divergence. `key` comes from [/v2/cot/markets](/api/v2/cot/markets).
+
+<EnterpriseCta />

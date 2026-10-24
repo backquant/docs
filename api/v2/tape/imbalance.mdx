@@ -4,6 +4,8 @@ openapi: "GET /tape/imbalance"
 description: "Time-bucketed aggressor imbalance (premium or HIRO-style delta). Server-side rollup of the options tape into time buckets."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Server-side time-bucketed rollup of the options tape. One row per
 bucket so long windows stay small.
 
@@ -25,3 +27,5 @@ Coins: BTC, ETH.
   <Card title="Whale prints" href="/api/v2/tape/whale" icon="fish" />
   <Card title="Tape overview" href="/api/v2/tape/overview" icon="circle-info" />
 </CardGroup>
+
+<EnterpriseCta />

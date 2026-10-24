@@ -4,6 +4,8 @@ openapi: "GET /options/greeks/trace/{greek}"
 description: "Forward (time × price) greek projection - gamma / charm / vanna. Black-Scholes forward projection of dealer gamma, charm, or vanna across a (time ×..."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Forward Black-Scholes projection of dealer **gamma**, **charm**,
 **vanna**, or **delta_change** across a `(time × price)` grid. Same
 view as BackQuant Pro TRACE, as raw data for your own renderer.
@@ -100,3 +102,5 @@ Going past the caps returns a `VALIDATION_ERROR` with a 422.
   <Card title="Greeks beyond delta" href="/concepts/greeks" icon="bookmark" />
   <Card title="Greek profile" href="/api/v2/options/greeks/by-greek" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

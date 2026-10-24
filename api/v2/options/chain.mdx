@@ -4,6 +4,8 @@ openapi: "GET /options/chain"
 description: "Filtered options chain. Per-contract data (greeks, OI, IV, bid/ask) plus aggregate stats."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Filtered chain with two-layer projection (`?fields=` top-level, `?include=` per-contract) and a payload cap (`?max_contracts`). Cached 30s per filter combination.
 
 ## Where each number comes from
@@ -47,3 +49,5 @@ Full reasoning, including why SOL and HYPE are not blended, is in
   <Card title="Greeks beyond delta" href="/concepts/greeks" icon="bookmark" />
   <Card title="Refresh cadences" href="/concepts/data-freshness" icon="clock" />
 </CardGroup>
+
+<EnterpriseCta />

@@ -3,6 +3,15 @@ title: "What is GEX?"
 description: "Gamma exposure, dealer positioning, walls and support levels - explained"
 ---
 
+<div className="bq-summary">
+
+- GEX measures dealer hedging pressure: positive net gamma means dealers stabilize price, negative net gamma means they amplify moves.
+- Live GEX defaults to flow positioning; pass `?positioning=std` for the textbook model (call OI positive, put OI negative).
+- [`/v2/gex/levels`](/api/v2/gex/levels) returns all-expiry and 0DTE levels, including HVL, the gamma-flip regime line.
+- Pass `?exchanges=` to recompute levels from specific venues, since aggregating across venues can hide venue-specific positioning.
+
+</div>
+
 **Gamma exposure (GEX)** measures how much underlying delta dealers are
 forced to hedge for every $1 the underlying price moves. It's the single
 most useful concept for understanding why crypto sometimes pins to a

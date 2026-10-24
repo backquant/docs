@@ -3,6 +3,14 @@ title: "OPEX calendar"
 description: "Daily, weekly, monthly, quarterly - and why anchor expirations matter"
 ---
 
+<div className="bq-summary">
+
+- Monthly and quarterly expirations are anchor expiries, with 5-10x the OI of weeklies and outsized influence on price into expiry.
+- Every expiration comes pre-classified with a `type` field and an `is_anchor` flag, so you don't parse tokens client-side.
+- [`/v2/options/opex`](/api/v2/options/opex) bundles OI, IV, gamma and `max_pain` per expiration; pass `types=monthly,quarterly` for anchors only.
+
+</div>
+
 **OPEX** (options expiration) is the day options contracts expire. In
 crypto, contracts expire on multiple cadences:
 

@@ -3,6 +3,15 @@ title: "Point-in-time (as_of)"
 description: "Ask what the chain, dealer positioning and implied vol were at a past instant, with the snapshot used and its limits reported alongside."
 ---
 
+<div className="bq-summary">
+
+- Pass `as_of` to nine endpoints, including `/v2/options/chain` and `/v2/gex/levels`, to get the answer from the chain snapshot at that instant.
+- `as_of` snaps to the nearest snapshot at or before your time, never after, so align on `snapshot_ts`, not on what you requested.
+- Chain snapshots start 2026-04-16 and the aggressor tape 2026-05-17; between those dates, responses use `std` instead of `flow`.
+- Timestamps before the chain floor return `404`, future timestamps return `400`, and timestamps outside your plan's window are clamped.
+
+</div>
+
 Most of this API answers *what is true now*. Nine endpoints also answer **what
 was true at a given moment**, so a signal can be evaluated against history
 rather than only observed live.

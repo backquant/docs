@@ -4,6 +4,8 @@ openapi: "GET /gex/dealer-flow/by-level"
 description: "Expected dealer hedge $ if spot walks to each strike. Pro DEALERFLOW-style level map: cumulative net GEX from spot out to each strike under FLOW/STD..."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Expected cumulative dealer hedge dollars if spot walks from the current
 price to each strike (dealer-flow ladder). Built from the signed strike
 GEX profile.
@@ -19,3 +21,5 @@ Default `positioning=flow`. See [Positioning](/concepts/positioning).
   <Card title="Strike profile" href="/api/v2/gex/strike-profile" icon="chart-bar" />
   <Card title="Dealer flow series" href="/api/v2/gex/dealer-flow" icon="chart-line" />
 </CardGroup>
+
+<EnterpriseCta />

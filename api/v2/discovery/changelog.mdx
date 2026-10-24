@@ -4,6 +4,8 @@ openapi: "GET /changelog"
 description: "API version history with breaking-change flags. Returns the v2 release log plus the lifecycle status of v1."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Static release log with per-version `breaking` flags. Use
 `breaking: true` as the signal to schedule client re-integration tests.
 
@@ -52,3 +54,5 @@ Venue IDs and tape units: [Venue coverage](/concepts/venues).
   <Card title="Rate limits" href="/concepts/rate-limits" icon="gauge" />
   <Card title="Flow by strike" href="/api/v2/tape/flow-by-strike" icon="chart-column" />
 </CardGroup>
+
+<EnterpriseCta />

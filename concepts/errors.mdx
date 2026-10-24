@@ -3,6 +3,15 @@ title: "Errors"
 description: "Every error code, when it fires, and how to handle it"
 ---
 
+<div className="bq-summary">
+
+- Failed requests return a non-2xx status and an `error` envelope, so check `success` before reading `data` and branch on `error.code`.
+- `UNAUTHORIZED` (401) means a missing or bad key, while `FORBIDDEN` (403) means your plan does not permit the resource.
+- On `RATE_LIMIT_EXCEEDED`, check `X-Quota-Remaining`: if it is `0`, your monthly quota is exhausted, so stop retrying.
+- Don't retry `NOT_FOUND`, back off exponentially on `UPSTREAM_ERROR`, and include `meta.request_id` when reporting `INTERNAL_ERROR`.
+
+</div>
+
 When a request fails, the API returns a non-2xx HTTP status and an
 error envelope with a machine-readable `code` field, a human-readable
 `message`, and (sometimes) a structured `details` payload.

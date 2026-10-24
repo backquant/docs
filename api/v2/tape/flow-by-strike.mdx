@@ -4,6 +4,8 @@ openapi: "GET /tape/flow-by-strike"
 description: "Cumulative multi-venue aggressor buying and selling by strike on still-open contracts, split into call buy, call sell, put buy and put sell."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 `GET /v2/tape/flow-by-strike`
 
 Real taker flow on **still-open** contracts (`expiry_date >= today UTC`),
@@ -198,3 +200,5 @@ curl "https://api.backquant.com/v2/tape/flow-by-strike?symbol=BTCUSDT&min_premiu
   <Card title="Tape overview" href="/api/v2/tape/overview" icon="table-list" />
   <Card title="Greek TRACE" href="/api/v2/options/greeks/trace" icon="chart-area" />
 </CardGroup>
+
+<EnterpriseCta />

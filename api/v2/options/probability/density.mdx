@@ -4,6 +4,8 @@ openapi: "GET /options/probability/density"
 description: "Risk-neutral PDF/CDF (per expiry). Breeden-Litzenberger probability density derived from option prices."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Risk-neutral PDF/CDF derived from option prices via Breeden-Litzenberger. Optional `?confidence_band=0.68|0.95` returns interpolated price bands per expiry.
 
 ## See also
@@ -11,3 +13,5 @@ Risk-neutral PDF/CDF derived from option prices via Breeden-Litzenberger. Option
 <CardGroup cols={2}>
   <Card title="Breeden-Litzenberger explained" href="/concepts/probability-density" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />

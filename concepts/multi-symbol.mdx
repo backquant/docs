@@ -3,6 +3,15 @@ title: "Multi-symbol bundling"
 description: "Get the universe in one round-trip via /v2/multi/gex/levels"
 ---
 
+<div className="bq-summary">
+
+- [`/v2/multi/gex/levels`](/api/v2/multi/gex-levels) returns GEX levels for up to 8 symbols in one round-trip, keyed by symbol under `results`.
+- It defaults to `positioning=flow` with the same per-symbol fallbacks as single-symbol levels, so SOL and HYPE usually fall back to std.
+- A symbol with no live data appears in `missing` with a `null` result, but the other symbols still come back.
+- The `spot` and `candles` includes are not available here, so use the single-symbol endpoint when you need them.
+
+</div>
+
 Desk dashboards routinely watch the entire crypto-options universe at
 once: BTC + ETH + SOL + HYPE. Hitting `/v2/gex/levels` four times means
 four HTTP round-trips. The multi endpoint collapses that into one.

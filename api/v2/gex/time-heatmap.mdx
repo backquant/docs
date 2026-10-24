@@ -4,6 +4,8 @@ openapi: "GET /gex/time-heatmap"
 description: "Strike × time greek heatmap. Time-series of greek exposures by strike."
 ---
 
+import EnterpriseCta from "/snippets/enterprise-cta.mdx";
+
 Time-series of greek exposures by strike. Pick the greek
 (`gex|dex|vex|charm|vanna`), bound by DTE / OI / IV.
 
@@ -16,3 +18,5 @@ Default **`positioning=flow`**. See [Positioning](/concepts/positioning).
   <Card title="Flow vs std" href="/concepts/positioning" icon="scale-balanced" />
   <Card title="Greeks beyond delta" href="/concepts/greeks" icon="bookmark" />
 </CardGroup>
+
+<EnterpriseCta />
