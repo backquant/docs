@@ -3,14 +3,8 @@
   "info": {
     "title": "BackQuant API v2",
     "description": "\n# BackQuant API v2\n\nOptions + gamma-exposure focused public API. Built on the same data the\nBackQuant Pro Terminal renders - pre-computed every 30s, served from cache.\n\n## What's in v2\n\n* **Discovery**: `/v2/symbols` (universe + per-symbol freshness + supported\n  endpoint list), `/v2/expiries` (active expiry tokens with DTE), `/v2/status`\n  (per-symbol-per-category health with thresholds + overall classification).\n* **GEX**: composable levels (HVL / call wall / put support / max-pain /\n  expected move / gamma-flip zones), strike profile with typed expiry\n  filter, expiry profile, strike × expiry heatmap with downsampling,\n  greek time-heatmap with DTE/OI/IV filters, history (cursor-paginated),\n  Postgres-backed stress history, **per-expiry max-pain with pain curve**.\n* **Options**: filtered options chain with two-layer projection (top-level\n  `?fields=` and per-contract `?include=oi,iv,greeks,bid_ask,volume,gex`)\n  plus moneyness filter (`?moneyness_min=0.9&moneyness_max=1.1`), expiry\n  summary table, full IV suite (surface / term structure / 25Δ-10Δ skew /\n  curves / **single-expiry smile** / IV-RV history / VRP), expected move,\n  **Breeden-Litzenberger probability density and surface**, typed greek\n  profiles (delta / theta / vanna / charm / vega), strike × time charm/vega\n  surfaces, strike × expiry 3D greek surface, OI by expiry + history,\n  put/call ratio (intraday or daily), 0DTE & weekly premium tide,\n  dated-futures term structure.\n* **Liquidation**: heatmap + leverage-tiered distribution.\n* **Multi**: `/v2/multi/gex/levels` - bundled multi-symbol read across the\n  universe in one round-trip, with the same `?include=` model as the\n  single-symbol endpoint.\n\n## Authentication\n\nEvery v2 route (except `/v2/openapi.json`, `/v2/docs`, `/v2/redoc`, and\n`/v2/health`) requires the `X-API-Key` header.\n\n```\nX-API-Key: bq_live_your_api_key_here\n```\n\n**Get your API key at [backquant.com/api-access](https://backquant.com/api-access).**\n\nThe same key works across v1 and v2 - if you already have a v1 key, no\nre-issuance is needed.\n\n## Rate limits\n\nTwo budgets, both derived from your subscription tier: a **monthly request\nallowance** per account, and a **per-minute burst** per key. Size your\nintegration against the monthly figure - sustained polling at the burst rate\nexhausts the month early.\n\n| Plan                      | Monthly allowance | Burst    | Sustained   |\n|---------------------------|-------------------|----------|-------------|\n| Starter (Terminal Yearly) | 10,000 req/month  | 10/min   | ~333/day    |\n| Standard (Crypto API)     | 250,000 req/month | 60/min   | ~8,300/day  |\n| Pro (Terminal + API)      | 1,000,000/month   | 120/min  | ~33,000/day |\n| Enterprise                | custom            | 600/min  | custom      |\n\nHeaders `X-RateLimit-Limit / -Remaining / -Reset` (burst) and\n`X-Quota-Limit / -Used / -Remaining / -Period` (monthly) are included in\nevery response; the rate-limit triple is echoed inside `meta.rate_limit`\nwhen populated by middleware. Exceeding either budget returns `429`.\n\nThe live ladder is served at `GET /v2/meta` under `rate_limits`.\n\n## Response envelope\n\n```json\n{\n  \"success\": true,\n  \"data\": { ... },\n  \"meta\": {\n    \"version\": \"2.0\",\n    \"timestamp\": \"2026-04-29T12:00:00.000Z\",\n    \"request_id\": \"req_…\",\n    \"symbol\": \"BTCUSDT\",\n    \"spot_price\": 67213.5,\n    \"computed_at\": \"2026-04-29T11:59:48.000Z\",\n    \"freshness_seconds\": 12.0,\n    \"source\": [\"deribit\",\"bybit\",\"okx\",\"binance\",\"derive\",\"thalex\",\"delta_india\",\"delta\",\"bullish\",\"paradex\"],\n    \"exchanges_filtered\": [\"deribit\",\"bybit\"]\n  }\n}\n```\n\n## Errors\n\n```json\n{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"No data for BTCUSDT\"\n  },\n  \"meta\": { \"version\": \"2.0\", \"timestamp\": \"...\" }\n}\n```\n\n| Code                  | When |\n|-----------------------|------|\n| `UNAUTHORIZED`        | Missing or invalid API key |\n| `FORBIDDEN`           | Subscription doesn't allow API access |\n| `NOT_FOUND`           | Symbol/expiry/etc. not present in cache |\n| `VALIDATION_ERROR`    | Bad query parameters |\n| `RATE_LIMIT_EXCEEDED` | Per-tier limit hit |\n| `UPSTREAM_ERROR`      | Cache or DB temporarily unreachable |\n| `INTERNAL_ERROR`      | Anything else |\n    ",
-    "version": "2.13"
+    "version": "2.14"
   },
-  "servers": [
-    {
-      "url": "https://api.backquant.com/v2",
-      "description": "Production"
-    }
-  ],
   "paths": {
     "/health": {
       "get": {
@@ -763,7 +757,7 @@
           "GEX"
         ],
         "summary": "Composable GEX key levels",
-        "description": "All-expiry HVL/walls plus 0DTE-specific levels in a single call. Use `?include=` to opt in to optional sections - `spot,candles,zones,max_pain,expected_move,ranked`. Filter by exchange with `?exchanges=deribit,bybit,okx,binance`.\n\n**Positioning (default: flow).** `positioning=flow` (default) rebuilds HVL/walls/ranked from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the legacy Redis textbook-signed levels. On flow fallback, `meta.extra.positioning_fallback_reason` explains why. Secondary walls (call_wall_2/3) are only present on the std cache path.\n\nThe WebSocket channel `gex.levels.{SYMBOL}` publishes the SAME flow-signed levels from the same builder - REST and WS agree.",
+        "description": "All-expiry HVL/walls plus 0DTE-specific levels in a single call. Use `?include=` to opt in to optional sections - `spot,candles,zones,max_pain,expected_move,ranked`. Filter by exchange with `?exchanges=deribit,bybit,okx,binance`.\n\n`expected_move` `*_1sd` / `*_2sd` are the move to the nearest expiry with 7 to 30 days left (`days_to_expiry`), not a day's move; `upper_1d` / `lower_1d` are the one-day 1-sigma band (null until published).\n\n`max_pain` is the max pain of the 0DTE expiry (every expiry settling within a day), from that expiry's own open interest, the same number as `/v2/gex/max-pain?expiry=0dte`; null when no expiry settles within a day. `gamma_flip_zones` is every price where cumulative net GEX changes sign, within 0.5x to 2x spot, under either positioning model. `candles` are the Binance perpetual's 5-minute klines, the last 336 (about 28 hours); `spot.perps_price` is the last close.\n\n**`?exchanges=`** needs the per-venue split only the std model has: with `positioning=flow` a venue filter serves std, with `meta.extra.positioning_fallback_reason` = `exchange_filter_needs_std`. `max_pain` and `gamma_flip_zones` are not venue-filtered (`meta.extra.exchanges_not_applied_to`). Under `as_of` no venue filter is possible and `meta.exchanges_filtered` is null with `meta.extra.exchanges_not_applied`.\n\n**Positioning (default: flow).** `positioning=flow` (default) rebuilds HVL/walls/ranked from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the legacy Redis textbook-signed levels. On flow fallback, `meta.extra.positioning_fallback_reason` explains why. Secondary walls (call_wall_2/3) are only present on the std cache path.\n\nThe WebSocket channel `gex.levels.{SYMBOL}` publishes the SAME flow-signed levels from the same builder - REST and WS agree.",
         "operationId": "get_levels_gex_levels_get",
         "parameters": [
           {
@@ -2143,7 +2137,7 @@
           "GEX"
         ],
         "summary": "Long-window GEX levels from Postgres (per symbol)",
-        "description": "Persistent record of HVL / call wall / put wall / net GEX, suitable for backtests or regime analysis. Window is bounded to 30 days (720 hours) so a query never blows out the read pool.\n\n**Per symbol.** Each symbol has its own stored series. BTC has the deepest history; the other symbols began accruing when multi-symbol storage shipped (migration 065) and can be shorter or empty for an older window. An empty response means no stored rows for that symbol and window, never another symbol's data.\n\n**Positioning:** stored under **std** (textbook OI). Live GEX defaults to flow; this endpoint remains std historical, so do not overlay it directly on live flow-signed levels.",
+        "description": "Persistent record of HVL / call wall / put wall / net GEX, suitable for backtests or regime analysis. Window is bounded to 30 days (720 hours) so a query never blows out the read pool. A level that did not exist at that time (no flip within 25% of spot, no wall on a side) is `null`, never `0`.\n\n**Per symbol.** Each symbol has its own stored series. BTC has the deepest history; the other symbols began accruing when multi-symbol storage shipped (migration 065) and can be shorter or empty for an older window. An empty response means no stored rows for that symbol and window, never another symbol's data.\n\n**Positioning:** stored under **std** (textbook OI). Live GEX defaults to flow; this endpoint remains std historical, so do not overlay it directly on live flow-signed levels.",
         "operationId": "get_stress_history_gex_stress_history_get",
         "parameters": [
           {
@@ -2293,7 +2287,7 @@
           "GEX"
         ],
         "summary": "Max-pain strike (per-expiry)",
-        "description": "The strike at which option writers profit most at expiry. Use `?expiry=0dte` for the cheapest path (read straight from the 0DTE levels cache), `?expiry=all` for a per-expiry table covering every active expiration, or pass a specific expiry token (e.g. `28MAR25`) to also receive the full pain curve by strike.",
+        "description": "The strike at which option writers profit most at expiry. Use `?expiry=0dte` for the expiry (or expiries) settling within a day, computed from that expiry's own open interest, `?expiry=all` for a per-expiry table covering every active expiration, or pass a specific expiry token (e.g. `28MAR25`) to also receive the full pain curve by strike.",
         "operationId": "get_max_pain_gex_max_pain_get",
         "parameters": [
           {
@@ -2435,7 +2429,7 @@
           "GEX"
         ],
         "summary": "Strike ladder: dealer exposure by strike x expiry",
-        "description": "Dealer exposure per strike and per expiry for one metric, the grid behind the terminal's HEATMAP. Every value is dealer position x greek per contract, summed per (strike, expiry):\n\n* `gex` - $ of delta dealers must trade per 1% move\n* `dex` - $ delta\n* `vanna` - $ of delta per +1 vol point\n* `charm` - $ of delta per day of time passing\n* `vega` - $ per +1 vol point\n* `oi` - open interest in contracts (unsigned)\n* `pos` - the dealer position itself, in contracts\n\n`cells` has one row per strike in `strikes` and one column per expiry in `expiries` (the nearest `expiries`, default 8). `total` is each strike summed over every expiry in scope, including those beyond the columns, and `top` / `king` rank strikes by it. For `gex`, `levels` carries the gamma flip and walls by the same rule as /v2/gex/levels.\n\n**Positioning (default: flow).** `flow` uses BackQuant's measured dealer position (BTC and ETH); `std` the textbook convention (call:+OI, put:-OI). See `meta.extra.positioning`; `oi` is unsigned.\n\n`expiry` scopes which expiries count: `all`, `0dte`, `front`, `week` (7 days), `month` (31 days), or a comma list of ISO dates or tokens like `30OCT26`. `span` keeps strikes within spot x (1 +/- span); `group` merges strikes into buckets about that many strike steps wide. Every venue in the chain is included.",
+        "description": "Dealer exposure per strike and per expiry for one metric, the grid behind the terminal's HEATMAP. Every value is dealer position x greek per contract, summed per (strike, expiry):\n\n* `gex` - $ of delta dealers must trade per 1% move\n* `dex` - $ delta\n* `vanna` - $ of delta per +1 vol point\n* `charm` - $ of delta per day of time passing\n* `vega` - $ per +1 vol point\n* `oi` - open interest in coin units (unsigned). Every venue is stored coin-consistent, so this differs from a venue's own contract count where a contract is not one coin (OKX: 0.01 BTC, 0.1 ETH).\n* `pos` - the dealer position itself, in coin units\n\n`cells` has one row per strike in `strikes` and one column per expiry in `expiries` (the nearest `expiries`, default 8). `total` is each strike summed over every expiry in scope, including those beyond the columns, and `top` / `king` rank strikes by it. For `gex`, `levels` carries the gamma flip and walls by the same rule as /v2/gex/levels.\n\n**Positioning (default: flow).** `flow` uses BackQuant's measured dealer position (BTC and ETH); `std` the textbook convention (call:+OI, put:-OI). Under `flow` each venue's trades count until that venue's settle (08:00 UTC; Delta Exchange and Delta India 12:00 UTC), so from 08:00 to 12:00 UTC the day's expiry carries Delta's own position. See `meta.extra.positioning`; `oi` is unsigned.\n\n`expiry` scopes which expiries count: `all`, `0dte`, `front`, `week` (7 days), `month` (31 days), or a comma list of ISO dates or tokens like `30OCT26`. `span` keeps strikes within spot x (1 +/- span); `group` merges strikes into buckets about that many strike steps wide. Every venue in the chain is included.",
         "operationId": "get_gex_ladder_gex_ladder_get",
         "parameters": [
           {
@@ -2673,7 +2667,7 @@
           "Flow"
         ],
         "summary": "Dealer hedge flow time series (gamma + vanna + charm)",
-        "description": "Estimated dealer hedging flow across successive chain snapshots. Components: `gamma_flow` (ΔS% × net GEX), `charm_flow` (−Δt in days × net charm, $ delta per day), `vanna_flow` (reserved), plus `total_flow` and `cumulative_flow`.\n\nPositive ≈ dealers buying the underlying to re-hedge; negative ≈ selling. Default `positioning=flow` (BackQuant's measured dealer model). See `meta.extra.formula` for the exact calculation and units.",
+        "description": "Estimated dealer hedging flow across successive chain snapshots. Components: `gamma_flow` (−ΔS% × net GEX: long-gamma dealers sell a rally and buy a drop), `charm_flow` (−Δt in days × net charm, $ delta per day), `vanna_flow` (reserved), plus `total_flow` and `cumulative_flow`.\n\nEvery component uses one sign: positive ≈ dealers buying the underlying to re-hedge; negative ≈ selling. Default `positioning=flow` (BackQuant's measured dealer model). See `meta.extra.formula` for the exact calculation and units.",
         "operationId": "get_dealer_flow_gex_dealer_flow_get",
         "parameters": [
           {
@@ -2858,7 +2852,7 @@
           "Flow"
         ],
         "summary": "Total gamma flow time series",
-        "description": "Gamma component of dealer hedge flow only: each point is `ΔS% × net_GEX` under the selected positioning model, with session cumulative. HIRO-adjacent dealer gamma pressure.",
+        "description": "Gamma component of dealer hedge flow only: each point is `−ΔS% × net_GEX` under the selected positioning model, with a running cumulative over the returned snapshots (`timestamps`, the most recent chain snapshots, not a trading session). Positive = dealers buying: long-gamma dealers (net GEX > 0) sell a rally and buy a drop. HIRO-adjacent dealer gamma pressure.",
         "operationId": "get_gamma_flow_gex_gamma_flow_get",
         "parameters": [
           {
@@ -3025,7 +3019,7 @@
           "Flow"
         ],
         "summary": "Customer delta flow (HIRO-style) from options tape",
-        "description": "Time-bucketed **customer** signed Black-Scholes delta notional from the multi-venue options tape (primary BS inputs from Deribit-quality prints). This is the HIRO-style *delta* line: buy-side vs sell-side aggressor delta $, plus cumulative net.\n\nDistinct from /dealer-flow (which is hedge pressure from GEX×moves). Customer flow, not dealer flow: see the note in `meta.extra`.",
+        "description": "Time-bucketed **customer** signed Black-Scholes delta notional from the **Deribit** prints of the options tape (the other venues are not included; `meta.source`). This is the HIRO-style *delta* line: buy-side vs sell-side aggressor delta $, plus cumulative net over the window.\n\nDistinct from /dealer-flow (which is hedge pressure from GEX×moves). Customer flow, not dealer flow: see the note in `meta.extra`.",
         "operationId": "get_delta_flow_gex_delta_flow_get",
         "parameters": [
           {
@@ -3201,7 +3195,7 @@
           "Flow"
         ],
         "summary": "Expected dealer hedge $ if spot walks to each strike",
-        "description": "Pro DEALERFLOW-style level map: cumulative net GEX from spot out to each strike under FLOW/STD signing. Positive ≈ expected dealer buying pressure if spot reaches that level.",
+        "description": "DEALERFLOW-style level map: the dollar delta dealers would trade if spot walked from where it is to each strike, from cumulative net GEX under FLOW/STD signing: −cumulative walking up from spot, +cumulative walking down. Positive ≈ expected dealer buying if spot reaches that level. Long-gamma dealers sell into a rally (negative above spot) and buy into a drop (positive below).",
         "operationId": "get_dealer_flow_by_level_gex_dealer_flow_by_level_get",
         "parameters": [
           {
@@ -3349,7 +3343,7 @@
           "Options"
         ],
         "summary": "Filtered options chain",
-        "description": "Per-contract data (greeks, OI, IV, bid/ask) plus aggregate stats. Filters supported:\n\n* `expiries` - CSV of tokens (e.g. `28MAR25,25APR25`).\n* `dte_min` / `dte_max` - days-to-expiry bounds.\n* `oi_min` / `oi_max` - open interest bounds.\n* `delta_min` / `delta_max` - applied to |delta| (0..1).\n* `strike_min` / `strike_max` - absolute strike bounds.\n* `moneyness_min` / `moneyness_max` - strike / spot ratio bounds,   e.g. `0.9..1.1` keeps strikes within ±10% of spot. Useful for   cross-symbol screens since it normalises the strike grid.\n* `option_type` - `call`, `put`, or `both`.\n\nTwo layers of projection:\n\n* `fields` (top-level): comma-sep subset of `aggregates,available_expiries,contracts` - drops whole sections of the   response, e.g. `?fields=contracts` to skip aggregates.\n* `include` (per-contract): comma-sep subset of `bid_ask,gex,greeks,iv,oi,volume` - keeps only the   named sub-sections of each contract dict. Core identity fields (`strike,expiry,dte,type`) are always present. Default   is every section, matching v1 shape.\n\nPayload is capped at `?max_contracts=` (default 2000, hard ceiling 5000). On overflow the response is truncated to the closest-to-spot subset and `truncated=true` is set with `total_matching_count` so the client knows to narrow the filter.\n\nResponse is cached for 30s keyed by the exact filter combination, so repeated calls with identical filters are sub-millisecond.\n\n**Greeks are per contract, Black-Scholes:** `delta` per coin, `gamma` per $1 of spot, `theta` $ per day, `vega` $ per vol point, `vanna` delta per vol point, `charm` delta per day. `gex` is the contract's $ per 1% move, dealer-signed (puts negative).\n\n**Where each number comes from.** A chain row mixes two kinds of field on purpose, and which is which matters:\n\n* **Positioning is cross-venue.** `oi` is summed across all ten   venues. See `GET /v2/status` for which are live.\n* **Prices are one venue's.** `bid`, `ask` and `mark` are one   venue's quote, not a consolidated one: Deribit's wherever Deribit   lists the contract (the reference book for crypto options),   otherwise the first venue that lists it, in the order Bybit, OKX,   Binance, Derive, Thalex, Delta, Bullish, Paradex. On BTC and ETH   they are in coin, the way Deribit quotes: USD premium over that   expiry's forward (Deribit, OKX, Bybit); the few rows only a smaller   venue lists are converted at the index instead, so on far expiries   they can sit a few percent apart. For best bid and offer across every venue, with   the venue named on each side, use `GET /v2/options/venue-book`.\n* **Activity is cross-venue on BTC and ETH.** `volume`,   `notional_volume` and `trade_count` are measured over a rolling   24 hours from our own aggressor tape, which spans all ten   venues for these two symbols. `volume` is contracts,   `notional_volume` is premium in USD, `trade_count` is prints.\n* **Activity is single-venue on SOL and HYPE.** Our tape does not   span venues for them, so these fields carry the source venue's own   figures rather than a total that would look cross-venue and not   be. SOL is Deribit's; HYPE is Derive's.\n\n**`null` is not `0`.** On these three activity fields, `0` means measured and nothing traded, while `null` means not measured. SOL reports `trade_count: null` because no venue publishes a per-contract trade count for it, and on BTC/ETH all three read `null` in the rare window where the cross-venue measurement is unavailable - we report it as missing rather than substituting a single-venue number under a cross-venue field. Treating `null` and `0` as the same is how a contract that traded thousands of times can read as untraded.\n\n**Under `as_of`.** The activity fields are RECOMPUTED for the 24 hours ending at the resolved snapshot, from the same cross-venue tape, so a historical chain does not serve figures that were only ever single-venue. `meta.extra.activity_rebuilt` reports that it happened. `bid` and `ask` are a different case: on chains persisted before 2026-09-01 they are `0` because they were never recorded, and no amount of recomputation can recover them. `meta.extra.quotes_note` says so on every such response rather than leaving a caller to read those zeros as an unquoted market.",
+        "description": "Per-contract data (greeks, OI, IV, bid/ask) plus aggregate stats. Filters supported:\n\n* `expiries` - CSV of tokens (e.g. `28MAR25,25APR25`).\n* `dte_min` / `dte_max` - days-to-expiry bounds.\n* `oi_min` / `oi_max` - open interest bounds.\n* `delta_min` / `delta_max` - applied to |delta| (0..1).\n* `strike_min` / `strike_max` - absolute strike bounds.\n* `moneyness_min` / `moneyness_max` - strike / spot ratio bounds,   e.g. `0.9..1.1` keeps strikes within ±10% of spot. Useful for   cross-symbol screens since it normalises the strike grid.\n* `option_type` - `call`, `put`, or `both`.\n\nTwo layers of projection:\n\n* `fields` (top-level): comma-sep subset of `aggregates,available_expiries,contracts` - drops whole sections of the   response, e.g. `?fields=contracts` to skip aggregates.\n* `include` (per-contract): comma-sep subset of `bid_ask,gex,greeks,iv,oi,volume` - keeps only the   named sub-sections of each contract dict. Core identity fields (`strike,expiry,dte,type`) are always present. Default   is every section, matching v1 shape.\n\nPayload is capped at `?max_contracts=` (default 2000, hard ceiling 5000). On overflow the response is truncated to the closest-to-spot subset and `truncated=true` is set with `total_matching_count` so the client knows to narrow the filter.\n\nResponse is cached for 30s keyed by the exact filter combination, so repeated calls with identical filters are sub-millisecond.\n\n**Greeks are per contract, Black-Scholes:** `delta` per coin, `gamma` per $1 of spot, `theta` $ per day, `vega` $ per vol point, `vanna` delta per vol point, `charm` delta per day. `gex` is the contract's $ per 1% move, dealer-signed (puts negative).\n\n**Where each number comes from.** A chain row mixes two kinds of field on purpose, and which is which matters:\n\n* **Positioning is cross-venue.** `oi` is summed across all ten   venues. See `GET /v2/status` for which are live.\n* **Prices are one venue's.** `bid`, `ask` and `mark` are one   venue's quote, not a consolidated one: Deribit's wherever Deribit   lists the contract (the reference book for crypto options),   otherwise the first venue that lists it, in the order Bybit, OKX,   Binance, Derive, Thalex, Delta, Bullish, Paradex. On BTC and ETH   they are in coin, the way Deribit quotes: USD premium over that   expiry's forward (Deribit, OKX, Bybit); the few rows only a smaller   venue lists are converted at the index instead, so on far expiries   they can sit a few percent apart. For best bid and offer across every venue, with   the venue named on each side, use `GET /v2/options/venue-book`.\n* **Activity is cross-venue on BTC and ETH.** `volume`,   `notional_volume` and `trade_count` are measured over a rolling   24 hours from our own aggressor tape, which spans all ten   venues for these two symbols. `volume` is contracts,   `notional_volume` is premium in USD, `trade_count` is prints.\n* **Activity is single-venue on SOL and HYPE.** Our tape does not   span venues for them, so these fields carry the source venue's own   figures rather than a total that would look cross-venue and not   be. SOL is Deribit's; HYPE is Derive's.\n\n**`null` is not `0`.** On these three activity fields, `0` means measured and nothing traded, while `null` means not measured. SOL reports `trade_count: null` because no venue publishes a per-contract trade count for it, and on BTC/ETH all three read `null` in the rare window where the cross-venue measurement is unavailable - we report it as missing rather than substituting a single-venue number under a cross-venue field. Treating `null` and `0` as the same is how a contract that traded thousands of times can read as untraded.\n\n**Under `as_of`.** The activity fields are RECOMPUTED for the 24 hours ending at the resolved snapshot, from the same cross-venue tape, so a historical chain does not serve figures that were only ever single-venue. `meta.extra.activity_rebuilt` reports that it happened. `bid` and `ask` are a different case: on chains persisted before 2026-09-01 they are `0` because they were never recorded, and no amount of recomputation can recover them. `meta.extra.quotes_note` says so on every such response rather than leaving a caller to read those zeros as an unquoted market.\n\n**`aggregates.atm_iv`** is the at-the-money IV (percent) of the front live expiry among the matching contracts, read at that expiry's forward; `aggregates.atm_iv_expiry` names the expiry (the next one when the front's quotes do not reach its forward). `delta` is the Black-Scholes delta on spot, the sensitivity `gex` and dollar delta use; the 25-delta figures on `/v2/options/iv/*` are read on Black-76 forward deltas, the venues' convention.",
         "operationId": "get_chain_options_chain_get",
         "parameters": [
           {
@@ -3908,7 +3902,7 @@
           "Options"
         ],
         "summary": "IV surface (strike × expiry)",
-        "description": "The fitted implied-volatility surface from the ten-venue chain, out to 180 days: `z_grid[i][j]` is the vol (percent) at tenor `y_grid[i]` (days, ascending) and strike `x_grid[j]`; holes are null where the expiry never traded that far out.\n\nEach expiry is fitted with raw SVI on its own forward (put-call parity), the grid is lifted where needed so total variance never falls with maturity, and quotes too cheap to price are dropped. `expiry_forwards` gives each expiry's forward, fit method and error and, where it fitted, the SVI parameters `svi` {a, b, rho, m, sigma} (total variance w(k) = a + b (rho (k - m) + sqrt((k - m)^2 + sigma^2)), k = ln(K / F)), its years to expiry `t` and the log-moneyness span `k_range` of its quotes. The fit itself uses the quotes within four ATM standard deviations of the forward, and `smile_rmse` (vol points) is measured on those. The parameters are each expiry's own fit; the grid's calendar lift is not in them. `n_quotes` is how many out-of-the-money quotes the expiry's smile has. `long_expiries` carries the same fields for the expiries past 180 days (to about 18 months), which are fitted but not on the grid. `delta_surface` is the same surface by delta. Each fitted smile's static-arbitrage checks are on /v2/options/iv/constant-maturity.",
+        "description": "The fitted implied-volatility surface from the ten-venue chain, out to 180 days: `z_grid[i][j]` is the vol (percent) at tenor `y_grid[i]` (days, ascending) and strike `x_grid[j]`; holes are null where the expiry never traded that far out.\n\nEach expiry is fitted with raw SVI on its own forward (put-call parity), the grid is lifted where needed so total variance never falls with maturity, and quotes too cheap to price are dropped. `expiry_forwards` gives each expiry's forward, fit method and error and, where it fitted, the SVI parameters `svi` {a, b, rho, m, sigma} (total variance w(k) = a + b (rho (k - m) + sqrt((k - m)^2 + sigma^2)), k = ln(K / F)), its years to expiry `t` and the log-moneyness span `k_range` of its quotes. The fit itself uses the quotes within four ATM standard deviations of the forward, and `smile_rmse` (vol points) is measured on those. The parameters are each expiry's own fit; the grid's calendar lift is not in them. `n_quotes` is how many out-of-the-money quotes the expiry's smile has. `long_expiries` carries the same fields for the expiries past 180 days (to about 18 months), which are fitted but not on the grid. `delta_surface` is the same surface by delta (Black-76 forward deltas). Each fitted smile's static-arbitrage checks are on /v2/options/iv/constant-maturity.\n\nThe top-level `forward` is the spot the per-expiry forwards were solved from (equal to `spot_price`), not a forward: each expiry's own forward is in `expiry_forwards` / `long_expiries`.",
         "operationId": "get_iv_surface_options_iv_surface_get",
         "parameters": [
           {
@@ -4062,7 +4056,7 @@
           "Options"
         ],
         "summary": "ATM IV by tenor",
-        "description": "At-the-money implied volatility for each active expiration.\n\nFilters:\n* `exchanges` - comma-separated venue filter.\n* `dte_max` - drop tenors with DTE > dte_max (focus on the front   of the curve).\n* `historical_compare_days=N` - also include the constant-maturity   ATM IV from N days ago, sourced from the `iv_history` Postgres   table. Returned as a separate `historical` block under   `compare`. Different shape from the live curve - historical is   by DTE-bucket (7/14/30/60/90/180/365) since that's how the   worker stores it; the client can interpolate onto the live   tenor grid for visualisation.",
+        "description": "At-the-money implied volatility for each active expiration, read at that expiry's forward (`forwards`, parallel to `expiries`) by interpolating between the strikes either side of it.\n\nFilters:\n* `exchanges` - comma-separated venue filter. An expiry none of the   chosen venues quotes has a null `atm_iv`.\n* `dte_max` - drop tenors with DTE > dte_max (focus on the front   of the curve).\n* `historical_compare_days=N` - also include the constant-maturity   ATM IV from N days ago, sourced from the `iv_history` Postgres   table. Returned as a separate `historical` block under   `compare`. Different shape from the live curve - historical is   by DTE-bucket (7/14/30/60/90/180/365) since that's how the   worker stores it; the client can interpolate onto the live   tenor grid for visualisation.",
         "operationId": "get_iv_term_options_iv_term_structure_get",
         "parameters": [
           {
@@ -4268,7 +4262,7 @@
           "Options"
         ],
         "summary": "25Δ / 10Δ skew + 25Δ butterfly per expiry",
-        "description": "Delta-interpolated risk-reversal and butterfly per active expiry. `skew_25d` = 25Δ put IV − 25Δ call IV (positive = put premium, fear bid); `butterfly_25d` = (25Δ put IV + 25Δ call IV) / 2 − ATM IV (smile curvature / wing pricing). Computed from real delta-bracketed options, not strike proxies.",
+        "description": "Delta-interpolated risk-reversal and butterfly per active expiry. `skew_25d` = 25Δ put IV − 25Δ call IV (positive = put premium, fear bid); `butterfly_25d` = (25Δ put IV + 25Δ call IV) / 2 − ATM IV (smile curvature / wing pricing). Computed from real delta-bracketed options, not strike proxies: deltas are Black-76 on each expiry's forward (`forward`), the venues' convention, and ATM is the IV at that forward. A 25Δ or 10Δ point the quotes do not reach (no quote within 0.05 delta of it) is null rather than the nearest quote held flat.",
         "operationId": "get_iv_skew_options_iv_skew_get",
         "parameters": [
           {
@@ -4842,7 +4836,7 @@
           "Options"
         ],
         "summary": "Implied vs realized vol history",
-        "description": "Daily implied (DVOL/ATM-IV) and 30d realized vol with the spread.",
+        "description": "Implied vol (Deribit DVOL, percent) against 30-day realized vol (hourly returns, annualised), hourly points over the last 30 days, and `spread` = iv - rv per point (vol points).",
         "operationId": "get_iv_rv_options_iv_iv_rv_get",
         "parameters": [
           {
@@ -4899,7 +4893,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/IvRvResponse"
+                }
               }
             }
           },
@@ -4922,22 +4918,14 @@
             }
           },
           "404": {
-            "description": "No data available for the requested resource",
             "content": {
               "application/json": {
-                "example": {
-                  "success": false,
-                  "error": {
-                    "code": "NOT_FOUND",
-                    "message": "No data for BTCUSDT"
-                  },
-                  "meta": {
-                    "version": "2.0",
-                    "timestamp": "2026-04-29T12:00:00Z"
-                  }
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorEnvelope"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "422": {
             "description": "Validation error on query parameters",
@@ -5142,7 +5130,7 @@
           "Options"
         ],
         "summary": "Implied 1σ move",
-        "description": "ATM-implied 1- and 2-sigma expected move to the nearest liquid expiry: the closest expiry 7-30 days out, else the closest one 1-60 days out (`days_to_expiry` says which). Move = `atm_iv` x sqrt(days/365) x spot; `straddle_price` is the ATM straddle for the same expiry.\n\nUnit: `atm_iv` here is a decimal (0.33 = 33%). Elsewhere in v2, `atm_iv` is in percent (33.0 = 33%).",
+        "description": "ATM-implied 1- and 2-sigma expected move to the nearest liquid expiry: the closest expiry 7-30 days out, else the closest one 1-60 days out (`days_to_expiry` says which). Move = `atm_iv` x sqrt(days/365) x spot; `straddle_price` is the ATM straddle for the same expiry. ATM is read at that expiry's forward.\n\nThe 1-day move is separate: `expected_move_1d` = spot x `atm_iv_1d` x sqrt(1/365), with `upper_1d` / `lower_1d` around spot, where `atm_iv_1d` is the ATM IV of the front live expiry (the next to settle at 08:00 UTC, passed over inside its last 4 hours; `expiry_1d` names it). The 7-30 day move above is not a daily range. With `exchanges=`, both moves are recomputed from the chosen venues' own ATM IVs (null where none quotes the expiry).\n\nUnit: `atm_iv` and `atm_iv_1d` here are decimals (0.33 = 33%). Elsewhere in v2, `atm_iv` is in percent (33.0 = 33%).",
         "operationId": "get_expected_move_options_expected_move_get",
         "parameters": [
           {
@@ -5221,7 +5209,9 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpectedMoveResponse"
+                }
               }
             }
           },
@@ -5244,22 +5234,14 @@
             }
           },
           "404": {
-            "description": "No data available for the requested resource",
             "content": {
               "application/json": {
-                "example": {
-                  "success": false,
-                  "error": {
-                    "code": "NOT_FOUND",
-                    "message": "No data for BTCUSDT"
-                  },
-                  "meta": {
-                    "version": "2.0",
-                    "timestamp": "2026-04-29T12:00:00Z"
-                  }
+                "schema": {
+                  "$ref": "#/components/schemas/V2ErrorEnvelope"
                 }
               }
-            }
+            },
+            "description": "Not Found"
           },
           "422": {
             "description": "Validation error on query parameters",
@@ -5638,7 +5620,7 @@
           "Options"
         ],
         "summary": "Greek exposure profile by strike",
-        "description": "Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`.\n\n**Units** (`unit` in the response): delta $ delta, theta $ per day, vanna $ delta per vol point, charm $ delta per day, vega $ per vol point.\n\n**Positioning (default: flow).** Weights by BackQuant's measured dealer model (BTC/ETH) or textbook ±OI.\n\nFilters:\n* `exchanges` - comma-separated venue filter (std redis path).\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps ATM ±10% exposure only.\n* `dte_max` - re-aggregates from the raw chain to limit   contributing contracts to `DTE ≤ dte_max`.\n* `positioning` - `flow` (default) or `std`.",
+        "description": "Net greek exposure per strike. `greek` is one of `delta` (DEX), `theta`, `vanna`, `charm`, `vega`.\n\n**Units** (`unit` in the response): delta $ delta, theta $ per day, vanna $ delta per vol point, charm $ delta per day, vega $ per vol point.\n\n**Positioning (default: flow).** Weights by BackQuant's measured dealer model (BTC/ETH) or textbook ±OI.\n\nFilters:\n* `exchanges` - comma-separated venue filter. Only the std profile   has a per-venue split, so with `positioning=flow` a venue filter   serves std (`positioning_fallback_reason`   `exchange_filter_needs_std`); with `dte_max` it cannot apply and   `meta.extra.exchanges_not_applied` says so.\n* `moneyness_min` / `moneyness_max` - strike/spot ratio bounds,   e.g. `0.9..1.1` keeps ATM ±10% exposure only.\n* `dte_max` - re-aggregates from the raw chain to limit   contributing contracts to `DTE ≤ dte_max`.\n* `positioning` - `flow` (default) or `std`.",
         "operationId": "get_greek_profile_options_greeks__greek__get",
         "parameters": [
           {
@@ -8084,7 +8066,7 @@
           "Liquidation"
         ],
         "summary": "Liquidation intensity heatmap (price × time)",
-        "description": "Estimated liquidation levels normalized to a 0-100 scale, gridded by price bin and time bucket. Includes the OHLC candles plotted alongside so the heatmap can be rendered standalone.",
+        "description": "Estimated liquidation levels normalized to a 0-100 scale, gridded by price bin and time bucket. A model of where open positions would be liquidated, built from the cross-venue perp open interest and taker volume, not a record of liquidations that happened. Includes the OHLC candles plotted alongside so the heatmap can be rendered standalone.",
         "operationId": "get_liquidation_heatmap_liquidation_heatmap_get",
         "parameters": [
           {
@@ -8220,7 +8202,7 @@
           "Liquidation"
         ],
         "summary": "Liquidation histogram with leverage tiers",
-        "description": "Per-price-level long and short liquidation volumes, with a leverage tier estimate based on distance from current price and cumulative-volume series for visualizing concentration.",
+        "description": "Per-price-level estimated resting long and short positions from the liquidation model, in coins of the base asset (BTC for BTCUSDT), not USD and not liquidations that happened. `leverage_tier` is the model's leverage cohort whose liquidation, for a position opened at the current price, lies nearest the level (a distance label that moves with price), and `tier_color` ranks it, highest leverage first. Includes cumulative series for visualizing concentration.",
         "operationId": "get_liquidation_distribution_liquidation_distribution_get",
         "parameters": [
           {
@@ -8356,7 +8338,7 @@
           "Multi"
         ],
         "summary": "GEX levels across multiple symbols (bundled)",
-        "description": "Multi-symbol GEX levels in one round-trip. Returns a `results` map keyed by symbol with the same shape per-entry as /v2/gex/levels. Symbols with no current data return null in `results` and appear in `missing` rather than failing the whole request. Up to 8 symbols per request.\n\n**Positioning (default: flow).** Each symbol is rebuilt from the multi-venue chain + aggressor tape when `positioning=flow` (BTC/ETH). SOL/HYPE fall back to std. See per-symbol `positioning` and top-level `meta.extra.aggregation`.\n\nIncludes: `ranked` (top-10 strikes by |GEX|), `max_pain` (0DTE only), `expected_move` (1σ / 2σ implied range), `zones` (gamma flip zones).",
+        "description": "Multi-symbol GEX levels in one round-trip. Returns a `results` map keyed by symbol with the same shape per-entry as /v2/gex/levels. Symbols with no current data return null in `results` and appear in `missing` rather than failing the whole request. Up to 8 symbols per request.\n\n**Positioning (default: flow).** Each symbol is rebuilt from the multi-venue chain + aggressor tape when `positioning=flow` (BTC/ETH). SOL/HYPE fall back to std. See per-symbol `positioning` and top-level `meta.extra.aggregation`.\n\nIncludes: `ranked` (top-10 strikes by |GEX|), `max_pain` (0DTE only), `expected_move` (1σ / 2σ implied range to the nearest expiry with 7 to 30 days left, `days_to_expiry`, plus the one-day band `upper_1d` / `lower_1d`), `zones` (gamma flip zones).",
         "operationId": "get_multi_gex_levels_multi_gex_levels_get",
         "parameters": [
           {
@@ -9762,7 +9744,7 @@
           "ETF"
         ],
         "summary": "Spot ETF premium or discount to NAV",
-        "description": "Premium or discount of each fund's market price to its net asset value. Available for BTC and ETH.",
+        "description": "Premium or discount of each fund's market price to its net asset value. Available for BTC. `symbol=ETH` is accepted but returns 404: the source publishes premium / discount for the BTC funds only.",
         "operationId": "get_etf_premium_etf_premium_get",
         "parameters": [
           {
@@ -9896,7 +9878,7 @@
           "ETF"
         ],
         "summary": "Spot ETF assets under management",
-        "description": "Assets under management per fund. Available for BTC and ETH.",
+        "description": "Spot ETF net assets for all funds of the asset combined, as CoinGlass reports them: carried forward by each day's net flow and not revalued with price, so not the funds' market value (`net_assets_basis`, `net_assets_note`). `change` and `net_flow` are the day's net flow. Available for BTC and ETH.",
         "operationId": "get_etf_aum_etf_aum_get",
         "parameters": [
           {
@@ -10167,7 +10149,7 @@
           "COT"
         ],
         "summary": "COT positioning across markets",
-        "description": "Each instrument's latest weekly positioning for its primary trader category: `net` contracts (long minus short), `wow_change`, net as a share of open interest, where net sits in its own 1-year and 3-year history (`percentile_*`, 0 to 100) and its 3-year z-score, plus the smart-versus-fast money `divergence_score` and `flags` for extremes. Sorted most extreme first by default.\n\nCFTC data as of each report's Tuesday, released the following Friday.",
+        "description": "Each instrument's latest weekly positioning for its primary trader category: `net` contracts (long minus short), `wow_change`, net as a share of open interest, where net sits in its own 1-year and 3-year history (`percentile_1y`, `percentile_3y`, 0 to 100) and its 3-year z-score, the same rank and z-score over the requested `window` (`percentile_window`, `zscore_window`, with `window_weeks_used` weekly reports behind them), plus the smart-versus-fast money `divergence_score` and `flags` for extremes. Sorted most extreme first by default.\n\nCFTC data as of each report's Tuesday, released the following Friday.",
         "operationId": "get_cot_summary_cot_summary_get",
         "parameters": [
           {
@@ -10201,11 +10183,11 @@
                 "all"
               ],
               "type": "string",
-              "description": "History the percentiles and z-score are taken over.",
+              "description": "History percentile_window, zscore_window, the flags and the sort are taken over.",
               "default": "3y",
               "title": "Window"
             },
-            "description": "History the percentiles and z-score are taken over."
+            "description": "History percentile_window, zscore_window, the flags and the sort are taken over."
           },
           {
             "name": "sort",
@@ -10532,7 +10514,7 @@
           "Filings"
         ],
         "summary": "Insider transactions (SEC Form 4)",
-        "description": "Form 4 transactions by the officers, directors and 10% owners of COIN and HOOD, newest first: who, their role, the SEC `transaction_code` with a readable `transaction` (purchase, sale, award, option_exercise, tax_withholding, gift...), shares, price, `value_usd` and the holding after. Purchases and sales are the discretionary trades; awards, exercises and tax withholding are compensation mechanics. `purchases_usd` and `sales_usd` sum the non-derivative purchases and sales only (option and award lines carry exercise prices, not trade values). Filings reach EDGAR within minutes of acceptance. `lookback` is clamped to your plan's history depth.",
+        "description": "Form 4 transactions by the officers, directors and 10% owners of COIN and HOOD, newest first: who, their role, the SEC `transaction_code` with a readable `transaction` (purchase, sale, award, option_exercise, tax_withholding, gift...), shares, price, `value_usd` and the holding after. Purchases and sales are the discretionary trades; awards, exercises and tax withholding are compensation mechanics. `purchases_usd` and `sales_usd` sum the non-derivative purchases and sales only (option and award lines carry exercise prices, not trade values). Purchases and sales of the company's other securities (a preferred series) are not listed; `security_title` names the security of each line. Filings reach EDGAR within minutes of acceptance. `lookback` is clamped to your plan's history depth.",
         "operationId": "get_insider_filings_insider_get",
         "parameters": [
           {
@@ -10985,13 +10967,13 @@
                   "type": "null"
                 }
               ],
-              "description": "CSV of tags. 0dte → expiry_date = today (UTC). whale → premium_usd ≥ $250k (configurable via premium_min_usd). atm → strike within ±2% of the trade's index_price.",
+              "description": "CSV of tags. 0dte → the trade was on its front live expiry: the contract settled within 24h after the print (08:00 UTC, 12:00 UTC on delta / delta_india). whale → premium_usd ≥ $250k (configurable via premium_min_usd). atm → strike within ±2% of the trade's index_price.",
               "examples": [
                 "0dte,whale"
               ],
               "title": "Tags"
             },
-            "description": "CSV of tags. 0dte → expiry_date = today (UTC). whale → premium_usd ≥ $250k (configurable via premium_min_usd). atm → strike within ±2% of the trade's index_price."
+            "description": "CSV of tags. 0dte → the trade was on its front live expiry: the contract settled within 24h after the print (08:00 UTC, 12:00 UTC on delta / delta_india). whale → premium_usd ≥ $250k (configurable via premium_min_usd). atm → strike within ±2% of the trade's index_price."
           },
           {
             "name": "before",
@@ -11059,11 +11041,11 @@
               "type": "integer",
               "maximum": 5000,
               "minimum": 1,
-              "description": "Max trades per page (1-5000).",
+              "description": "Max trades per page (1-5000). A page that would end inside a group of prints sharing one timestamp includes the whole group, so it can be longer than `limit`; the cursor never splits such a group.",
               "default": 200,
               "title": "Limit"
             },
-            "description": "Max trades per page (1-5000)."
+            "description": "Max trades per page (1-5000). A page that would end inside a group of prints sharing one timestamp includes the whole group, so it can be longer than `limit`; the cursor never splits such a group."
           },
           {
             "name": "X-API-Key",
@@ -11344,7 +11326,7 @@
           "Tape"
         ],
         "summary": "Tape statistics for a window",
-        "description": "Aggregate stats over a time window - useful for Methix-style scorers that don't need raw trades, just the summary numbers. Computes count, total premium, buy/sell split, call/put split, per-venue breakdown, all in a single query.",
+        "description": "Aggregate stats over a time window - useful for Methix-style scorers that don't need raw trades, just the summary numbers. Computes count, total premium, buy/sell split, call/put split, per-venue breakdown, all in a single query.\n\n**`contracts` is traded size in COIN units** (the sum of each print's `amount`, stored coin-consistent for every venue), not a count of venue contracts: one OKX BTC contract is 0.01 BTC. `size_coin` carries the same number under an exact name; `calls` / `puts` are print counts.",
         "operationId": "get_tape_stats_tape_stats_get",
         "parameters": [
           {
@@ -12109,7 +12091,7 @@
           "Tape"
         ],
         "summary": "Aggressor flow by strike (bought vs sold calls/puts)",
-        "description": "REAL multi-venue taker flow on still-open contracts (`expiry_date >= today UTC`) - cumulative sold/bought pressure behind live open interest, not a rolling lookback.\n\nFour quadrants per strike: `call_buy`, `call_sell`, `put_buy`, `put_sell` - each with `premium` (USD), `size` (contracts/coin-eq), and `trades` count. Every venue stamps native taker `direction` at ingest (Deribit/Bybit/OKX/Binance/Derive/Thalex), so this is exact aggressor side, not quote-rule inference.\n\nUse `expiry` or `expiries` (YYYY-MM-DD) to restrict to one or more live expiries. Omit both for all open contracts. Optional `venues` CSV and `min_premium_usd` whale filter.\n\nResponse shape matches the terminal / internal crypto flow endpoint so integrators can rebuild TRACE-style dealer maps.",
+        "description": "REAL multi-venue taker flow on still-open contracts (not yet past their settle: 08:00 UTC, 12:00 UTC on delta / delta_india) - cumulative sold/bought pressure behind live open interest, not a rolling lookback.\n\nFour quadrants per strike: `call_buy`, `call_sell`, `put_buy`, `put_sell` - each with `premium` (USD), `size` (contracts/coin-eq), and `trades` count. Every venue stamps native taker `direction` at ingest (Deribit/Bybit/OKX/Binance/Derive/Thalex), so this is exact aggressor side, not quote-rule inference.\n\nUse `expiry` or `expiries` (YYYY-MM-DD) to restrict to one or more live expiries. Omit both for all open contracts. Optional `venues` CSV and `min_premium_usd` whale filter.\n\nResponse shape matches the terminal / internal crypto flow endpoint so integrators can rebuild TRACE-style dealer maps.",
         "operationId": "get_tape_flow_by_strike_tape_flow_by_strike_get",
         "parameters": [
           {
@@ -12412,7 +12394,19 @@
               }
             ],
             "title": "Atm Iv",
-            "description": "ATM implied volatility in percent (33.0 = 33%)."
+            "description": "ATM implied volatility in percent (33.0 = 33%) of the front live expiry among the matching contracts, read at that expiry's forward."
+          },
+          "atm_iv_expiry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atm Iv Expiry",
+            "description": "The expiry token `atm_iv` was read from (null when no expiry's quotes reach its forward)."
           },
           "contract_count": {
             "type": "integer",
@@ -12633,6 +12627,252 @@
           "meta"
         ],
         "title": "ChangelogResponse"
+      },
+      "ExpectedMoveData": {
+        "properties": {
+          "spot_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spot Price"
+          },
+          "atm_iv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atm Iv"
+          },
+          "days_to_expiry": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To Expiry"
+          },
+          "expected_move_1sd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Move 1Sd"
+          },
+          "expected_move_1sd_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Move 1Sd Pct"
+          },
+          "expected_move_2sd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Move 2Sd"
+          },
+          "expected_move_2sd_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Move 2Sd Pct"
+          },
+          "upper_1sd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upper 1Sd"
+          },
+          "lower_1sd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lower 1Sd"
+          },
+          "upper_2sd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upper 2Sd"
+          },
+          "lower_2sd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lower 2Sd"
+          },
+          "straddle_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Straddle Price"
+          },
+          "atm_iv_1d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Atm Iv 1D",
+            "description": "Front live expiry's ATM IV (decimal) behind the 1-day move."
+          },
+          "expected_move_1d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Move 1D",
+            "description": "spot x atm_iv_1d x sqrt(1/365)."
+          },
+          "upper_1d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upper 1D"
+          },
+          "lower_1d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lower 1D"
+          },
+          "expiry_1d": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry 1D",
+            "description": "The expiry `atm_iv_1d` came from."
+          },
+          "exchange_breakdown_1d": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exchange Breakdown 1D",
+            "description": "Each venue's ATM IV (decimal) for `expiry_1d`; `exchanges=` averages these."
+          },
+          "ts": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ts"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ExpectedMoveData",
+        "description": "`atm_iv` / `atm_iv_1d` are decimals (0.33 = 33%) on this endpoint."
+      },
+      "ExpectedMoveResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true,
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/ExpectedMoveData"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/V2Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "ExpectedMoveResponse"
       },
       "ExpiryRow": {
         "properties": {
@@ -13003,7 +13243,8 @@
                 "type": "null"
               }
             ],
-            "title": "Upper 1Sd"
+            "title": "Upper 1Sd",
+            "description": "Spot + 1 sigma move to the expiry `days_to_expiry` days out (the nearest expiry with 7 to 30 days left), not a 1-day move."
           },
           "lower_1sd": {
             "anyOf": [
@@ -13014,7 +13255,8 @@
                 "type": "null"
               }
             ],
-            "title": "Lower 1Sd"
+            "title": "Lower 1Sd",
+            "description": "Spot - 1 sigma move to the same expiry as upper_1sd."
           },
           "upper_2sd": {
             "anyOf": [
@@ -13025,7 +13267,8 @@
                 "type": "null"
               }
             ],
-            "title": "Upper 2Sd"
+            "title": "Upper 2Sd",
+            "description": "Spot + 2 sigma move to the same expiry as upper_1sd."
           },
           "lower_2sd": {
             "anyOf": [
@@ -13036,7 +13279,44 @@
                 "type": "null"
               }
             ],
-            "title": "Lower 2Sd"
+            "title": "Lower 2Sd",
+            "description": "Spot - 2 sigma move to the same expiry as upper_1sd."
+          },
+          "days_to_expiry": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To Expiry",
+            "description": "Days to the expiry the *_1sd / *_2sd bands are measured to."
+          },
+          "upper_1d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upper 1D",
+            "description": "Spot + 1 sigma move over ONE day (ATM IV scaled to 1/365 of a year). Null until published."
+          },
+          "lower_1d": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lower 1D",
+            "description": "Spot - 1 sigma move over one day. Null until published."
           }
         },
         "type": "object",
@@ -13593,6 +13873,115 @@
         "type": "object",
         "title": "GexStrikeWindow"
       },
+      "IvRvData": {
+        "properties": {
+          "timestamps": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamps"
+          },
+          "iv": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iv",
+            "description": "Implied vol (Deribit DVOL), percent."
+          },
+          "rv": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rv",
+            "description": "30-day realized vol, percent."
+          },
+          "spread": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spread",
+            "description": "iv - rv per point, vol points."
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "IvRvData"
+      },
+      "IvRvResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true,
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/IvRvData"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/V2Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "IvRvResponse"
+      },
       "IvSkewData": {
         "properties": {
           "expiries": {
@@ -13656,13 +14045,14 @@
           "dte": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Dte"
+            "title": "Dte",
+            "description": "Days to the 08:00 UTC settle (fractional)."
           },
           "atm_iv": {
             "anyOf": [
@@ -13674,7 +14064,7 @@
               }
             ],
             "title": "Atm Iv",
-            "description": "ATM implied volatility in percent (33.0 = 33%)."
+            "description": "ATM implied volatility in percent (33.0 = 33%), at the expiry's forward."
           },
           "put_25d_iv": {
             "anyOf": [
@@ -13752,6 +14142,18 @@
               }
             ],
             "title": "Butterfly 25D"
+          },
+          "forward": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forward",
+            "description": "The expiry's forward the deltas and ATM were read against."
           }
         },
         "type": "object",
@@ -13902,7 +14304,7 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "integer"
+                  "type": "number"
                 },
                 "type": "array"
               },
@@ -13916,7 +14318,7 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "integer"
+                  "type": "number"
                 },
                 "type": "array"
               },
@@ -13924,7 +14326,8 @@
                 "type": "null"
               }
             ],
-            "title": "Days To Expiry"
+            "title": "Days To Expiry",
+            "description": "Days to each expiry's 08:00 UTC settle (fractional, e.g. 0.8)."
           },
           "atm_iv": {
             "anyOf": [
@@ -13946,7 +14349,29 @@
               }
             ],
             "title": "Atm Iv",
-            "description": "ATM implied volatility per expiry, in percent (33.0 = 33%)."
+            "description": "ATM implied volatility per expiry, in percent (33.0 = 33%), read at the expiry's forward; null where the chosen venues do not quote the expiry."
+          },
+          "forwards": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forwards",
+            "description": "The forward each expiry's ATM was read at, parallel to `expiries`."
           },
           "ts": {
             "anyOf": [
@@ -15242,6 +15667,18 @@
               }
             ],
             "title": "Prob 75"
+          },
+          "forward": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forward",
+            "description": "The expiry's forward the distribution is centred on."
           },
           "confidence_band": {
             "anyOf": [
