@@ -757,7 +757,7 @@
           "GEX"
         ],
         "summary": "Composable GEX key levels",
-        "description": "All-expiry HVL/walls plus 0DTE-specific levels in a single call. Use `?include=` to opt in to optional sections - `spot,candles,zones,max_pain,expected_move,ranked`. Filter by exchange with `?exchanges=deribit,bybit,okx,binance`.\n\n`expected_move` `*_1sd` / `*_2sd` are the move to the nearest expiry with 7 to 30 days left (`days_to_expiry`), not a day's move; `upper_1d` / `lower_1d` are the one-day 1-sigma band (null until published).\n\n`max_pain` is the max pain of the 0DTE expiry (every expiry settling within a day), from that expiry's own open interest, the same number as `/v2/gex/max-pain?expiry=0dte`; null when no expiry settles within a day. `gamma_flip_zones` is every price where cumulative net GEX changes sign, within 0.5x to 2x spot, under either positioning model. `candles` are the Binance perpetual's 5-minute klines, the last 336 (about 28 hours); `spot.perps_price` is the last close.\n\n**`?exchanges=`** needs the per-venue split only the std model has: with `positioning=flow` a venue filter serves std, with `meta.extra.positioning_fallback_reason` = `exchange_filter_needs_std`. `max_pain` and `gamma_flip_zones` are not venue-filtered (`meta.extra.exchanges_not_applied_to`). Under `as_of` no venue filter is possible and `meta.exchanges_filtered` is null with `meta.extra.exchanges_not_applied`.\n\n**Positioning (default: flow).** `positioning=flow` (default) rebuilds HVL/walls/ranked from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the legacy Redis textbook-signed levels. On flow fallback, `meta.extra.positioning_fallback_reason` explains why. Secondary walls (call_wall_2/3) are only present on the std cache path.\n\nThe WebSocket channel `gex.levels.{SYMBOL}` publishes the SAME flow-signed levels from the same builder - REST and WS agree.",
+        "description": "All-expiry HVL/walls plus 0DTE-specific levels in a single call. Use `?include=` to opt in to optional sections - `spot,candles,zones,max_pain,expected_move,ranked`. Filter by exchange with `?exchanges=deribit,bybit,okx,binance`.\n\n`expected_move` `*_1sd` / `*_2sd` are the move to the nearest expiry with 7 to 30 days left (`days_to_expiry`), not a day's move; `upper_1d` / `lower_1d` are the one-day 1-sigma band (null until published).\n\n`max_pain` is the max pain of the 0DTE expiry (the front expiry: the next 08:00 UTC settle, when it is within a day), from that expiry's own open interest on every venue, the same number as `/v2/gex/max-pain?expiry=0dte`; null when no expiry settles within a day. The `odte` levels are that expiry's. `gamma_flip_zones` is every price where cumulative net GEX changes sign, within 0.5x to 2x spot, under either positioning model. `candles` are the Binance perpetual's 5-minute klines, the last 336 (about 28 hours); `spot.perps_price` is the last close.\n\n**`?exchanges=`** needs the per-venue split only the std model has: with `positioning=flow` a venue filter serves std, with `meta.extra.positioning_fallback_reason` = `exchange_filter_needs_std`. `max_pain` and `gamma_flip_zones` are not venue-filtered (`meta.extra.exchanges_not_applied_to`). Under `as_of` no venue filter is possible and `meta.exchanges_filtered` is null with `meta.extra.exchanges_not_applied`.\n\n**Positioning (default: flow).** `positioning=flow` (default) rebuilds HVL/walls/ranked from the chain + aggressor tape (BTC/ETH). `positioning=std` serves the legacy Redis textbook-signed levels. On flow fallback, `meta.extra.positioning_fallback_reason` explains why. Secondary walls (call_wall_2/3) are only present on the std cache path.\n\nThe WebSocket channel `gex.levels.{SYMBOL}` publishes the SAME flow-signed levels from the same builder - REST and WS agree.",
         "operationId": "get_levels_gex_levels_get",
         "parameters": [
           {
@@ -2287,7 +2287,7 @@
           "GEX"
         ],
         "summary": "Max-pain strike (per-expiry)",
-        "description": "The strike at which option writers profit most at expiry. Use `?expiry=0dte` for the expiry (or expiries) settling within a day, computed from that expiry's own open interest, `?expiry=all` for a per-expiry table covering every active expiration, or pass a specific expiry token (e.g. `28MAR25`) to also receive the full pain curve by strike.",
+        "description": "The strike at which option writers profit most at expiry. Use `?expiry=0dte` for the front expiry (the next 08:00 UTC settle, when it is within a day; `expiry_tokens` names it), computed from that expiry's own open interest, `?expiry=all` for a per-expiry table covering every active expiration, or pass a specific expiry token (e.g. `28MAR25`) to also receive the full pain curve by strike.",
         "operationId": "get_max_pain_gex_max_pain_get",
         "parameters": [
           {
@@ -7395,11 +7395,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "description": "Expiry filter. `0dte` = front 0-DTE book (same-day UTC token if listed, else any expiry settling within 24h / dte < 1 - matches GEX 0dte), `all` = every active expiry, or a specific Deribit token (e.g. `28MAR25`).",
+              "description": "Expiry filter. `0dte` = the front expiry: the next 08:00 UTC settle, when it is within 24h (today's expiry before 08:00 UTC, tomorrow's after it; the same expiry as GEX `0dte`), `all` = every active expiry, or a specific Deribit token (e.g. `28MAR25`).",
               "default": "0dte",
               "title": "Expiry"
             },
-            "description": "Expiry filter. `0dte` = front 0-DTE book (same-day UTC token if listed, else any expiry settling within 24h / dte < 1 - matches GEX 0dte), `all` = every active expiry, or a specific Deribit token (e.g. `28MAR25`)."
+            "description": "Expiry filter. `0dte` = the front expiry: the next 08:00 UTC settle, when it is within 24h (today's expiry before 08:00 UTC, tomorrow's after it; the same expiry as GEX `0dte`), `all` = every active expiry, or a specific Deribit token (e.g. `28MAR25`)."
           },
           {
             "name": "time_steps",
@@ -8874,7 +8874,7 @@
           "Market"
         ],
         "summary": "Funding rate series",
-        "description": "Aggregate perpetual funding rate over time, on the same interval grid as `/market/candles`.\n\nNote the source cadence: funding settles on each venue's own schedule, so a fine interval does not create new settlements, it resamples the ones that exist.",
+        "description": "Aggregate perpetual funding rate over time, on the same interval grid as `/market/candles`. `30m` merges the two 15-minute bars of each half hour (first open, highest high, lowest low, last close).\n\nNote the source cadence: funding settles on each venue's own schedule, so a fine interval does not create new settlements, it resamples the ones that exist.",
         "operationId": "get_funding_market_funding_get",
         "parameters": [
           {
@@ -9232,7 +9232,7 @@
           "Market"
         ],
         "summary": "Liquidation series",
-        "description": "Long and short liquidations over time, on the same interval grid as the other market series so they align without resampling.\n\nThis is the time series. For the strike-style views see `/liquidation/heatmap` and `/liquidation/distribution`.",
+        "description": "Long and short liquidations over time, on the same interval grid as the other market series so they align without resampling. `30m` is the sum of the two 15-minute buckets in each half hour.\n\nThis is the time series. For the strike-style views see `/liquidation/heatmap` and `/liquidation/distribution`.",
         "operationId": "get_liquidations_market_liquidations_get",
         "parameters": [
           {
